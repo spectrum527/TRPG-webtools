@@ -35,9 +35,9 @@ jobs:
         run: npm test
       - name: TypeScript and production build
         run: npm run build
-      - name: Audit production dependencies
+      - name: Audit production and development dependencies
         if: matrix.node == '24'
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --audit-level=high
 
   browser:
     name: Browser acceptance (Chromium)

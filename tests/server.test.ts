@@ -1033,3 +1033,27 @@ describe('主持人灵感服务', () => {
     expect(await response.text()).not.toContain('test-key');
   });
 });
+
+describe('HTTP request limits', () => {
+  it('limits inspiration and fallback requests before expensive work without trusting forwarded addresses', async () => {
+    const { url } = await setup({
+      httpRateLimits: { inspiration: 2, frontendFallback: 2 },
+    });
+    for (let i = 0; i < 3; i++) {
+      const response = await fetch(`${url}/api/inspiration`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-forwarded-for': `198.51.100.${i + 1}` },
+        body: '{}',
+      });
+      expect(response.status).toBe(i < 2 ? 400 : 429);
+    }
+    for (let i = 0; i < 3; i++) {
+      const response = await fetch(`${url}/missing-route-${i}`, {
+        headers: { 'x-forwarded-for': `198.51.100.${i + 10}` },
+      });
+      if (i < 2) expect(response.status).not.toBe(429);
+      else expect(response.status).toBe(429);
+    }
+    expect((await fetch(`${url}/api/health`)).status).toBe(200);
+  });
+});

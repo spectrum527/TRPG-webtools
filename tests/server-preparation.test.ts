@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { io, type Socket } from 'socket.io-client';
-import { createAppServer } from '../server/app';
+import { createAppServer, type ServerOptions } from '../server/app';
 import { parseAtlases } from '../shared/atlas';
 import { ATLAS_IMPORT_TEMPLATE } from '../shared/atlas-guide';
 import { roomConfiguration } from '../shared/room-config';
@@ -17,9 +17,10 @@ const sockets: Socket[] = [],
 async function server(
   dataDir = mkdtempSync(join(tmpdir(), 'interlude-preparation-')),
   imageDir = join(dataDir, 'custom-images'),
+  options: ServerOptions = {},
 ) {
   if (!dirs.includes(dataDir)) dirs.push(dataDir);
-  const app = createAppServer({ dataDir, imageDir });
+  const app = createAppServer({ ...options, dataDir, imageDir });
   servers.push(app);
   return { app, dataDir, imageDir, url: `http://127.0.0.1:${await app.listen()}` };
 }
@@ -53,8 +54,8 @@ async function bad(socket: Socket, input: unknown) {
   expect(r.ok).toBe(false);
   return r.ok ? '' : r.error;
 }
-async function setup(active = false) {
-  const env = await server();
+async function setup(active = false, options: ServerOptions = {}) {
+  const env = await server(undefined, undefined, options);
   const host = await client(env.url),
     player = await client(env.url);
   const h = await good<RoomConnection>(host, 'room:create', {
@@ -254,6 +255,18 @@ describe('portable room configuration and dedicated pools', () => {
 });
 
 describe('authenticated image messages and disk storage', () => {
+  it('limits image reads per authenticated seat without blocking another member', async () => {
+    const { url, host, h, p } = await setup(true, { httpRateLimits: { imageReads: 2 } });
+    expect((await upload(url, h.session)).status).toBe(201);
+    const image = (await state(host, h.session)).log.find((event) => event.image)!.image!;
+    expect((await getImage(url, h.session, image.id)).status).toBe(200);
+    expect((await getImage(url, h.session, image.id)).status).toBe(200);
+    expect((await getImage(url, h.session, image.id)).status).toBe(429);
+    expect((await getImage(url, p.session, image.id)).status).toBe(200);
+    expect((await getImage(url, { ...p.session, token: '0'.repeat(64) }, image.id)).status).toBe(
+      403,
+    );
+  });
   it('lets both roles send, keeps the chosen directory and delivers exact bytes only to members', async () => {
     const { url, host, player, h, p, imageDir } = await setup(true);
     for (const sender of [h.session, p.session])

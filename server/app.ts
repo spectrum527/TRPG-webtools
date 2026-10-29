@@ -7,6 +7,7 @@ import { RoomConfigSchema } from '../shared/room-config.ts';
 import { IMAGE_MIMES, MAX_IMAGE_BYTES } from '../shared/media.ts';
 import { decodeImage, imagePath, saveImage } from './images.ts';
 import express from 'express';
+import { ipKeyGenerator, MemoryStore, rateLimit } from 'express-rate-limit';
 import { createServer } from 'node:http';
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
@@ -292,6 +293,7 @@ export interface ServerOptions {
   rng?: DieRandom;
   fetch?: typeof fetch;
   now?: () => number;
+  httpRateLimits?: Partial<{ imageReads: number; inspiration: number; frontendFallback: number }>;
 }
 const COLORS = [
   '#f5bb7d',
@@ -408,6 +410,37 @@ export function createAppServer(options: ServerOptions = {}) {
     bucket.count += 1;
     requireCondition(bucket.count <= max, '操作过于频繁，请稍后重试');
   }
+  // Use the connection address, not untrusted forwarded headers. Behind a proxy,
+  // the generous per-address limits are shared by clients using that proxy.
+  const connectionKey = (request: express.Request) =>
+    ipKeyGenerator(request.socket.remoteAddress ?? 'unknown');
+  const imageReadStore = new MemoryStore();
+  const inspirationStore = new MemoryStore();
+  const frontendFallbackStore = new MemoryStore();
+  const imageReadLimit = rateLimit({
+    windowMs: 60_000,
+    limit: options.httpRateLimits?.imageReads ?? 1200,
+    store: imageReadStore,
+    keyGenerator: (request) => `${request.params.code}:${request.headers['x-interlude-member']}`,
+    legacyHeaders: false,
+    message: { error: '操作过于频繁，请稍后重试' },
+  });
+  const inspirationLimit = rateLimit({
+    windowMs: 60_000,
+    limit: options.httpRateLimits?.inspiration ?? 2400,
+    store: inspirationStore,
+    keyGenerator: connectionKey,
+    legacyHeaders: false,
+    message: { error: '操作过于频繁，请稍后重试' },
+  });
+  const frontendFallbackLimit = rateLimit({
+    windowMs: 60_000,
+    limit: options.httpRateLimits?.frontendFallback ?? 3000,
+    store: frontendFallbackStore,
+    keyGenerator: connectionKey,
+    legacyHeaders: false,
+    message: { error: '操作过于频繁，请稍后重试' },
+  });
   function persist() {
     const tempPath = `${storagePath}.${process.pid}.tmp`;
     try {
@@ -1347,7 +1380,9 @@ export function createAppServer(options: ServerOptions = {}) {
     express.raw({ type: 'application/zip', limit: MAX_ARCHIVE_BYTES }),
     (request, response) => {
       try {
-        const { room, exportedAt } = readArchive(request.body);
+        const body: unknown = request.body;
+        requireCondition(Buffer.isBuffer(body), '请选择 ZIP 存档');
+        const { room, exportedAt } = readArchive(body);
         response.set('Cache-Control', 'no-store').json(archiveSummary(room, exportedAt));
       } catch (error) {
         response.status(400).json({ error: failure(error) });
@@ -1365,7 +1400,9 @@ export function createAppServer(options: ServerOptions = {}) {
           decodeURIComponent(String(request.headers['x-interlude-nickname'] ?? '')),
         );
         const rule = parse(ruleSchema, request.headers['x-interlude-rule']);
-        const { room } = readArchive(request.body);
+        const body: unknown = request.body;
+        requireCondition(Buffer.isBuffer(body), '请选择 ZIP 存档');
+        const { room } = readArchive(body);
         requireCondition(room.rule === rule, '存档规则与所选规则不匹配');
         cleanup();
         requireCondition(rooms.size < maxRooms, '当前房间数量已达上限，请稍后再试');
@@ -1518,7 +1555,7 @@ export function createAppServer(options: ServerOptions = {}) {
       }
     },
   );
-  app.get('/api/rooms/:code/images/:imageId', imageAccess, (request, response) => {
+  app.get('/api/rooms/:code/images/:imageId', imageAccess, imageReadLimit, (request, response) => {
     const { entry } = imageSeat(request);
     const image = entry.room.log.find(
       (e) => e.image?.id === request.params.imageId && e.visibility === 'public',
@@ -1544,7 +1581,7 @@ export function createAppServer(options: ServerOptions = {}) {
   app.get('/api/status', (_request, response) =>
     response.json({ aiConfigured: Boolean(geminiKey) }),
   );
-  app.post('/api/inspiration', express.json({ limit: '32kb' }), async (request, response) => {
+  app.post('/api/inspiration', inspirationLimit, express.json({ limit: '32kb' }), async (request, response) => {
     try {
       const input = parse(
         z
@@ -1680,7 +1717,7 @@ export function createAppServer(options: ServerOptions = {}) {
   });
   const frontendDir = resolve('dist');
   app.use(express.static(frontendDir));
-  app.get('/{*path}', (request, response) => {
+  app.get('/{*path}', frontendFallbackLimit, (request, response) => {
     if (request.path.startsWith('/api/'))
       return void response.status(404).json({ error: '接口不存在' });
     if (existsSync(resolve(frontendDir, 'index.html')))
@@ -1716,6 +1753,9 @@ export function createAppServer(options: ServerOptions = {}) {
     },
     async close() {
       clearInterval(cleanupTimer);
+      imageReadStore.shutdown();
+      inspirationStore.shutdown();
+      frontendFallbackStore.shutdown();
       io.disconnectSockets(true);
       try {
         persist();
