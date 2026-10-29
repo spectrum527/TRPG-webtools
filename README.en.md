@@ -175,7 +175,7 @@ npm run typecheck # TypeScript type check
 npm run build     # Type check, then production build
 ```
 
-[GitHub CI](.github/workflows/ci.yml) runs tests and builds on Node.js 22 and 24 and audits production dependencies. It also walks through the app in Chromium (including native IndexedDB) and checks that the Docker image starts.
+[GitHub CI](.github/workflows/ci.yml) runs tests and builds on Node.js 22 and 24 and audits production and development dependencies. It also walks through the app in Chromium (including native IndexedDB) and checks that the Docker image starts.
 
 Setup for the browser test scripts is in the [usage guide](docs/USAGE.md#浏览器验收), and results go to `test-results/`. The Gemini tests use a mock server; to test against the real API you need to configure a key yourself.
 

@@ -173,7 +173,7 @@ npm run typecheck # TypeScript 类型检查
 npm run build     # 类型检查后打包
 ```
 
-[GitHub CI](.github/workflows/ci.yml) 会在 Node.js 22 和 24 上跑测试和构建，审计生产依赖，并在 Chromium 里走一遍浏览器流程（包括原生 IndexedDB），最后检查 Docker 镜像能否正常启动。
+[GitHub CI](.github/workflows/ci.yml) 会在 Node.js 22 和 24 上跑测试和构建，审计生产及开发依赖，并在 Chromium 里走一遍浏览器流程（包括原生 IndexedDB），最后检查 Docker 镜像能否正常启动。
 
 浏览器测试脚本的安装和运行方法见[使用手册](docs/USAGE.md#浏览器验收)，结果保存在 `test-results/`。Gemini 相关测试用的是模拟接口，接真实服务要自己配密钥再测。
 

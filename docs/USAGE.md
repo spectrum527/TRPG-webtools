@@ -192,7 +192,7 @@ python3 -m venv .venv
 
 ## GitHub 自动检查
 
-[CI 工作流](../.github/workflows/ci.yml)在 PR 和主分支推送时运行：Node.js 22／24 下的规则与真实 Socket.IO 集成测试、TypeScript 与生产构建、生产依赖高危漏洞检查、Chromium 下的完整浏览器流程和原生 IndexedDB 检查，地图／场景、图片消息与房间配置验收，以及 Docker 镜像构建、健康接口与前端资源加载。浏览器报告、截图和服务日志保留 14 天。
+[CI 工作流](../.github/workflows/ci.yml)在 PR 和主分支推送时运行：Node.js 22／24 下的规则与真实 Socket.IO 集成测试、TypeScript 与生产构建、生产及开发依赖高危漏洞检查、Chromium 下的完整浏览器流程和原生 IndexedDB 检查，地图／场景、图片消息与房间配置验收，以及 Docker 镜像构建、健康接口与前端资源加载。浏览器报告、截图和服务日志保留 14 天。
 
 脚本优先使用 macOS 已安装的 Chrome，其他环境使用 Playwright Chromium。截图与结果保存在忽略提交的 `test-results/`。这些检查不会消耗 Gemini 配额；Gemini 的鉴权、超时及响应路径使用模拟上游验证，真实生成需要配置密钥后验收。
 
