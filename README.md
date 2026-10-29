@@ -4,7 +4,7 @@
   <img src="docs/assets/interlude-banner.png" alt="幕间 Interlude 头图" width="100%">
 </p>
 
-# 幕间 · Interlude
+# 幕间
 
 幕间是一个网页版的跑团工具，自己部署到服务器上，和朋友在浏览器里开团。支持 **D&D 5e（2014 / SRD 5.1）** 和 **CoC 第 7 版**。
 
