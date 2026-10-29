@@ -654,8 +654,9 @@ describe('complete room archives and resumable seats', () => {
 
 describe('archive format and bounded importer', () => {
   it('rejects non-binary archive inputs explicitly', () => {
-    expect(() => readArchive([] as unknown as Uint8Array)).toThrow('存档 ZIP 数据无效');
-    expect(() => readArchive('not a zip' as unknown as Uint8Array)).toThrow('存档 ZIP 数据无效');
+    expect(() => readArchive([])).toThrow('存档 ZIP 数据无效');
+    expect(() => readArchive('not a zip')).toThrow('存档 ZIP 数据无效');
+    expect(() => readArchive({ length: 1 })).toThrow('存档 ZIP 数据无效');
   });
   it('restores D&D stat blocks, independent NPC resources and current turn', async () => {
     const env = await setup(true, 'dnd');
