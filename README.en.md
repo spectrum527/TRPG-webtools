@@ -4,7 +4,7 @@
   <img src="docs/assets/interlude-banner.png" alt="Interlude banner" width="100%">
 </p>
 
-# Interlude · 幕间
+# Interlude
 
 Interlude is a web app for running tabletop RPG sessions with friends in the browser. You host it on your own server. It supports **D&D 5e (2014 / SRD 5.1)** and **Call of Cthulhu 7th Edition**.
 
