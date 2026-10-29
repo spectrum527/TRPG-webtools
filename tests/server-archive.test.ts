@@ -191,7 +191,9 @@ describe('archive image references and session retention', () => {
       includeImages: true,
     });
     expect(archived.room.log.find((e) => e.image)?.image).toEqual(image);
-    const all = Object.values(files).map((bytes) => strFromU8(bytes)).join('');
+    const all = Object.values(files)
+      .map((bytes) => strFromU8(bytes))
+      .join('');
     expect(all).toContain(join(env.imageDir, imageFilename(image)));
     expect(all).not.toContain(png);
     expect(all).not.toContain(env.h.session.token);
@@ -651,6 +653,10 @@ describe('complete room archives and resumable seats', () => {
 });
 
 describe('archive format and bounded importer', () => {
+  it('rejects non-binary archive inputs explicitly', () => {
+    expect(() => readArchive([] as unknown as Uint8Array)).toThrow('存档 ZIP 数据无效');
+    expect(() => readArchive('not a zip' as unknown as Uint8Array)).toThrow('存档 ZIP 数据无效');
+  });
   it('restores D&D stat blocks, independent NPC resources and current turn', async () => {
     const env = await setup(true, 'dnd');
     const card = createDndStatBlock('npc-bridge-guard');

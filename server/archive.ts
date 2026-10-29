@@ -115,6 +115,7 @@ export async function exportArchive(
  * Nothing is ever extracted to the filesystem. Reject unknown paths and duplicate entries.
  */
 export function readArchive(bytes: Uint8Array): { room: Room; exportedAt: string } {
+  if (!(bytes instanceof Uint8Array)) throw new Error('存档 ZIP 数据无效。');
   if (!bytes.length || bytes.length > MAX_ARCHIVE_BYTES)
     throw new Error('存档 ZIP 不能为空或超过 32 MiB。');
   try {
