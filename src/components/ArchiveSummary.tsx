@@ -6,7 +6,8 @@ export function ArchiveSummaryView({ value }: { value: ArchiveSummary }) {
       <div>
         <span>规则与阶段</span>
         <b>
-          {ruleEdition(value.rule)} · {value.phase === 'active' ? '进行中' : '准备中'}
+          {ruleEdition(value.rule, value.dndEdition)} ·{' '}
+          {value.phase === 'active' ? '进行中' : '准备中'}
         </b>
       </div>
       <div>

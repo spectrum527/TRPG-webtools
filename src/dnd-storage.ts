@@ -1,4 +1,5 @@
 import { DndStatBlockSchema, MAX_DND_FILE_BYTES, type DndStatBlock } from '../shared/dnd';
+import { getDndEdition } from '../shared/dnd-edition';
 
 const DATABASE = 'interlude-dnd-library';
 const DATABASE_VERSION = 1;
@@ -76,7 +77,12 @@ function validateLibrary(value: unknown, stored = false): DndStatBlock[] {
 
 function mergeValidated(existing: DndStatBlock[], incoming: DndStatBlock[]): DndStatBlock[] {
   const merged = new Map(existing.map((card) => [card.id, card]));
-  incoming.forEach((card) => merged.set(card.id, card));
+  for (const card of incoming) {
+    const previous = merged.get(card.id);
+    if (previous && getDndEdition(previous.dndEdition) !== getDndEdition(card.dndEdition))
+      throw new DndLibraryError('数据块编号与其他版次冲突，本次未保存。请用新编号另存。');
+    merged.set(card.id, card);
+  }
   if (merged.size > MAX_CARDS) {
     throw new DndLibraryError(
       'D&D 个人卡库最多保存 200 张卡片，本次修改未保存。请先导出备份并移除不需要的卡片后重试。',

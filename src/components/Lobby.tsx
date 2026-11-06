@@ -1,3 +1,4 @@
+import { effectiveCharacter } from '../../shared/adjustments';
 import { MAX_ARCHIVE_BYTES, type ArchiveSummary } from '../../shared/archive';
 import { inspectArchive } from '../api';
 import { ArchiveSummaryView } from './ArchiveSummary';
@@ -33,12 +34,18 @@ import type {
 import { exportCharacter, parseCharacter } from '../../shared/rules';
 import { readStored, writeStored, downloadFile } from '../storage';
 import { DieIcon, Spinner, Modal, ruleName, ruleEdition } from './ui';
+import { getDndEdition, type DndEdition } from '../../shared/dnd-edition';
+import { DndEditionSwitch } from './DndEditionSwitch';
 
 export function RuleSelection({
+  dndEdition,
+  onDndEditionChange,
   onSelect,
   onRules,
   onLibrary,
 }: {
+  dndEdition: DndEdition;
+  onDndEditionChange: (edition: DndEdition) => void;
   onSelect: (rule: RuleId) => void;
   onRules: (rule: RuleId) => void;
   onLibrary: () => void;
@@ -62,7 +69,13 @@ export function RuleSelection({
         </span>
       </div>
       <div className="rule-grid">
-        <RuleCard rule="dnd" onSelect={onSelect} onRules={onRules} />
+        <RuleCard
+          rule="dnd"
+          onSelect={onSelect}
+          onRules={onRules}
+          dndEdition={dndEdition}
+          onDndEditionChange={onDndEditionChange}
+        />
         <RuleCard rule="coc" onSelect={onSelect} onRules={onRules} />
       </div>
       <div className="welcome-bottom">
@@ -87,10 +100,14 @@ export function RuleSelection({
   );
 }
 function RuleCard({
+  dndEdition = '2014',
+  onDndEditionChange,
   rule,
   onSelect,
   onRules,
 }: {
+  dndEdition?: DndEdition;
+  onDndEditionChange?: (edition: DndEdition) => void;
   rule: RuleId;
   onSelect: (rule: RuleId) => void;
   onRules: (rule: RuleId) => void;
@@ -112,7 +129,12 @@ function RuleCard({
         </span>
       </div>
       <div className="rule-card-top">
-        <span className="rule-edition">{dnd ? 'D&D 5e' : 'CoC 7th'}</span>
+        <div className="rule-version-heading">
+          <span className="rule-edition">{dnd ? 'D&D 5e' : 'CoC 7th'}</span>
+          {dnd && onDndEditionChange && (
+            <DndEditionSwitch compact value={dndEdition} onChange={onDndEditionChange} />
+          )}
+        </div>
         <button
           onClick={() => onRules(rule)}
           className="rule-info"
@@ -157,12 +179,16 @@ function RuleCard({
 
 export function Gateway({
   rule,
+  dndEdition,
+  onDndEditionChange,
   onBack,
   onCreate,
   onRestore,
   onJoin,
 }: {
   rule: RuleId;
+  dndEdition: DndEdition;
+  onDndEditionChange: (edition: DndEdition) => void;
   onBack: () => void;
   onCreate: (input: CreateRoomInput) => Promise<void>;
   onRestore: (file: File, nickname: string) => Promise<void>;
@@ -185,6 +211,11 @@ export function Gateway({
     setError('');
     setBusy(true);
     try {
+      if (tab === 'create' && rule === 'dnd' && (configuration || archive)) {
+        const edition = getDndEdition(archive?.summary.dndEdition ?? configuration?.dndEdition);
+        if (edition !== dndEdition)
+          throw new Error(`文件使用 D&D ${edition}，请先切换到相同版本。`);
+      }
       writeStored('interlude-nickname', nickname.trim());
       if (tab === 'create' && archive) await onRestore(archive.file, nickname.trim());
       else if (tab === 'create')
@@ -192,6 +223,7 @@ export function Gateway({
           name: name.trim(),
           nickname: nickname.trim(),
           rule,
+          ...(rule === 'dnd' ? { dndEdition } : {}),
           mode,
           ...(configuration
             ? { configuration: { ...configuration, name: name.trim(), mode } }
@@ -202,6 +234,7 @@ export function Gateway({
           code: code.trim().toUpperCase(),
           nickname: nickname.trim(),
           rule,
+          ...(rule === 'dnd' ? { dndEdition } : {}),
           ...(seatCode ? { seatCode } : {}),
         });
     } catch (e) {
@@ -217,7 +250,8 @@ export function Gateway({
       </button>
       <div className="gateway-grid">
         <div className={`gateway-intro ${rule}`}>
-          <div className="section-eyebrow">{ruleEdition(rule)}</div>
+          <div className="section-eyebrow">{ruleEdition(rule, dndEdition)}</div>
+          {rule === 'dnd' && <DndEditionSwitch value={dndEdition} onChange={onDndEditionChange} />}
           <h1>
             故事将启，
             <br />
@@ -236,7 +270,7 @@ export function Gateway({
         <div className="gateway-form">
           <div className="gateway-rule">
             <span className={`rule-dot ${rule}`} /> {ruleName(rule)}
-            <span className="muted">{rule === 'dnd' ? '5e · 2014' : '第 7 版'}</span>
+            <span className="muted">{rule === 'dnd' ? `5e · ${dndEdition}` : '第 7 版'}</span>
           </div>
           <div className="segmented">
             <button
@@ -509,12 +543,16 @@ function PreviewTable() {
 
 export function Library({
   cards,
+  dndEdition,
+  onDndEditionChange,
   onCreate,
   onEdit,
   onImport,
   onDelete,
 }: {
   cards: Character[];
+  dndEdition: DndEdition;
+  onDndEditionChange: (edition: DndEdition) => void;
   onCreate: (rule: RuleId) => void;
   onEdit: (card: Character) => void;
   onImport: (card: Character) => void;
@@ -528,7 +566,7 @@ export function Library({
   const importFile = async (file?: File) => {
     if (!file) return;
     try {
-      if (file.size > 256000) throw new Error('角色卡不能超过 256 KB。');
+      if (file.size > 1024 * 1024) throw new Error('角色卡文件不能超过 1 MiB。');
       onImport(parseCharacter(await file.text()));
       setError('');
     } catch (e) {
@@ -588,7 +626,7 @@ export function Library({
                 <span className={`character-avatar ${card.rule}`}>
                   {card.name.slice(0, 1) || '?'}
                 </span>
-                <span className="pill">{ruleEdition(card.rule)}</span>
+                <span className="pill">{ruleEdition(card.rule, card.dndEdition)}</span>
               </div>
               <h2>{card.name}</h2>
               <p>
@@ -604,7 +642,7 @@ export function Library({
                 </span>
                 <span>
                   <small>{card.rule === 'dnd' ? '护甲等级' : '理智'}</small>
-                  {card.rule === 'dnd' ? card.ac : card.san}
+                  {card.rule === 'dnd' ? effectiveCharacter(card).ac : card.san}
                 </span>
                 <span>
                   <small>物品</small>
@@ -659,6 +697,10 @@ export function Library({
       </div>
       {newCard && (
         <Modal title="为哪段故事创造角色？" onClose={() => setNewCard(false)}>
+          <div className="new-character-edition">
+            <span>D&D 规则版本</span>
+            <DndEditionSwitch value={dndEdition} onChange={onDndEditionChange} />
+          </div>
           <div className="new-character-options">
             {(['dnd', 'coc'] as const).map((rule) => (
               <button
@@ -672,7 +714,7 @@ export function Library({
                 <DieIcon size={40} />
                 <span>
                   <b>{ruleName(rule)}</b>
-                  <small>{ruleEdition(rule)}</small>
+                  <small>{ruleEdition(rule, dndEdition)}</small>
                 </span>
                 <Plus size={20} />
               </button>
@@ -708,12 +750,20 @@ export function Library({
   );
 }
 
-export function RulesModal({ rule, onClose }: { rule: RuleId; onClose: () => void }) {
+export function RulesModal({
+  rule,
+  dndEdition = '2014',
+  onClose,
+}: {
+  rule: RuleId;
+  dndEdition?: DndEdition;
+  onClose: () => void;
+}) {
   const dnd = rule === 'dnd';
   return (
     <Modal
       title={`${ruleName(rule)} · 规则速览`}
-      subtitle={dnd ? 'D&D 5e（2014）/ SRD 5.1' : 'Call of Cthulhu · 第 7 版'}
+      subtitle={ruleEdition(rule, dndEdition)}
       onClose={onClose}
       className="rules-modal"
     >
@@ -731,7 +781,7 @@ export function RulesModal({ rule, onClose }: { rule: RuleId; onClose: () => voi
           <h3>{dnd ? '六项属性，四投取三' : '八项属性，加上幸运'}</h3>
           <p>
             {dnd
-              ? '每项属性掷 4D6，去掉最低一枚后求和。属性调整值 = 向下取整（属性 − 10）÷ 2。可以不限次数重掷。种族加值、职业特性、生命上限与护甲由你填写。'
+              ? `每项属性掷 4D6，去掉最低一枚后求和。属性调整值 = 向下取整（属性 − 10）÷ 2。可以不限次数重掷。${dndEdition === '2024' ? '新版属性加值来自背景，填写最终属性时请一并计入。' : '种族属性加值请填写到最终属性中。'}职业特性、生命上限与护甲由你核对填写。`
               : '力量、体质、敏捷、外貌、意志和幸运：3D6 × 5；体型、智力、教育：（2D6 + 6）× 5。生命 =（体质 + 体型）÷ 10 向下取整，魔法 = 意志 ÷ 5。'}
           </p>
         </section>
@@ -749,7 +799,7 @@ export function RulesModal({ rule, onClose }: { rule: RuleId; onClose: () => voi
           <h3>运算交给工具，裁定留给同桌。</h3>
           <p>
             {dnd
-              ? '职业、背景、种族的技能熟练分开选择，专精受职业等级名额限制。其他特性带来的额外名额由 DM 设置；法术、装备与升级效果请结合规则书记录。卡片数值合规并通过 DM 审核后才能开场。'
+              ? `${dndEdition === '2024' ? '内置背景固定授予对应技能，职业与种族的自选技能分别记录。' : '职业、背景、种族的技能熟练分开选择。'}专精受职业等级名额限制。其他特性带来的额外名额由 DM 设置；法术、装备与升级效果请结合规则书记录。卡片数值合规并通过 DM 审核后才能开场。`
               : '技能按基础值、职业点和兴趣点分配，系统检查预算、信用区间与本团上限。年龄修正、伤害加值、移动及精神状态由守密人裁定。卡片数值合规并通过 KP 审核后才能开场；KP 另有独立的 NPC 与怪物卡库。'}
           </p>
         </section>

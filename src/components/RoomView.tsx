@@ -50,6 +50,7 @@ import {
   ClipboardCheck,
   Maximize2,
   Minimize2,
+  Eye,
 } from 'lucide-react';
 import type {
   Character,
@@ -74,6 +75,8 @@ import {
 } from '../../shared/rules';
 import { getInspiration, uploadChatImage, getHistory } from '../api';
 import { validateCreation } from '../../shared/creation';
+import { getDndEdition } from '../../shared/dnd-edition';
+import { passivePerception } from '../../shared/rules';
 import { adjustmentFields, effectiveCharacter, hasAdjustments } from '../../shared/adjustments';
 import { AdjustmentSummary } from './AdjustmentSummary';
 import { ReviewDesk, isApproved, reviewLabel } from './ReviewDesk';
@@ -85,6 +88,15 @@ const RoomAtlasLibrary = lazy(() =>
 );
 const RoomArchive = lazy(() => import('./RoomArchive'));
 const EncounterPanel = lazy(() => import('./EncounterPanel'));
+const CharacterPreparation = lazy(() =>
+  import('./CharacterPreparation').then((m) => ({ default: m.CharacterPreparation })),
+);
+const PartyOverview = lazy(() =>
+  import('./PartyOverview').then((m) => ({ default: m.PartyOverview })),
+);
+const EncounterPlans = lazy(() =>
+  import('./EncounterPlans').then((m) => ({ default: m.EncounterPlans })),
+);
 const CharacterAdjustments = lazy(() => import('./CharacterAdjustments'));
 
 interface Props {
@@ -121,6 +133,9 @@ export function RoomView({
   const [showArchive, setShowArchive] = useState(!!room.seatClaims?.length);
   const [showConfiguration, setShowConfiguration] = useState(false);
   const [showEncounter, setShowEncounter] = useState(false);
+  const [preparingMember, setPreparingMember] = useState<string | null>(null);
+  const [showPartyOverview, setShowPartyOverview] = useState(false);
+  const [showPlans, setShowPlans] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [adjustMember, setAdjustMember] = useState<string | null>(null);
   const [showInspiration, setShowInspiration] = useState(false);
@@ -180,7 +195,7 @@ export function RoomView({
           <div>
             <h1>{room.name}</h1>
             <p>
-              {ruleEdition(room.rule)}
+              {ruleEdition(room.rule, room.dndEdition)}
               <span>·</span>
               {room.mode === 'in-room' ? '房内演绎' : '外部演绎'}
             </p>
@@ -324,6 +339,13 @@ export function RoomView({
                     {card.occupation}
                     {room.rule === 'dnd' && ` · Lv.${card.level}`}
                   </p>
+                  {card.rule === 'dnd' && card.passivePerceptionEnabled && (
+                    <div className="passive-perception-inline">
+                      <Eye size={15} />
+                      <span>被动察觉</span>
+                      <b>{passivePerception(card)}</b>
+                    </div>
+                  )}
                   <div className="my-resources">
                     <ResourceControl
                       label="生命"
@@ -337,7 +359,7 @@ export function RoomView({
                     <ResourceControl
                       label={room.rule === 'dnd' ? '护甲' : '理智'}
                       icon={room.rule === 'dnd' ? <Shield size={13} /> : <Brain size={13} />}
-                      value={room.rule === 'dnd' ? card.ac : card.san}
+                      value={room.rule === 'dnd' ? effectiveCharacter(card).ac : card.san}
                       max={room.rule === 'dnd' ? undefined : card.maxSan}
                       onChange={
                         room.rule === 'dnd'
@@ -511,6 +533,15 @@ export function RoomView({
             {tool === 'inventory' && <InventoryTool room={room} me={me} run={run} />}
           </div>
           <div className="host-tool-links">
+            {room.rule === 'dnd' && (
+              <button aria-label="角色准备" onClick={() => setPreparingMember(me.id)}>
+                <WandSparkles size={18} />
+                <span>
+                  角色准备<small>法术、休息资源与装备联动</small>
+                </span>
+                <ChevronRight size={16} />
+              </button>
+            )}
             <button
               aria-label={isHost ? '角色调整' : '角色数值'}
               onClick={() => setAdjustMember(isHost ? '' : me.id)}
@@ -526,6 +557,20 @@ export function RoomView({
             </button>
             {isHost && (
               <>
+                <button aria-label="队伍总览" onClick={() => setShowPartyOverview(true)}>
+                  <Users size={18} />
+                  <span>
+                    队伍总览<small>生命、专注与全队休息</small>
+                  </span>
+                  <ChevronRight size={16} />
+                </button>
+                <button aria-label="遭遇预案" onClick={() => setShowPlans(true)}>
+                  <BookOpen size={18} />
+                  <span>
+                    遭遇预案<small>参战波次、增援与私密笔记</small>
+                  </span>
+                  <ChevronRight size={16} />
+                </button>
                 <button aria-label="审核与制卡要求" onClick={() => setShowReview(true)}>
                   <ClipboardCheck size={18} />
                   <span>
@@ -600,6 +645,46 @@ export function RoomView({
           </div>
         </aside>
       </div>
+      {preparingMember !== null && room.rule === 'dnd' && (
+        <Suspense fallback={<Spinner />}>
+          <CharacterPreparation
+            room={room}
+            memberId={preparingMember}
+            isHost={isHost}
+            run={run}
+            onClose={() => setPreparingMember(null)}
+          />
+        </Suspense>
+      )}
+      {showPartyOverview && isHost && (
+        <Suspense fallback={<Spinner />}>
+          <PartyOverview
+            room={room}
+            run={run}
+            onClose={() => setShowPartyOverview(false)}
+            onPrepare={(id) => {
+              setShowPartyOverview(false);
+              setPreparingMember(id);
+            }}
+          />
+        </Suspense>
+      )}
+      {showPlans && isHost && (
+        <Modal
+          title="本桌遭遇预案"
+          onClose={() => setShowPlans(false)}
+          className="preparation-modal"
+        >
+          <Suspense fallback={<Spinner />}>
+            <EncounterPlans
+              room={room}
+              isHost={isHost}
+              edition={getDndEdition(room.dndEdition)}
+              run={run}
+            />
+          </Suspense>
+        </Modal>
+      )}
       {showArchive && isHost && (
         <Suspense fallback={<Spinner />}>
           <RoomArchive
@@ -616,12 +701,17 @@ export function RoomView({
       {showLibrary && !isHost && (
         <Modal
           title="带一位老朋友入席"
-          subtitle={`只展示 ${ruleEdition(room.rule)} 的角色`}
+          subtitle={`只展示 ${ruleEdition(room.rule, room.dndEdition)} 的角色`}
           onClose={() => setShowLibrary(false)}
         >
           <div className="load-library-list">
             {library
-              .filter((c) => c.rule === room.rule)
+              .filter(
+                (c) =>
+                  c.rule === room.rule &&
+                  (room.rule !== 'dnd' ||
+                    getDndEdition(c.dndEdition) === getDndEdition(room.dndEdition)),
+              )
               .map((character) => (
                 <button
                   key={character.id}
@@ -642,7 +732,12 @@ export function RoomView({
                   <Plus size={17} />
                 </button>
               ))}
-            {!library.some((c) => c.rule === room.rule) && (
+            {!library.some(
+              (c) =>
+                c.rule === room.rule &&
+                (room.rule !== 'dnd' ||
+                  getDndEdition(c.dndEdition) === getDndEdition(room.dndEdition)),
+            ) && (
               <div className="empty-state">
                 <FileText size={30} />
                 <p>还没有这套规则的角色。可以创建新角色，或在制卡器中导入文件。</p>
@@ -727,7 +822,7 @@ export function RoomView({
               </div>
             }
           >
-            <EncounterPanel room={room} isHost={false} run={run} />
+            <EncounterPanel room={room} isHost={false} memberId={me.id} run={run} />
           </Suspense>
         </Modal>
       )}
@@ -1031,7 +1126,7 @@ function StoryLog({
     (event) => filter === 'all' || event.type === 'roll' || event.type === 'check',
   );
   const exportLog = () => {
-    const text = `# ${room.name}\n\n规则：${ruleEdition(room.rule)}\n\n${allEvents.map((event) => `- ${new Date(event.createdAt).toLocaleString('zh-CN')} · ${event.name}${event.visibility === 'host' ? '（主持人暗骰）' : ''}：${event.content}${event.scene?.description ? `\n  ${event.scene.description}` : ''}${event.image ? ` [图片：${event.image.name}，请在房间中查看或保存]` : ''}${event.imageDescription ? ` [图片描述：${event.imageDescription.name}：${event.imageDescription.description}]` : ''}`).join('\n')}`;
+    const text = `# ${room.name}\n\n规则：${ruleEdition(room.rule, room.dndEdition)}\n\n${allEvents.map((event) => `- ${new Date(event.createdAt).toLocaleString('zh-CN')} · ${event.name}${event.visibility === 'host' ? '（主持人暗骰）' : ''}：${event.content}${event.scene?.description ? `\n  ${event.scene.description}` : ''}${event.image ? ` [图片：${event.image.name}，请在房间中查看或保存]` : ''}${event.imageDescription ? ` [图片描述：${event.imageDescription.name}：${event.imageDescription.description}]` : ''}`).join('\n')}`;
     downloadFile(text, `${room.name}-跑团记录.md`, 'text/markdown');
     notify('已导出当前已载入的记录；完整续团请使用全局存档。');
   };
@@ -1808,6 +1903,13 @@ function MemberModal({
                 {me.role === 'host' ? '调整属性与技能' : '查看技能与修正'}
                 <ChevronRight size={16} />
               </button>
+            )}
+            {card.rule === 'dnd' && card.passivePerceptionEnabled && member.character && (
+              <div className="passive-perception-inline">
+                <Eye size={16} />
+                <span>被动察觉</span>
+                <b>{passivePerception(member.character)}</b>
+              </div>
             )}
             {member.character && hasAdjustments(member.character) && (
               <AdjustmentSummary card={member.character} />

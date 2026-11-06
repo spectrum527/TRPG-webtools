@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { BookOpen, Check, Copy, Download, ChevronDown } from 'lucide-react';
-import { DND_EXTRACTION_PROMPT, DND_IMPORT_TEMPLATE } from '../../shared/dnd-guide';
+import { getDndExtractionPrompt, getDndImportTemplate } from '../../shared/dnd-guide';
+import type { DndEdition } from '../../shared/dnd-edition';
 import tutorial from '../../docs/DND-STATBLOCKS.md?raw';
 import { downloadFile } from '../storage';
 
-export function DndImportGuide() {
+export function DndImportGuide({ edition = '2014' }: { edition?: DndEdition }) {
+  const prompt = getDndExtractionPrompt(edition);
+  const template = getDndImportTemplate(edition);
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState('');
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(DND_EXTRACTION_PROMPT);
+      await navigator.clipboard.writeText(prompt);
       setCopied(true);
       setError('');
     } catch {
@@ -23,7 +26,7 @@ export function DndImportGuide() {
       <div className="import-guide-heading">
         <BookOpen size={24} />
         <div>
-          <span className="mini-label">D&D 5E · 2014 / SRD 5.1</span>
+          <span className="mini-label">D&D 5e · {edition}</span>
           <h2>从剧本到数据块</h2>
           <p>把人物、能力与骰式整理成能随时查阅的资料。</p>
         </div>
@@ -36,7 +39,7 @@ export function DndImportGuide() {
         <button
           className="button secondary"
           onClick={() =>
-            downloadFile(DND_IMPORT_TEMPLATE, '幕间-DND数据块模板.md', 'text/markdown')
+            downloadFile(template, `幕间-DND-${edition}-数据块模板.md`, 'text/markdown')
           }
         >
           <Download size={16} />
@@ -58,7 +61,7 @@ export function DndImportGuide() {
         {[
           [
             '提供原文与版本',
-            '复制提示词，连同剧本、PDF 或页图交给外部 AI Agent。指定 D&D 5e（2014），并说明章节、页码和要提取的角色。',
+            `复制提示词，连同剧本、PDF 或页图交给外部 AI Agent。指定 D&D 5e（${edition}），并说明章节、页码和要提取的角色。`,
           ],
           [
             '保留数据块原值',
@@ -90,8 +93,9 @@ export function DndImportGuide() {
         <b>文件格式</b>
         <p>
           <code>documentType: "dnd-source"</code>、<code>schemaVersion: 1</code>、
-          <code>rule: "dnd"</code> 与 <code>cards</code>{' '}
-          数组。网站补齐编号和空白字段；导入时不掷骰，不修改原文 HP，也不混用 2024 版规则。
+          <code>rule: "dnd"</code> 与 <code>cards</code> 数组及对应的 <code>dndEdition</code>
+          。网站补齐编号和空白字段；导入时不掷骰，不修改原文 HP，不混用两版资料。旧文件未写版本时按
+          2014 读取。
         </p>
       </div>
       <div className="prompt-disclosure">
@@ -105,9 +109,7 @@ export function DndImportGuide() {
         </button>
         <button
           className="text-button"
-          onClick={() =>
-            downloadFile(DND_EXTRACTION_PROMPT, '幕间-DND提取提示词.md', 'text/markdown')
-          }
+          onClick={() => downloadFile(prompt, `幕间-DND-${edition}-提取提示词.md`, 'text/markdown')}
         >
           <Download size={14} />
           下载提示词
@@ -118,7 +120,7 @@ export function DndImportGuide() {
           className="keeper-prompt-text"
           aria-label="D&D LLM 提取提示词"
           readOnly
-          value={DND_EXTRACTION_PROMPT}
+          value={prompt}
           rows={16}
           onFocus={(e) => e.target.select()}
         />

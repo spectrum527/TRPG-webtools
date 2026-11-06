@@ -394,7 +394,8 @@ describe('portable character files', () => {
     expect(() =>
       parseCharacter(json.replace('"skills": {', '"skills": {"__proto__": 1,')),
     ).toThrow();
-    expect(() => parseCharacter(' '.repeat(256001))).toThrow('最多');
+    expect(() => parseCharacter(' '.repeat(1024 * 1024 + 1))).toThrow('1 MiB');
+    expect(() => parseCharacter('汉'.repeat(350000))).toThrow('1 MiB');
     expect(() => parseCharacter('null')).toThrow();
     expect(getCharacterErrors(null as unknown as Character).length).toBeGreaterThan(0);
   });

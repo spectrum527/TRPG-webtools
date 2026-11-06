@@ -24,6 +24,7 @@ import { getLibrary, getSession, readStored, saveToLibrary, writeStored } from '
 import { Logo, ThemeToggle, Toast, Spinner } from './components/ui';
 import { Gateway, Library, RuleSelection, RulesModal } from './components/Lobby';
 import { CharacterEditor } from './components/CharacterEditor';
+import { getDndEdition, type DndEdition } from '../shared/dnd-edition';
 import { RoomView } from './components/RoomView';
 const HostToolkit = lazy(() =>
   import('./components/HostToolkit').then((module) => ({ default: module.HostToolkit })),
@@ -33,6 +34,12 @@ type Page = 'welcome' | 'gateway' | 'library' | 'room' | 'host-tools';
 export default function App() {
   const [page, setPage] = useState<Page>('welcome');
   const [rule, setRule] = useState<RuleId>('dnd');
+  const [dndEdition, setDndEdition] = useState<DndEdition>(() =>
+    readStored<string>('interlude-dnd-edition', '2014') === '2024' ? '2024' : '2014',
+  );
+  useEffect(() => {
+    writeStored('interlude-dnd-edition', dndEdition);
+  }, [dndEdition]);
   const [theme, setTheme] = useState(() => {
     try {
       return localStorage.getItem('interlude-theme') || 'light';
@@ -49,6 +56,7 @@ export default function App() {
   const [aiConfigured, setAiConfigured] = useState(false);
   const [editor, setEditor] = useState<{
     rule: RuleId;
+    dndEdition?: DndEdition;
     initial?: Character;
     inRoom?: boolean;
   } | null>(null);
@@ -142,6 +150,8 @@ export default function App() {
     notify(editor?.inRoom ? '角色卡已提交，请等待主持人审核。' : '角色已保存至档案。');
   }
   const go = (next: Page) => {
+    if (next === 'host-tools' && room?.rule === 'dnd')
+      setDndEdition(getDndEdition(room.dndEdition));
     setPage(next);
     setMobileNav(false);
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -259,6 +269,8 @@ export default function App() {
           )}
           {page === 'welcome' && (
             <RuleSelection
+              dndEdition={dndEdition}
+              onDndEditionChange={setDndEdition}
               onSelect={(r) => {
                 setRule(r);
                 setPage('gateway');
@@ -271,13 +283,15 @@ export default function App() {
             <Gateway
               key={rule}
               rule={rule}
+              dndEdition={dndEdition}
+              onDndEditionChange={setDndEdition}
               onBack={() => go('welcome')}
               onCreate={async (input: CreateRoomInput) => {
                 acceptConnection(await createRoom(input));
                 notify('房间已创建，把房间码分享给同伴吧。');
               }}
               onRestore={async (file, nickname) => {
-                acceptConnection(await restoreArchive(file, nickname, rule));
+                acceptConnection(await restoreArchive(file, nickname, rule, dndEdition));
                 notify('房间已恢复，可在全局存档中复制同伴的席位恢复码。');
               }}
               onJoin={async (input: JoinRoomInput) => {
@@ -289,8 +303,16 @@ export default function App() {
           {page === 'library' && (
             <Library
               cards={library}
-              onCreate={(r) => setEditor({ rule: r })}
-              onEdit={(card) => setEditor({ rule: card.rule, initial: card })}
+              dndEdition={dndEdition}
+              onDndEditionChange={setDndEdition}
+              onCreate={(r) => setEditor({ rule: r, dndEdition })}
+              onEdit={(card) =>
+                setEditor({
+                  rule: card.rule,
+                  dndEdition: getDndEdition(card.dndEdition),
+                  initial: card,
+                })
+              }
               onImport={(card) => {
                 setLibrary(saveToLibrary(card));
                 notify(`「${card.name}」已导入。`);
@@ -312,7 +334,12 @@ export default function App() {
               library={library}
               onAction={action}
               onEdit={(card) =>
-                setEditor({ rule: room.rule, initial: card ?? undefined, inRoom: true })
+                setEditor({
+                  rule: room.rule,
+                  dndEdition: getDndEdition(room.dndEdition),
+                  initial: card ?? undefined,
+                  inRoom: true,
+                })
               }
               onRules={() => setRules(room.rule)}
               onHostToolkit={() => go('host-tools')}
@@ -329,6 +356,8 @@ export default function App() {
               }
             >
               <HostToolkit
+                dndEdition={dndEdition}
+                onDndEditionChange={setDndEdition}
                 room={room}
                 memberId={session?.memberId}
                 onAction={action}
@@ -348,7 +377,13 @@ export default function App() {
           onClose={closeEditor}
         />
       )}
-      {rules && <RulesModal rule={rules} onClose={closeRules} />}
+      {rules && (
+        <RulesModal
+          rule={rules}
+          dndEdition={page === 'room' ? getDndEdition(room?.dndEdition) : dndEdition}
+          onClose={closeRules}
+        />
+      )}
       {toast && <Toast {...toast} />}
     </div>
   );

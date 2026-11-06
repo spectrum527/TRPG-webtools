@@ -4,6 +4,7 @@ import App from './App';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/libre-caslon-display/400.css';
 import './styles.css';
+import './preparation.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -4,7 +4,9 @@ import type { Character } from '../../shared/types';
 import { COC_SKILLS, DND_SKILLS, DND_ATTRIBUTES } from '../../shared/rules';
 import {
   COC_OCCUPATION_RULES,
-  DND_CLASS_RULES,
+  dndClassRule,
+  dndBackground,
+  expertiseOptions,
   cocBudget,
   cocSkillBase,
   defaultAllocation,
@@ -21,6 +23,7 @@ import {
   type CreationPolicy,
   type DndAllocation,
 } from '../../shared/creation';
+import { getDndEdition } from '../../shared/dnd-edition';
 
 export function ValidationSummary({
   errors,
@@ -352,7 +355,8 @@ export function AllocationEditor({
       </div>
     );
   }
-  const cls = DND_CLASS_RULES.find((c) => c.name === card.occupation);
+  const cls = dndClassRule(card);
+  const background = dndBackground(card);
   const ancestry = dndAncestry(card);
   const toggle = (field: keyof Omit<DndAllocation, 'rule'>, key: string) =>
     set({
@@ -365,6 +369,7 @@ export function AllocationEditor({
     choices: string[],
     limit: number,
     helper?: string,
+    locked = false,
   ) => (
     <fieldset className="proficiency-group">
       <legend>
@@ -382,7 +387,7 @@ export function AllocationEditor({
               <input
                 type="checkbox"
                 checked={checked}
-                disabled={!checked && a[field].length >= limit}
+                disabled={locked || (!checked && a[field].length >= limit)}
                 onChange={() => toggle(field, key)}
               />
               <span>
@@ -420,9 +425,12 @@ export function AllocationEditor({
       {group(
         '背景技能',
         'backgroundSkills',
-        DND_SKILLS.map((s) => s.key),
+        background?.skills ?? DND_SKILLS.map((s) => s.key),
         2,
-        '按 SRD 自定义背景选择两项；背景故事由主持人审核。',
+        background
+          ? `${background.name}：固定背景技能。属性候选 ${background.abilities.map((key) => DND_ATTRIBUTES.find((attribute) => attribute.key === key)?.label).join('、')}；起源专长：${background.feat}。`
+          : '按自定义或经主持人批准的背景选择两项；背景故事由主持人审核。',
+        !!background,
       )}
       {ancestry.fixed.length > 0 && (
         <p className="helper-callout">
@@ -431,12 +439,7 @@ export function AllocationEditor({
         </p>
       )}
       {ancestry.choices > 0 &&
-        group(
-          '种族自选技能',
-          'ancestrySkills',
-          DND_SKILLS.map((s) => s.key),
-          ancestry.choices,
-        )}
+        group('种族自选技能', 'ancestrySkills', ancestry.skills, ancestry.choices)}
       {(replacementCount(card) > 0 || a.replacementSkills.length > 0) &&
         group(
           '重复来源的替代熟练',
@@ -463,9 +466,11 @@ export function AllocationEditor({
         group(
           '技能专精',
           'expertise',
-          DND_SKILLS.filter((s) => card.proficiencies.includes(`skill:${s.key}`)).map((s) => s.key),
+          expertiseOptions(card),
           expertiseLimit(card),
-          '熟练加值翻倍；工具专精可记在笔记中，因此无需用满技能名额。',
+          getDndEdition(card.dndEdition) === '2024'
+            ? '按本版职业选择足额的技能专精，熟练加值翻倍。'
+            : '熟练加值翻倍；工具专精可记在笔记中，因此无需用满技能名额。',
         )}
       <div className="derived-skills">
         {DND_SKILLS.map((s) => (

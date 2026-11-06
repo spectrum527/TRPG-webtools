@@ -6,6 +6,13 @@ import type { KeeperCard } from './keeper';
 import type { DndStatBlock } from './dnd';
 import type { EncounterAction, EncounterState } from './encounter';
 import type { CharacterAdjustmentEdit, CharacterAdjustments } from './adjustments';
+import type { DndEdition } from './dnd-edition';
+import type { DndMagicState } from './dnd-magic';
+import type { DndEquipmentState, DndItemDetails } from './dnd-equipment';
+import type { CharacterRuntimeAction } from './character-runtime';
+import type { EncounterPlan, PreparationAction } from './preparation';
+
+export type { DndEdition } from './dnd-edition';
 export type RuleId = 'dnd' | 'coc';
 export type RoomMode = 'in-room' | 'external';
 export type Role = 'host' | 'player';
@@ -17,11 +24,16 @@ export interface Item {
   name: string;
   quantity: number;
   notes: string;
+  equipment?: DndItemDetails;
 }
 export interface Character {
   schemaVersion: 1;
   id: string;
   rule: RuleId;
+  dndEdition?: DndEdition;
+  passivePerceptionEnabled?: boolean;
+  dndMagic?: DndMagicState;
+  dndEquipment?: DndEquipmentState;
   name: string;
   occupation: string;
   ancestry: string;
@@ -103,6 +115,8 @@ export interface RoomEvent {
   createdAt: string;
   visibility: Visibility;
   requestId?: string;
+  /** Server-only key for checking that a retried combat request has the same payload. */
+  combatRequestHash?: string;
   image?: ChatImage;
   scene?: { title: string; description: string };
   imageDescription?: { name: string; description: string };
@@ -117,6 +131,7 @@ export interface Room {
   code: string;
   name: string;
   rule: RuleId;
+  dndEdition?: DndEdition;
   hostId: string;
   mode: RoomMode;
   phase: 'lobby' | 'active';
@@ -138,6 +153,8 @@ export interface Room {
   keeperCards: KeeperCard[];
   dndCards: DndStatBlock[];
   encounter: EncounterState;
+  encounterPlans?: EncounterPlan[];
+  encounterPlanRevision?: number;
 }
 export interface Session {
   roomCode: string;
@@ -153,6 +170,7 @@ export interface CreateRoomInput {
   name: string;
   nickname: string;
   rule: RuleId;
+  dndEdition?: DndEdition;
   mode: RoomMode;
   configuration?: RoomConfig;
 }
@@ -161,9 +179,12 @@ export interface JoinRoomInput {
   code: string;
   nickname: string;
   rule: RuleId;
+  dndEdition?: DndEdition;
 }
 export type RoomAction =
   | EncounterAction
+  | CharacterRuntimeAction
+  | PreparationAction
   | { type: 'atlas-save'; atlases: Atlas[] }
   | { type: 'atlas-delete'; atlasId: string }
   | { type: 'atlas-publish'; atlasId: string; sceneId: string }
@@ -200,7 +221,6 @@ export type RoomAction =
   | { type: 'resource'; memberId: string; resource: 'hp' | 'mp' | 'san'; value: number }
   | { type: 'item-add'; memberId: string; item: Item }
   | { type: 'item-remove'; memberId: string; itemId: string }
-  | { type: 'initiative' }
   | { type: 'next-turn' }
   | { type: 'kick'; memberId: string }
   | { type: 'transfer-host'; memberId: string }

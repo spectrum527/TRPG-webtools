@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CreationPolicySchema } from './creation';
+import { DndEditionSchema } from './dnd-edition';
 import type { Room } from './types';
 import { parsePortable, portableMarkdown } from './portable';
 
@@ -15,12 +16,14 @@ export const RoomConfigSchema = z
     documentType: z.literal('interlude-room-config'),
     schemaVersion: z.literal(1),
     rule: z.enum(['coc', 'dnd']),
+    dndEdition: DndEditionSchema.optional(),
     name: z.string().trim().min(1).max(60),
     mode: z.enum(['in-room', 'external']),
     creationPolicy: CreationPolicySchema,
     scene: PublicSceneSchema,
   })
   .strict()
+  .refine((c) => c.rule === 'dnd' || c.dndEdition === undefined, '规则版次仅适用于 D&D')
   .refine((c) => c.rule === c.creationPolicy.rule, '制卡规则与房间规则不匹配');
 export type RoomConfig = z.infer<typeof RoomConfigSchema>;
 export function roomConfiguration(room: Room): RoomConfig {
@@ -28,6 +31,7 @@ export function roomConfiguration(room: Room): RoomConfig {
     documentType: 'interlude-room-config',
     schemaVersion: 1,
     rule: room.rule,
+    ...(room.dndEdition !== undefined ? { dndEdition: room.dndEdition } : {}),
     name: room.name,
     mode: room.mode,
     creationPolicy: room.creationPolicy,

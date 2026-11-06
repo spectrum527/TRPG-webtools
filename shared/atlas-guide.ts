@@ -60,7 +60,7 @@ export const ATLAS_EXTRACTION_PROMPT = `你是一名跑团剧本资料整理助�
 
 要求：
 1. 只输出一个 Markdown 文件，内含一个完整的 JSON 代码块，结构与后面的模板一致，不要在代码块中使用注释或省略号。
-2. documentType 固定为 "atlas-source"，schemaVersion 为 1；atlases 可以包含多本地图册。rule 只能是 "coc"、"dnd" 或 "any"，D&D 对应 5e（2014 / SRD 5.1），CoC 对应第 7 版；未指定规则用 "any"。
+2. documentType 固定为 "atlas-source"，schemaVersion 为 1；atlases 可以包含多本地图册。rule 只能是 "coc"、"dnd" 或 "any"，D&D 对应 5e（2014 / 2024，地图与场景不自动执行版次规则），CoC 对应第 7 版；未指定规则用 "any"。
 3. 每个地图使用唯一 key（1–80 位英文字母、数字、下划线或连字符）。地图的 description 提取地形、空间关系、出入口和路线，避免凭空编造比例、距离、机关或规则数值。地图是描述资料，不是战棋格网。
 4. scenes 可以有很多个。每个场景的 mapKey 引用同一本地图册中的地图 key；独立场景填 null。不要把整份剧本挤成一个场景；按地点或事件分成可供主持人逐次公布的场景。保持原剧情顺序，不要求固定数量。
 5. 地图 description 和场景 description 都是可公开的描述。隐藏线索、幕后真相、NPC 动机、机关触发条件、检定与后续分支只能写在 keeperNotes，绝不混入公开描述。未知信息用空字符串，不猜测。

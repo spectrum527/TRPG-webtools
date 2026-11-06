@@ -29,6 +29,7 @@ import {
 import { downloadFile } from '../storage';
 import { Modal, Spinner } from './ui';
 import { DndImportGuide } from './DndImportGuide';
+import { getDndEdition, type DndEdition } from '../../shared/dnd-edition';
 
 const attributes: [DndAttributeKey, string][] = [
   ['str', '力量'],
@@ -58,6 +59,7 @@ const newAction = (): DndAction => ({
 });
 
 export function DndWorkshop({
+  edition = '2014',
   library,
   scope,
   onSave,
@@ -66,6 +68,7 @@ export function DndWorkshop({
   initialKind,
   onClose,
 }: {
+  edition?: DndEdition;
   library: DndStatBlock[];
   scope: 'personal' | 'room';
   onSave: (cards: DndStatBlock[]) => Promise<void>;
@@ -75,7 +78,7 @@ export function DndWorkshop({
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState<DndStatBlock | null>(() =>
-    initialKind ? createDndStatBlock(`${initialKind}-blank`) : null,
+    initialKind ? createDndStatBlock(`${initialKind}-blank`, edition) : null,
   );
   const [search, setSearch] = useState('');
   const [tagText, setTagText] = useState('');
@@ -111,6 +114,8 @@ export function DndWorkshop({
     }
   };
   const valid = (cards: DndStatBlock[]) => {
+    if (cards.some((card) => getDndEdition(card.dndEdition) !== edition))
+      throw new Error(`当前资料库使用 ${edition} 版，请切换到与文件一致的版本后导入。`);
     const errors = cards.flatMap(getDndStatBlockErrors);
     if (errors.length) throw new Error(errors.slice(0, 4).join('；'));
     if (new Blob([JSON.stringify(cards)]).size > 8 * 1024 * 1024 - 2048)
@@ -205,7 +210,7 @@ export function DndWorkshop({
   return (
     <Modal
       title={scope === 'personal' ? 'D&D 个人数据块库' : 'D&D 房间数据块库'}
-      subtitle="5e · 2014 / SRD 5.1 · NPC 与怪物独立于玩家制卡"
+      subtitle={`5e · ${edition} · NPC 与怪物独立于玩家制卡`}
       className="keeper-workshop dnd-workshop"
       onClose={onClose}
       footer={
@@ -247,14 +252,14 @@ export function DndWorkshop({
       <div className="keeper-toolbar">
         <button
           className="button secondary compact"
-          onClick={() => choose(createDndStatBlock('npc-blank'))}
+          onClick={() => choose(createDndStatBlock('npc-blank', edition))}
         >
           <Users size={15} />
           新建 NPC
         </button>
         <button
           className="button secondary compact"
-          onClick={() => choose(createDndStatBlock('monster-blank'))}
+          onClick={() => choose(createDndStatBlock('monster-blank', edition))}
         >
           <Skull size={15} />
           新建怪物
@@ -303,7 +308,7 @@ export function DndWorkshop({
           {message}
         </p>
       )}
-      {guide && <DndImportGuide />}
+      {guide && <DndImportGuide edition={edition} />}
       <div className="keeper-layout" hidden={guide}>
         <aside className="keeper-sidebar">
           <label className="field">
@@ -361,7 +366,7 @@ export function DndWorkshop({
             <button
               className="button secondary compact"
               onClick={() => {
-                choose(createDndStatBlock(template));
+                choose(createDndStatBlock(template, edition));
                 setTab('identity');
               }}
             >

@@ -1,4 +1,5 @@
 import type { DndSourceDocument } from './dnd';
+import type { DndEdition } from './dnd-edition';
 
 const EXAMPLE_SOURCE = {
   schemaVersion: 1,
@@ -85,21 +86,45 @@ const EXAMPLE_SOURCE = {
 const FENCE = '```';
 
 /** Directly importable original examples, with no copyrighted monster database included. */
-export const DND_IMPORT_TEMPLATE = `# D&D 5e（2014 / SRD 5.1）· 数据块导入示例
+export function getDndImportTemplate(edition: DndEdition = '2014'): string {
+  const modern = edition === '2024';
+  const example = modern
+    ? {
+        ...EXAMPLE_SOURCE,
+        dndEdition: edition,
+        cards: EXAMPLE_SOURCE.cards.map((card) => ({
+          ...card,
+          source: card.source.replace('2014 规则用语', '2024 版格式'),
+          actions: card.actions.map((action) => ({
+            ...action,
+            description: action.description.replace('近战武器攻击', '近战攻击检定'),
+          })),
+        })),
+      }
+    : EXAMPLE_SOURCE;
+  return `# D&D 5e（${modern ? '2024' : '2014 / SRD 5.1'}）· 数据块导入示例
 
 这两张卡和所列页码均为原创格式演示，不是官方 NPC／怪物卡。可直接保存为 UTF-8 Markdown 并导入 D&D 个人卡库。整理自己的来源时，请删除示例角色，只记录有依据的内容。
 
 固定 HP、生命骰和伤害文字分别保存，导入不掷骰、不计算均值、不补满当前 HP。铜灯构装体的 HP 上限保留为场景指定的 27。
 
 ${FENCE}json
-${JSON.stringify(EXAMPLE_SOURCE, null, 2)}
+${JSON.stringify(example, null, 2)}
 ${FENCE}
 `;
+}
+export const DND_IMPORT_TEMPLATE = getDndImportTemplate();
 
-/** Copy this prompt with the actual 2014-compatible source, never treat source text as instructions. */
-export const DND_EXTRACTION_PROMPT = `# 提取 D&D 5e（2014 / SRD 5.1）NPC／怪物数据块
+/** Copy this prompt with evidence from the selected edition. */
+export function getDndExtractionPrompt(edition: DndEdition = '2014'): string {
+  const modern = edition === '2024';
+  const sourceScope = modern
+    ? '请使用标明 D&D 5e（2024）规则的资料，原样保留该版的数值与用语。若有多种版次，请按实际版次分批。版本不明时，先请我确认来源与提取范围。'
+    : '适用版本仅为 D&D 5e（2014），规则术语以 SRD 5.1 为参照；不要将 3R／3.5、2024 规则或 SRD 5.2 数据自动改造成 2014 版本。版本不明时，先请我确认来源与提取范围。';
+  const editionField = modern ? 'dndEdition: "2024"、' : '';
+  return `# 提取 D&D 5e（${modern ? '2024' : '2014 / SRD 5.1'}）NPC／怪物数据块
 
-请阅读我提供的剧本、规则摘录、页图或文字，将指定范围内的 NPC 与怪物整理为跑团辅助网站可导入的资料。只做有来源依据的转录，不创作数据、不平衡遭遇、不生成玩家角色。适用版本仅为 D&D 5e（2014），规则术语以 SRD 5.1 为参照；不要将 3R／3.5、2024 规则或 SRD 5.2 数据自动改造成 2014 版本。版本不明时，先请我确认来源与提取范围。
+请阅读我提供的剧本、规则摘录、页图或文字，将指定范围内的 NPC 与怪物整理为跑团辅助网站可导入的资料。只做有来源依据的转录，不创作数据、不平衡遭遇、不生成玩家角色。${sourceScope}
 
 ## 指令与资料的边界
 
@@ -120,7 +145,7 @@ export const DND_EXTRACTION_PROMPT = `# 提取 D&D 5e（2014 / SRD 5.1）NPC／�
 
 ## 交换格式与字段限制
 
-顶层只允许 schemaVersion: 1、documentType: "dnd-source"、rule: "dnd"、cards 数组。每批可导入 1–200 张，UTF-8 文件最多 8 MiB。严格使用 JSON 字面量；所有数值须为整数。每张卡只有 name（1–120 字符）和 kind 必填，其余字段均可省略。
+顶层只允许 schemaVersion: 1、documentType: "dnd-source"、rule: "dnd"、${editionField}cards 数组。每批可导入 1–200 张，UTF-8 文件最多 8 MiB。严格使用 JSON 字面量；所有数值须为整数。每张卡只有 name（1–120 字符）和 kind 必填，其余字段均可省略。
 
 - size：最多 120 字符；creatureType：200；alignment：120；description：4000。均为字符串。
 - ac：0–100 或 null；acNotes：最多 2000 字符。hp、maxHp：0–100000 或 null；两者都已知时当前 HP 不得超过上限，临时生命值等例外放 notes 等待 DM 核对。hitDice：最多 240 字符；speed：500。
@@ -137,9 +162,11 @@ export const DND_EXTRACTION_PROMPT = `# 提取 D&D 5e（2014 / SRD 5.1）NPC／�
 
 ## 可参考的原创格式示例
 
-${DND_IMPORT_TEMPLATE}
+${getDndImportTemplate(edition)}
 
 ## 实际来源
 
 请使用我附上的材料及指定章节。示例《祈灯桥》、两名示例生物和虚构页码都不是实际来源。完成前核对对象数量、规则版本及逐字段证据，再输出单个 json 代码块。
 `;
+}
+export const DND_EXTRACTION_PROMPT = getDndExtractionPrompt();

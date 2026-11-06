@@ -31,6 +31,13 @@ import { abilityModifier, proficiencyBonus } from '../../shared/rules';
 import { effectiveCharacter } from '../../shared/adjustments';
 import { DndBlockPreview } from './DndWorkshop';
 import { Spinner } from './ui';
+import {
+  InitiativeCheck,
+  AutoDamageSetting,
+  TargetedDamage,
+  CombatCommandStatus,
+  useEncounterCommand,
+} from './CombatActions';
 
 type Run = (action: RoomAction) => Promise<boolean>;
 const nullable = (value: string) => (value === '' ? null : Number(value));
@@ -74,11 +81,13 @@ const editable = [
 export default function EncounterPanel({
   room,
   isHost,
+  memberId,
   run,
   onOpenLibrary,
 }: {
   room: Room;
   isHost: boolean;
+  memberId?: string;
   run: Run;
   onOpenLibrary?: () => void;
 }) {
@@ -123,7 +132,13 @@ export default function EncounterPanel({
             <button
               className="button secondary compact"
               disabled={busy || room.phase !== 'active' || !state.participants.length}
-              onClick={() => void perform({ type: 'initiative' })}
+              onClick={() =>
+                void perform({
+                  type: 'initiative',
+                  expectedRevision: state.revision,
+                  fillMissing: true,
+                })
+              }
             >
               <RefreshCw size={15} />
               {state.round ? '重新排定' : '生成顺序'}
@@ -143,9 +158,10 @@ export default function EncounterPanel({
         <>
           <p className="subtle-note">
             {room.rule === 'dnd'
-              ? '以 D20＋敏捷调整值排定；同值按列表顺序，可手填行动值调整。'
+              ? '先为角色掷先攻；排定时保留已有骰点、补掷尚未投掷者。同值按列表顺序，可手填行动值调整。'
               : '按 DEX 排定；已准备好的枪械可加 50。'}
-            重新排定会回到第 1 轮。{room.phase !== 'active' && '开启故事后可生成顺序。'}
+            {room.rule === 'coc' ? '重新排定会回到第 1 轮。' : '重排会保留当前轮次。'}
+            {room.phase !== 'active' && '开启故事后可生成顺序。'}
           </p>
           <div className="encounter-add">
             {cards.length ? (
@@ -202,6 +218,7 @@ export default function EncounterPanel({
           </div>
         </>
       )}
+      {isHost && <AutoDamageSetting room={room} run={run} />}
       <div className="encounter-layout">
         <div className="encounter-roster" aria-label="参战者列表">
           {!state.participants.length && (
@@ -220,7 +237,14 @@ export default function EncounterPanel({
               className={`encounter-row ${selected === c.id ? 'selected' : ''} ${state.activeId === c.id ? 'current' : ''}`}
               onClick={() => setSelected(c.id)}
             >
-              <span className="encounter-order">{c.initiative ?? '—'}</span>
+              <span className="encounter-order">
+                {c.initiative ??
+                  (c.initiativeRoll
+                    ? c.initiativeRoll.selected +
+                      c.initiativeRoll.dexModifier +
+                      c.initiativeRoll.bonus
+                    : '—')}
+              </span>
               <span className="encounter-row-name">
                 <b>{isHost ? c.name : c.publicName}</b>
                 <small>
@@ -244,20 +268,38 @@ export default function EncounterPanel({
         <div className="encounter-detail">
           {current ? (
             isHost ? (
-              <CombatantEditor
-                key={current.id}
-                combatant={current}
-                room={room}
-                run={run}
-                onSave={save}
-                onRemove={() => perform({ type: 'encounter-remove', combatantId: current.id })}
-              />
+              <>
+                {room.rule === 'dnd' && current.kind !== 'player' && (
+                  <CompanionControl room={room} combatant={current} isHost run={run} />
+                )}
+                <InitiativeCheck
+                  key={`initiative-${current.id}`}
+                  room={room}
+                  combatant={current}
+                  isHost
+                  run={run}
+                />
+                <TargetedDamage
+                  key={`damage-${current.id}`}
+                  room={room}
+                  actor={current}
+                  run={run}
+                />
+                <CombatantEditor
+                  key={current.id}
+                  combatant={current}
+                  room={room}
+                  run={run}
+                  onSave={save}
+                  onRemove={() => perform({ type: 'encounter-remove', combatantId: current.id })}
+                />
+              </>
             ) : (
               <div className="encounter-public">
                 <h3>{current.publicName}</h3>
                 <p>
                   行动值 {current.initiative ?? '待排定'}
-                  {current.kind === 'player' &&
+                  {(current.kind === 'player' || current.ownerMemberId === memberId) &&
                     ` · HP ${current.hp ?? '—'} / ${current.maxHp ?? '—'}`}
                 </p>
                 <div className="encounter-tags">
@@ -286,6 +328,18 @@ export default function EncounterPanel({
                       {current.dying && <span>濒死</span>}
                     </div>
                   ))}
+                {current.ownerMemberId && (
+                  <p className="subtle-note">
+                    伙伴归属：
+                    {room.members.find((m) => m.id === current.ownerMemberId)?.name ?? '未知'}
+                  </p>
+                )}
+                {current.ownerMemberId === memberId && current.revealed && (
+                  <>
+                    <CompanionControl room={room} combatant={current} isHost={false} run={run} />
+                    <InitiativeCheck room={room} combatant={current} isHost={false} run={run} />
+                  </>
+                )}
                 {current.kind !== 'player' && <p className="subtle-note">详细资料由主持人掌握。</p>}
               </div>
             )
@@ -297,6 +351,15 @@ export default function EncounterPanel({
           )}
         </div>
       </div>
+      {!isHost && room.rule === 'dnd' && (
+        <InitiativeCheck
+          key={memberId}
+          room={room}
+          combatant={state.participants.find((entry) => entry.memberId === memberId)}
+          isHost={false}
+          run={run}
+        />
+      )}
       {isHost && room.rule === 'coc' && <CocMelee room={room} run={run} />}
       {isHost && state.participants.length > 0 && (
         <div className="encounter-reset">
@@ -947,7 +1010,9 @@ function CombatantRolls({
       ? deathSaveSuggestion(result.event.roll.total)
       : null;
   const dc =
-    Number.isInteger(damage) && damage >= 0 && damage <= 100000 ? concentrationDC(damage) : null;
+    Number.isInteger(damage) && damage >= 0 && damage <= 100000
+      ? concentrationDC(damage, room.dndEdition)
+      : null;
   const locked = !!pending || applying;
   return (
     <section className="combatant-rolls">
@@ -1062,7 +1127,9 @@ function CombatantRolls({
               </label>
             </div>
             <div className="combatant-inline">
-              <span>DC {dc ?? '—'} · 10 与伤害一半取高</span>
+              <span>
+                DC {dc ?? '—'} · 10 与伤害一半取高{room.dndEdition === '2024' ? '，上限 30' : ''}
+              </span>
               <button
                 className="text-button"
                 disabled={
@@ -1206,6 +1273,13 @@ function CombatantRolls({
 }
 
 function CocMelee({ room, run }: { room: Room; run: Run }) {
+  const command = useEncounterCommand(room, run);
+  const autoDamage = room.encounter.autoDamage ?? false;
+  const [attackDamage, setAttackDamage] = useState('');
+  const [extremeDamage, setExtremeDamage] = useState('');
+  const [fightBackDamage, setFightBackDamage] = useState('');
+  const [attackArmor, setAttackArmor] = useState('');
+  const [fightBackArmor, setFightBackArmor] = useState('');
   const participants = room.encounter.participants;
   const [attackId, setAttackId] = useState('');
   const [defenseId, setDefenseId] = useState('');
@@ -1218,9 +1292,11 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
   const [busy, setBusy] = useState(false);
   const attack = participants.find((c) => c.id === attackId),
     defend = participants.find((c) => c.id === defenseId);
-  const latest = [...room.log]
-    .reverse()
-    .find((e) => e.type === 'system' && e.content.includes('（不自动扣除 HP）'));
+  const latest =
+    command.event ??
+    [...room.log]
+      .reverse()
+      .find((e) => e.type === 'system' && e.content.includes('（不自动扣除 HP）'));
   const personSkill = (id: string, side: 'attack' | 'defense', response = defense) => {
     const c = participants.find((p) => p.id === id);
     const rawPc = room.members.find((m) => m.id === c?.memberId)?.character;
@@ -1242,15 +1318,24 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
     if (side === 'attack') {
       setAttackId(id);
       setAttackOverride(null);
+      const actor = participants.find((entry) => entry.id === id);
+      setAttackDamage(actor?.source?.rule === 'coc' ? (actor.source.attacks[0]?.damage ?? '') : '');
+      setExtremeDamage('');
+      setFightBackArmor('');
     } else {
       setDefenseId(id);
       setDefenseOverride(null);
+      const actor = participants.find((entry) => entry.id === id);
+      setFightBackDamage(
+        actor?.source?.rule === 'coc' ? (actor.source.attacks[0]?.damage ?? '') : '',
+      );
+      setAttackArmor('');
     }
   };
   const edgeSelect = (label: string, value: Edge, set: (value: Edge) => void) => (
     <label className="field">
       {label}
-      <select value={value} onChange={(e) => set(e.target.value as Edge)}>
+      <select aria-label={label} value={value} onChange={(e) => set(e.target.value as Edge)}>
         <option value="normal">普通骰</option>
         <option value="advantage">一颗奖励骰</option>
         <option value="disadvantage">一颗惩罚骰</option>
@@ -1268,7 +1353,11 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
         <div>
           <label className="field">
             进攻者
-            <select value={attackId} onChange={(e) => usePerson(e.target.value, 'attack')}>
+            <select
+              aria-label="进攻者"
+              value={attackId}
+              onChange={(e) => usePerson(e.target.value, 'attack')}
+            >
               <option value="">手填进攻技能</option>
               {participants.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -1299,7 +1388,11 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
         <div>
           <label className="field">
             防守者
-            <select value={defenseId} onChange={(e) => usePerson(e.target.value, 'defense')}>
+            <select
+              aria-label="防守者"
+              value={defenseId}
+              onChange={(e) => usePerson(e.target.value, 'defense')}
+            >
               <option value="">手填防守技能</option>
               {participants.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -1346,6 +1439,75 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
         技能栏可按武器专长修正；奖励／惩罚骰由 KP
         根据以多打少等情境指定。本工具用于近战，枪械攻击请用火器检定。
       </p>
+      {autoDamage && (
+        <div className="coc-auto-damage-fields">
+          <h4>命中后自动扣血</h4>
+          <div className="combat-action-grid">
+            <label className="field">
+              进攻方普通伤害
+              <input
+                aria-label="进攻方普通伤害"
+                value={attackDamage}
+                maxLength={120}
+                onChange={(event) => setAttackDamage(event.target.value)}
+                placeholder="完整骰式，含伤害加值"
+              />
+            </label>
+            <label className="field">
+              极难命中伤害
+              <input
+                aria-label="极难命中伤害"
+                value={extremeDamage}
+                maxLength={120}
+                onChange={(event) => setExtremeDamage(event.target.value)}
+                placeholder="按武器最大伤害／贯穿规则填写"
+              />
+            </label>
+            <label className="field">
+              防守者护甲覆盖
+              <input
+                aria-label="防守者护甲覆盖"
+                type="number"
+                min={0}
+                max={100000}
+                value={attackArmor}
+                onChange={(event) => setAttackArmor(event.target.value)}
+                placeholder="留空采用资料；玩家默认为 0"
+              />
+            </label>
+            {defense === 'fight-back' && (
+              <>
+                <label className="field">
+                  反击普通伤害
+                  <input
+                    aria-label="反击普通伤害"
+                    value={fightBackDamage}
+                    maxLength={120}
+                    onChange={(event) => setFightBackDamage(event.target.value)}
+                    placeholder="反击成功时扣进攻方 HP"
+                  />
+                </label>
+                <label className="field">
+                  进攻者护甲覆盖
+                  <input
+                    aria-label="进攻者护甲覆盖"
+                    type="number"
+                    min={0}
+                    max={100000}
+                    value={fightBackArmor}
+                    onChange={(event) => setFightBackArmor(event.target.value)}
+                    placeholder="留空采用资料；玩家默认为 0"
+                  />
+                </label>
+              </>
+            )}
+          </div>
+          <p className="subtle-note">
+            必须选择两名不同参战者。极难伤害未填写、或目标护甲未知时，保留骰点并暂停扣血，待 KP
+            核对后用直接伤害结算；反击只用普通伤害。
+          </p>
+        </div>
+      )}
       <div className="combatant-inline">
         <select
           aria-label="近战对抗可见范围"
@@ -1357,12 +1519,24 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
         </select>
         <button
           className="button primary compact"
-          disabled={busy || attackSkill === null || defenseSkill === null}
+          disabled={
+            busy ||
+            command.busy ||
+            !!command.retry ||
+            attackSkill === null ||
+            defenseSkill === null ||
+            (autoDamage &&
+              (!attack ||
+                !defend ||
+                attackId === defenseId ||
+                !attackDamage.trim() ||
+                (defense === 'fight-back' && !fightBackDamage.trim())))
+          }
           onClick={async () => {
             if (attackSkill === null || defenseSkill === null) return;
             setBusy(true);
             try {
-              await run({
+              await command.execute({
                 type: 'coc-melee',
                 attacker: attack?.publicName ?? '进攻方',
                 defender: defend?.publicName ?? '防守方',
@@ -1372,20 +1546,130 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
                 attackEdge,
                 defenseEdge,
                 visibility,
+                ...(autoDamage && attack && defend
+                  ? {
+                      damage: {
+                        attackerId: attack.id,
+                        defenderId: defend.id,
+                        attackExpression: attackDamage,
+                        ...(extremeDamage.trim() ? { attackExtremeExpression: extremeDamage } : {}),
+                        ...(fightBackDamage.trim() ? { fightBackExpression: fightBackDamage } : {}),
+                        ...(attackArmor !== '' ? { attackArmorOverride: Number(attackArmor) } : {}),
+                        ...(fightBackArmor !== ''
+                          ? { fightBackArmorOverride: Number(fightBackArmor) }
+                          : {}),
+                        expectedRevision: room.encounter.revision,
+                        requestId: crypto.randomUUID(),
+                      },
+                    }
+                  : {}),
               });
             } finally {
               setBusy(false);
             }
           }}
         >
-          {busy ? <Spinner /> : <Dices size={16} />}掷骰并比较
+          {busy ? <Spinner /> : <Dices size={16} />}
+          {autoDamage ? '掷骰并结算' : '掷骰并比较'}
         </button>
       </div>
+      {command.retry && <CombatCommandStatus command={command} />}
       {latest && (
         <div className="coc-melee-result" aria-live="polite">
           {latest.visibility === 'host' && <EyeOff size={15} />}
           {latest.content}
         </div>
+      )}
+    </section>
+  );
+}
+
+function CompanionControl({
+  room,
+  combatant,
+  isHost,
+  run,
+}: {
+  room: Room;
+  combatant: Combatant;
+  isHost: boolean;
+  run: Run;
+}) {
+  const command = useEncounterCommand(room, run),
+    [assigning, setAssigning] = useState(false);
+  return (
+    <section className="companion-control" aria-label="伙伴管理">
+      {isHost ? (
+        <>
+          <label className="field">
+            伙伴归属
+            <select
+              aria-label="伙伴归属"
+              value={combatant.ownerMemberId ?? ''}
+              disabled={assigning}
+              onChange={async (e) => {
+                setAssigning(true);
+                try {
+                  await run({
+                    type: 'encounter-companion',
+                    combatantId: combatant.id,
+                    ownerMemberId: e.target.value || null,
+                    expectedRevision: room.encounter.revision,
+                  });
+                } finally {
+                  setAssigning(false);
+                }
+              }}
+            >
+              <option value="">由主持人控制</option>
+              {room.members
+                .filter((m) => m.role === 'player')
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.character?.name || m.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <p className="subtle-note">
+            公开后，所属玩家可记录伙伴生命与先攻。模板、私密笔记仍由主持人掌握。清空本场会移除该伙伴个体。
+          </p>
+        </>
+      ) : (
+        <>
+          <b>
+            我的伙伴 · HP {combatant.hp ?? '未知'} / {combatant.maxHp ?? '未知'}
+          </b>
+          <div className="prep-action-row">
+            {[-5, -1, 1, 5].map((delta) => (
+              <button
+                className="button secondary compact"
+                key={delta}
+                disabled={
+                  command.busy ||
+                  !!command.retry ||
+                  room.phase !== 'active' ||
+                  combatant.hp === null ||
+                  combatant.maxHp === null ||
+                  (delta < 0 ? combatant.hp === 0 : combatant.hp === combatant.maxHp)
+                }
+                onClick={() =>
+                  void command.execute({
+                    type: 'encounter-companion-hp',
+                    combatantId: combatant.id,
+                    hp: Math.min(combatant.maxHp ?? 0, Math.max(0, (combatant.hp ?? 0) + delta)),
+                    expectedRevision: room.encounter.revision,
+                    requestId: crypto.randomUUID(),
+                  })
+                }
+              >
+                {delta > 0 ? '+' : ''}
+                {delta} HP
+              </button>
+            ))}
+          </div>
+          <CombatCommandStatus command={command} />
+        </>
       )}
     </section>
   );
