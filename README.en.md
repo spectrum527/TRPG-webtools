@@ -190,7 +190,7 @@ docs/      Guides, rules, templates, README images
 ## Contributors
 
 - Alex Xiao
-- Codex (OpenAI, AI contributor)
+- [Codex](https://github.com/codex) (OpenAI, AI contributor)
 
 ## Vibe Coding disclosure
 
