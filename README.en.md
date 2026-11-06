@@ -6,7 +6,7 @@
 
 # Interlude
 
-Interlude is a web app for running tabletop RPG sessions with friends in the browser. You host it on your own server. It supports **D&D 5e (2014 / SRD 5.1)** and **Call of Cthulhu 7th Edition**.
+Interlude is a web app for running tabletop RPG sessions with friends in the browser. You host it on your own server. It supports **D&D 5e (2014 / 2024)** and **Call of Cthulhu 7th Edition**.
 
 The host (DM or Keeper) uses it to prepare sessions and review characters. Players use it to build characters, roll dice and post in the shared chat. If you don't finish in one sitting, export an archive and pick up from there next time. Interlude keeps the records and does the arithmetic. Rulings and the direction of the story are still up to the table.
 
@@ -27,12 +27,18 @@ The app interface is in Chinese. This README covers setup and the main workflow 
 - Players generate attributes, allocate skill points or choose proficiencies, then submit the character to the host for review.
 - The host can set creation limits first, such as attribute caps. Characters that don't meet the current limits block the session from starting.
 
+- D&D characters can prepare edition-specific spells and track slots, class resources, worn equipment, AC, weapon attacks and carried weight. Additional grants and item bonuses are visible during host review.
+- Hosts can prepare reusable encounter plans with waves, rewards and private notes before joining a room.
+
 **During play**
 
 - The server rolls the dice, so players can't tamper with results. You get custom dice expressions and D&D advantage/disadvantage, plus CoC bonus/penalty dice and sanity checks. The host can roll in secret.
 - Post text and images, and the host can publish a scene for everyone to see. There's an immersive view, a dark theme and a mobile layout.
+- Roll D&D initiative per participant, including bonuses, advantage/disadvantage and edition-specific surprise. The host can enable automatic HP deductions for targeted attacks and damage, including temporary HP, selected resistance/vulnerability and CoC armor.
 - Combat has a turn order. Several copies of the same NPC can be tracked as separate individuals with their own HP. Resources and inventory are tracked too, and the host can apply permanent adjustments or temporary effects mid-session.
 - If your group roleplays elsewhere (another chat app, or in person), you can use Interlude just for dice and bookkeeping.
+
+- Character preparation supports casting, resource spending and confirmed rests. The host can rest selected party members together and assign revealed familiars or summons to their owners. See the [character and host preparation guide](docs/CHARACTER-PREPARATION.md).
 
 **Pausing and resuming**
 
@@ -41,12 +47,14 @@ The app interface is in Chinese. This README covers setup and the main workflow 
 
 ### What it doesn't do yet
 
-- D&D covers the 12 SRD 5.1 classes. CoC covers 11 occupations, with occupation and personal-interest skill points.
-- Spells, equipment effects and leveling up need to be checked by hand.
-- A hit doesn't subtract HP automatically, and temporary effects don't expire on their own; the host turns them off.
+- D&D supports basic character creation for the 12 classes in each edition, with edition-specific skill, background and expertise rules. CoC covers 11 occupations, with occupation and personal-interest skill points.
+- Spell effects, special item effects, leveling and multiclass builds still need human adjudication.
+- Complex spell and feat effects remain manual, and temporary effects don't expire on their own; the host turns them off.
 - The atlas stores written descriptions of places and scenes. It doesn't draw battle maps.
 
 See [rules and formats](docs/RULES.md) and [combat tools](docs/COMBAT.md) for details.
+
+The D&D preparation tools include separate spell and feat catalogs for each edition, with search, personal collections and JSON/Markdown import/export. Core sources are shown by default; expansion sources are selected separately. Enable passive Perception in the character attribute panel to display its derived score. See [edition notes](docs/DND-EDITIONS.md) and [spell and feat collections](docs/DND-REFERENCES.md).
 
 ## Try it locally
 
@@ -62,7 +70,7 @@ Open <http://127.0.0.1:5173>. This starts the frontend (Vite) and the room serve
 
 A typical session goes like this.
 
-1. Pick a ruleset and create a room. Everyone else picks the same ruleset and enters the room code.
+1. Pick a ruleset and create a room. The D&D homepage artwork has a 2014/2024 selector. Rooms, characters and imported files use the same edition; everyone joins with that ruleset and edition.
 2. The host sets the character creation rules. Players create or import a character, allocate skills or choose proficiencies according to the room rules, and submit it for review.
 3. The host can start once three things are true. There's at least one player; everyone is online and has clicked Ready; every player's character has been approved under the current rules.
 4. Use the in-session tools to roll, post scenes and track status. Export an archive before you stop so you can resume next time.

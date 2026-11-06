@@ -156,6 +156,6 @@ export function Modal({
   );
 }
 export const ruleName = (rule: 'dnd' | 'coc') => (rule === 'dnd' ? '龙与地下城' : '克苏鲁的呼唤');
-export const ruleEdition = (rule: 'dnd' | 'coc') =>
-  rule === 'dnd' ? 'D&D 5e · 2014' : 'CoC · 第 7 版';
+export const ruleEdition = (rule: 'dnd' | 'coc', edition: '2014' | '2024' = '2014') =>
+  rule === 'dnd' ? `D&D 5e · ${edition}` : 'CoC · 第 7 版';
 export const hostName = (rule: 'dnd' | 'coc') => (rule === 'dnd' ? '地下城主 DM' : '守密人 KP');

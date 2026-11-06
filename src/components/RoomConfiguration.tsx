@@ -11,6 +11,7 @@ import {
 import { policyFields } from '../../shared/creation';
 import { downloadFile } from '../storage';
 import { Modal, Spinner, ruleEdition } from './ui';
+import { getDndEdition } from '../../shared/dnd-edition';
 
 export function ConfigurationSummary({ value }: { value: RoomConfig }) {
   const p = value.creationPolicy;
@@ -21,7 +22,7 @@ export function ConfigurationSummary({ value }: { value: RoomConfig }) {
         <dt>房间名称</dt>
         <dd>{value.name}</dd>
         <dt>规则</dt>
-        <dd>{ruleEdition(value.rule)}</dd>
+        <dd>{ruleEdition(value.rule, value.dndEdition)}</dd>
         <dt>演绎方式</dt>
         <dd>{value.mode === 'in-room' ? '房内演绎' : '外部演绎'}</dd>
         {value.rule === 'coc' ? (
@@ -94,6 +95,11 @@ export function RoomConfiguration({
       const parsed = parseRoomConfig(await picked.text());
       if (parsed.rule !== room.rule)
         throw new Error('配置规则与当前房间不匹配，请在相同规则的房间中导入。');
+      if (
+        room.rule === 'dnd' &&
+        getDndEdition(parsed.dndEdition) !== getDndEdition(room.dndEdition)
+      )
+        throw new Error(`配置使用 D&D ${getDndEdition(parsed.dndEdition)}，与当前房间版本不一致。`);
       setIncoming(parsed);
       setRevision(room.configRevision);
       setError('');

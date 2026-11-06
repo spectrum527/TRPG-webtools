@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import type { Character, RuleId } from './types';
-import { COC_ATTRIBUTES, COC_SKILLS, DND_ATTRIBUTES, DND_SKILLS } from './catalog';
+import {
+  COC_ATTRIBUTES,
+  COC_SKILLS,
+  DND_ATTRIBUTES,
+  DND_SKILLS,
+  DND_2024_BACKGROUNDS,
+} from './catalog';
+import { getDndEdition } from './dnd-edition';
 
 const keys = (value: string) => value.split(' ');
 const allDnd = DND_SKILLS.map((s) => s.key);
@@ -83,6 +90,38 @@ export const DND_CLASS_RULES = [
     saves: ['int', 'wis'],
   },
 ];
+// Only the changed skill lists are overridden. The source's 2024 Warlock name
+// is displayed separately from the 2014 identifier already stored in cards.
+const dnd2024ClassSkills: Record<string, string[]> = {
+  战士: keys(
+    'acrobatics animalHandling athletics history insight intimidation persuasion perception survival',
+  ),
+  游荡者: keys(
+    'acrobatics athletics deception insight intimidation investigation perception persuasion sleightOfHand stealth',
+  ),
+  法师: keys('arcana history insight investigation medicine nature religion'),
+};
+
+export function dndClassRule(card: Character) {
+  const modern = getDndEdition(card.dndEdition) === '2024';
+  const name = modern && card.occupation === '魔契师' ? '邪术师' : card.occupation;
+  const base = DND_CLASS_RULES.find((entry) => entry.name === name);
+  if (!modern || !base) return base;
+  return {
+    ...base,
+    name: name === '邪术师' ? '魔契师' : name,
+    // Primal Knowledge grants one more choice from the Barbarian skill list at level 3.
+    count: name === '野蛮人' && card.level >= 3 ? base.count + 1 : base.count,
+    skills: dnd2024ClassSkills[name] ?? base.skills,
+  };
+}
+
+export function dndBackground(card: Character) {
+  return getDndEdition(card.dndEdition) === '2024'
+    ? DND_2024_BACKGROUNDS.find((entry) => entry.name === card.background.trim())
+    : undefined;
+}
+
 export interface OccupationProfile {
   name: string;
   credit: [number, number];
@@ -429,19 +468,37 @@ export function cocBudget(card: Character) {
     spentPersonal: Object.values(allocation?.personal ?? {}).reduce((a, b) => a + b, 0),
   };
 }
-export function dndAncestry(card: Character) {
+export function dndAncestry(card: Character): {
+  fixed: string[];
+  choices: number;
+  skills: string[];
+} {
+  if (getDndEdition(card.dndEdition) === '2024') {
+    if (card.ancestry.trim() === '精灵')
+      return { fixed: [], choices: 1, skills: ['insight', 'perception', 'survival'] };
+    if (card.ancestry.trim() === '人类') return { fixed: [], choices: 1, skills: allDnd };
+    return { fixed: [], choices: 0, skills: [] };
+  }
   return card.ancestry === '精灵'
-    ? { fixed: ['perception'], choices: 0 }
+    ? { fixed: ['perception'], choices: 0, skills: [] }
     : card.ancestry === '半兽人'
-      ? { fixed: ['intimidation'], choices: 0 }
-      : { fixed: [], choices: card.ancestry === '半精灵' ? 2 : 0 };
+      ? { fixed: ['intimidation'], choices: 0, skills: [] }
+      : card.ancestry === '半精灵'
+        ? { fixed: [], choices: 2, skills: allDnd }
+        : { fixed: [], choices: 0, skills: [] };
 }
 export function dndSaves(card: Character) {
-  const base = DND_CLASS_RULES.find((c) => c.name === card.occupation)?.saves ?? [];
+  const base = dndClassRule(card)?.saves ?? [];
   if (card.occupation === '武僧' && card.level >= 14) return DND_ATTRIBUTES.map((a) => a.key);
-  return card.occupation === '游荡者' && card.level >= 15 ? [...base, 'wis'] : base;
+  if (card.occupation !== '游荡者' || card.level < 15) return base;
+  return getDndEdition(card.dndEdition) === '2024' ? [...base, 'wis', 'cha'] : [...base, 'wis'];
 }
 export function expertiseLimit(card: Character) {
+  if (getDndEdition(card.dndEdition) === '2024') {
+    if (card.occupation === '吟游诗人') return card.level >= 9 ? 4 : card.level >= 2 ? 2 : 0;
+    if (card.occupation === '游侠') return card.level >= 9 ? 3 : card.level >= 2 ? 1 : 0;
+    if (card.occupation === '法师') return card.level >= 2 ? 1 : 0;
+  }
   return card.occupation === '游荡者'
     ? card.level >= 6
       ? 4
@@ -451,6 +508,13 @@ export function expertiseLimit(card: Character) {
         ? 4
         : 2
       : 0;
+}
+export function expertiseOptions(card: Character): string[] {
+  const skills =
+    getDndEdition(card.dndEdition) === '2024' && card.occupation === '法师'
+      ? ['arcana', 'history', 'nature', 'religion']
+      : allDnd;
+  return skills.filter((skill) => card.proficiencies.includes(`skill:${skill}`));
 }
 export function dndSkillModifier(card: Character, key: string) {
   const skill = DND_SKILLS.find((s) => s.key === key);
@@ -469,15 +533,17 @@ export function dndSkillModifier(card: Character, key: string) {
           : 0)
   );
 }
-export function replacementCount(card: Character) {
-  if (card.creation?.rule !== 'dnd') return 0;
-  const a = card.creation;
-  const sources = [
-    ...a.classSkills,
-    ...a.backgroundSkills,
+function sourcedDndSkills(card: Character, allocation: DndAllocation): string[] {
+  return [
+    ...allocation.classSkills,
+    ...(dndBackground(card)?.skills ?? allocation.backgroundSkills),
     ...dndAncestry(card).fixed,
-    ...a.ancestrySkills,
+    ...allocation.ancestrySkills,
   ];
+}
+export function replacementCount(card: Character) {
+  if (card.creation?.rule !== 'dnd' || getDndEdition(card.dndEdition) === '2024') return 0;
+  const sources = sourcedDndSkills(card, card.creation);
   return sources.length - new Set(sources).size;
 }
 /** Only called by explicit editor changes, never on imported/untrusted server data. */
@@ -495,20 +561,20 @@ export function syncAllocation(card: Character): Character {
         ]),
       ),
     };
+  const background = dndBackground(card);
   const proficiencies = [
     ...new Set([
-      ...[
-        ...a.classSkills,
-        ...a.backgroundSkills,
-        ...dndAncestry(card).fixed,
-        ...a.ancestrySkills,
-        ...a.replacementSkills,
-        ...a.extraSkills,
-      ].map((s) => `skill:${s}`),
+      ...[...sourcedDndSkills(card, a), ...a.replacementSkills, ...a.extraSkills].map(
+        (s) => `skill:${s}`,
+      ),
       ...[...dndSaves(card), ...a.extraSaves].map((s) => `save:${s}`),
     ]),
   ];
-  const updated = { ...card, proficiencies };
+  const updated = {
+    ...card,
+    ...(background ? { creation: { ...a, backgroundSkills: [...background.skills] } } : {}),
+    proficiencies,
+  };
   return {
     ...updated,
     skills: Object.fromEntries(DND_SKILLS.map((s) => [s.key, dndSkillModifier(updated, s.key)])),
@@ -589,18 +655,33 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
     )
       errors.push('HP／MP／SAN 上限与属性及克苏鲁神话不一致');
   } else {
-    const cls = DND_CLASS_RULES.find((c) => c.name === card.occupation);
-    if (!cls) errors.push('请选择 SRD 5.1 支持的职业');
+    const modern = getDndEdition(card.dndEdition) === '2024';
+    const cls = dndClassRule(card);
+    const background = dndBackground(card);
+    const ancestry = dndAncestry(card);
+    if (!cls) errors.push(modern ? '请选择 2024 规则支持的职业' : '请选择 SRD 5.1 支持的职业');
     else if (
       a.classSkills.length !== cls.count ||
       a.classSkills.some((s) => !cls.skills.includes(s))
     )
       errors.push(`${cls.name}须从职业范围选择 ${cls.count} 项技能`);
-    if (a.backgroundSkills.length !== 2) errors.push('背景须选择 2 项技能熟练');
-    if (a.ancestrySkills.length !== dndAncestry(card).choices)
-      errors.push(`当前种族须自选 ${dndAncestry(card).choices} 项额外技能`);
-    if (a.replacementSkills.length !== replacementCount(card))
-      errors.push(`重复来源须补选 ${replacementCount(card)} 项替代熟练`);
+    if (modern && !card.background.trim()) errors.push('请填写 2024 角色背景');
+    if (background) {
+      if (
+        a.backgroundSkills.length !== background.skills.length ||
+        background.skills.some((skill) => !a.backgroundSkills.includes(skill))
+      )
+        errors.push(`${background.name}的技能熟练由 2024 背景固定授予`);
+    } else if (a.backgroundSkills.length !== 2) errors.push('背景须选择 2 项技能熟练');
+    if (a.ancestrySkills.length !== ancestry.choices)
+      errors.push(`当前种族须自选 ${ancestry.choices} 项额外技能`);
+    else if (a.ancestrySkills.some((skill) => !ancestry.skills.includes(skill)))
+      errors.push('种族自选技能须符合当前种族的选择范围');
+    const replacements = replacementCount(card);
+    if (a.replacementSkills.length !== replacements)
+      errors.push(
+        modern ? '2024 制卡不使用旧版替代熟练名额' : `重复来源须补选 ${replacements} 项替代熟练`,
+      );
     if (a.extraSkills.length > policy.dndExtraSkills) errors.push('额外技能熟练超出主持人给定名额');
     if (
       a.extraSaves.length > policy.dndExtraSaves ||
@@ -621,20 +702,19 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
       if (values.some((s) => !allDnd.includes(s))) errors.push(`${label}包含未支持的技能`);
     }
     duplicate(a.extraSaves, '额外豁免');
-    const sourced = [
-      ...new Set([
-        ...a.classSkills,
-        ...a.backgroundSkills,
-        ...dndAncestry(card).fixed,
-        ...a.ancestrySkills,
-      ]),
-    ];
+    const sourced = [...new Set(sourcedDndSkills(card, a))];
     duplicate([...sourced, ...a.replacementSkills, ...a.extraSkills], '补选和额外技能');
+    const expertise = expertiseLimit(card);
+    const options = expertiseOptions(card);
     if (
-      a.expertise.length > expertiseLimit(card) ||
-      a.expertise.some((s) => !card.proficiencies.includes(`skill:${s}`))
+      (modern ? a.expertise.length !== expertise : a.expertise.length > expertise) ||
+      a.expertise.some((s) => !options.includes(s))
     )
-      errors.push('专精须选择已熟练技能，且不能超过当前职业等级的名额');
+      errors.push(
+        modern
+          ? `专精须从当前职业允许的已熟练技能中选择 ${expertise} 项`
+          : '专精须选择已熟练技能，且不能超过当前职业等级的名额',
+      );
     const expected = syncAllocation(card);
     if ([...card.proficiencies].sort().join('|') !== [...expected.proficiencies].sort().join('|'))
       errors.push('熟练项与职业、背景、种族和主持人名额不一致');
@@ -683,14 +763,27 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
 export function suggestAllocation(card: Character, policy: CreationPolicy): Character {
   let result = { ...card, creation: defaultAllocation(card.rule, card.occupation) };
   if (result.creation.rule === 'dnd') {
-    const cls = DND_CLASS_RULES.find((c) => c.name === card.occupation);
+    const cls = dndClassRule(card);
+    const background = dndBackground(card);
+    const ancestry = dndAncestry(card);
     const a = result.creation;
-    a.classSkills = cls?.skills.slice(0, cls.count) ?? [];
-    const used = [...a.classSkills, ...dndAncestry(card).fixed];
-    a.backgroundSkills = allDnd.filter((s) => !used.includes(s)).slice(0, 2);
-    a.ancestrySkills = allDnd
-      .filter((s) => ![...used, ...a.backgroundSkills].includes(s))
-      .slice(0, dndAncestry(card).choices);
+    const freeClassSkills =
+      cls?.skills.filter((skill) => !background?.skills.includes(skill)) ?? [];
+    a.classSkills = [...new Set([...freeClassSkills, ...(cls?.skills ?? [])])].slice(
+      0,
+      cls?.count ?? 0,
+    );
+    const used = [...a.classSkills, ...ancestry.fixed];
+    a.backgroundSkills = background
+      ? [...background.skills]
+      : allDnd.filter((s) => !used.includes(s)).slice(0, 2);
+    const freeAncestrySkills = ancestry.skills.filter(
+      (s) => ![...used, ...a.backgroundSkills].includes(s),
+    );
+    a.ancestrySkills = [...new Set([...freeAncestrySkills, ...ancestry.skills])].slice(
+      0,
+      ancestry.choices,
+    );
     const count = replacementCount(result);
     a.replacementSkills = allDnd
       .filter((s) => ![...used, ...a.backgroundSkills, ...a.ancestrySkills].includes(s))
@@ -731,5 +824,15 @@ export function suggestAllocation(card: Character, policy: CreationPolicy): Char
       budget.personal,
     );
   }
-  return syncAllocation(result);
+  const suggested = syncAllocation(result);
+  if (suggested.creation?.rule === 'dnd' && getDndEdition(suggested.dndEdition) === '2024') {
+    return syncAllocation({
+      ...suggested,
+      creation: {
+        ...suggested.creation,
+        expertise: expertiseOptions(suggested).slice(0, expertiseLimit(suggested)),
+      },
+    });
+  }
+  return suggested;
 }

@@ -147,6 +147,7 @@ export async function restoreArchive(
   file: File,
   nickname: string,
   rule: import('../shared/types').RuleId,
+  dndEdition: import('../shared/dnd-edition').DndEdition = '2014',
 ) {
   const result = await jsonRequest<RoomConnection>('/api/archives/restore', {
     method: 'POST',
@@ -154,6 +155,7 @@ export async function restoreArchive(
       'content-type': 'application/zip',
       'x-interlude-nickname': encodeURIComponent(nickname),
       'x-interlude-rule': rule,
+      ...(rule === 'dnd' ? { 'x-interlude-dnd-edition': dndEdition } : {}),
     },
     body: file,
   });

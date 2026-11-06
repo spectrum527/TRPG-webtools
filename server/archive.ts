@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { MAX_ARCHIVE_BYTES } from '../shared/archive.ts';
 import { roomSchema, validRoomReferences } from '../shared/room-state.ts';
 import { validateCreation } from '../shared/creation.ts';
+import { getDndEdition } from '../shared/dnd-edition.ts';
 import { parsePortable } from '../shared/portable.ts';
 import { IMAGE_RETENTION_NOTICE, imageFilename, type ChatImage } from '../shared/media.ts';
 import type { Room, RoomEvent } from '../shared/types.ts';
@@ -35,7 +36,10 @@ const manifestSchema = z.union([
 ]);
 const explanation = `# 幕间 · 全局存档\n\n选择对应规则 → 创建房间 → 从全局存档续团 → 选择此 ZIP → 预览后恢复。无需手动解压。\n\nroom.json 保存房间配置、角色及修正、审核、地图与场景、NPC / 数据块、遭遇状态和完整可用记录。context.md 供人或外部 AI 阅读。\n\n“导出图片”默认开启：仅在上下文中记录图片的服务端存储路径，并保存用于恢复的图片引用；ZIP 不包含图片文件，也不会下载原图。关闭时以主持人填写的文字描述替代图片。\n\n${IMAGE_RETENTION_NOTICE}清理每分钟检查一次，停机期间到期的图片在启动时清理。仅预览、导出存档或查看图片不会续期；未开团的图片从上传时起保留 14 天。\n\n引用只能在原服务器（或同时迁移图片目录与 DATA_DIR/images.json 的服务器）读取。不要将 ZIP 当作图片备份。路径指向服务器配置的 IMAGE_DIR 中的文件；服务器外不可直接访问该路径。删除或无法找到的图片会显示占位符，有补充描述时仍可阅读文字。\n\n存档包含主持人私密资料和暗骰真实结果，请交给可信任的主持人保管。没有登录令牌、席位恢复码或服务端 API 密钥。\n\n恢复会创建新的房间码，保留原来的准备 / 进行阶段、资源和行动顺序。主持人在“全局存档”中分别复制席位恢复码；玩家选择同一规则，在加入房间时填写新房间码和自己的恢复码。每个恢复码只可使用一次。\n\n旧版本已经丢弃的历史无法补回；historyComplete 为 false 时，存档仅包含升级时仍保留的记录及之后的完整记录。原始图片无法从文字描述恢复。\n\n请勿直接修改 ZIP 内文件；导入时会检查版本、大小、内容校验和与状态引用。\n`;
 function transcript(room: Room, path: (image: ChatImage) => string, includeImages: boolean) {
-  const heading = `# ${room.name}\n\n规则：${room.rule === 'coc' ? 'CoC 7' : 'D&D 5e 2014 / SRD 5.1'}\n阶段：${room.phase === 'active' ? '进行中' : '准备中'}\n场景：${room.scene.title}\n${room.scene.description}\n\n历史：${room.historyComplete === false ? '旧版本此前已截断，仅包含现存历史及升级后的全部记录' : '完整'}\n\n图片：${includeImages ? '仅保留服务端路径引用，不包含图片文件。' : '以主持人填写的文字描述替代。'}${IMAGE_RETENTION_NOTICE}\n\n## 过程记录（含主持人私密内容）\n\n`;
+  const edition = getDndEdition(room.dndEdition);
+  const rule =
+    room.rule === 'coc' ? 'CoC 7' : edition === '2024' ? 'D&D 5e (2024)' : 'D&D 5e 2014 / SRD 5.1';
+  const heading = `# ${room.name}\n\n规则：${rule}\n阶段：${room.phase === 'active' ? '进行中' : '准备中'}\n场景：${room.scene.title}\n${room.scene.description}\n\n历史：${room.historyComplete === false ? '旧版本此前已截断，仅包含现存历史及升级后的全部记录' : '完整'}\n\n图片：${includeImages ? '仅保留服务端路径引用，不包含图片文件。' : '以主持人填写的文字描述替代。'}${IMAGE_RETENTION_NOTICE}\n\n## 过程记录（含主持人私密内容）\n\n`;
   return (
     heading +
     room.log
@@ -67,7 +71,9 @@ export async function exportArchive(
     m.online = false;
   });
   snapshot.log = snapshot.log.map((e) => {
-    const { requestId: _requestId, ...event } = e;
+    const { requestId: _requestId, ...withoutRequest } = e;
+    // Retain the request identity of committed combat actions across archive restore.
+    const event = e.combatRequestHash ? e : withoutRequest;
     if (!event.image) return event;
     const description = descriptions[event.image.id]?.trim();
     if ((!includeImages && !description) || (description && description.length > 2000))
@@ -236,6 +242,31 @@ export function readArchive(bytes: unknown): { room: Room; exportedAt: string } 
   }
 }
 function validEvent(e: RoomEvent) {
+  if (e.combatRequestHash) {
+    if (e.type !== 'system' || e.image || e.imageDescription || e.scene) return false;
+    if (e.roll) {
+      const { groups, modifier, total } = e.roll;
+      const sum = groups.reduce(
+        (result, group) =>
+          result + group.sign * group.rolls.reduce((subtotal, die) => subtotal + die, 0),
+        modifier,
+      );
+      if (sum !== total) return false;
+    }
+    if (e.check) {
+      const { rolls, selected, modifier, total, target, success } = e.check;
+      if (
+        rolls.length < 1 ||
+        rolls.length > 2 ||
+        rolls.some((die) => die < 1 || die > 20) ||
+        !rolls.includes(selected) ||
+        selected + modifier !== total ||
+        success !== (selected === 20 || (selected !== 1 && total >= target))
+      )
+        return false;
+    }
+    return true;
+  }
   return (
     (e.type === 'roll') === !!e.roll &&
     (e.type === 'check') === !!e.check &&

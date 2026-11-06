@@ -86,6 +86,14 @@ jobs:
         run: python tests/e2e_toolkit.py --url http://127.0.0.1:3001
       - name: D&D stat blocks and both encounter systems
         run: python tests/e2e_encounter.py --url http://127.0.0.1:3001
+      - name: D&D editions, spellbooks, feats and passive Perception
+        run: python tests/e2e_dnd_editions.py --url http://127.0.0.1:3001
+      - name: Initiative and automatic combat damage
+        run: python tests/e2e_combat_automation.py --url http://127.0.0.1:3001
+      - name: Edition-aware character spells and equipment
+        run: python tests/e2e_character_preparation.py --url http://127.0.0.1:3001
+      - name: Session resources, encounter plans and companions
+        run: python tests/e2e_session_resources.py --url http://127.0.0.1:3001
       - name: In-session attributes, skills and temporary effects
         run: python tests/e2e_adjustments.py --url http://127.0.0.1:3001
       - name: CoC attribute caps, room constraints and saved drafts
@@ -107,6 +115,10 @@ jobs:
           exit 1
       - name: Native IndexedDB persistence, concurrency and rollback
         run: python tests/e2e_keeper_storage.py --url http://127.0.0.1:5173
+      - name: D&D reference library concurrency and rollback
+        run: python tests/e2e_dnd_reference_storage.py
+      - name: Encounter plan storage concurrency and rollback
+        run: python tests/e2e_preparation_storage.py
       - name: Save acceptance reports, screenshots and server logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

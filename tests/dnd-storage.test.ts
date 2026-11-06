@@ -24,6 +24,15 @@ describe('D&D personal library validation', () => {
     expect({ first, second, incoming }).toEqual(snapshot);
   });
 
+  it('treats omitted editions as 2014 for upserts and refuses cross-edition ID conflicts', () => {
+    const legacy = card();
+    const sameEdition = { ...legacy, name: '旧版更新', dndEdition: '2014' as const };
+    expect(mergeDndStatBlocks([legacy], [sameEdition])).toEqual([sameEdition]);
+    const otherEdition = { ...legacy, name: '同编号新版', dndEdition: '2024' as const };
+    expect(() => mergeDndStatBlocks([legacy], [otherEdition])).toThrow('编号与其他版次冲突');
+    expect(() => mergeDndStatBlocks([otherEdition], [legacy])).toThrow('编号与其他版次冲突');
+  });
+
   it('allows updating a full 200-card library, refuses a 201st card and keeps the original intact', () => {
     const seed = card();
     const full = Array.from({ length: 200 }, (_, index) => ({ ...seed, id: `dnd-${index}` }));
@@ -177,6 +186,20 @@ function storageHarness(initial: unknown = []) {
 }
 
 describe('D&D IndexedDB transactions', () => {
+  it('aborts the whole transaction when the stored ID belongs to a different edition', async () => {
+    const existing = card();
+    const storage = storageHarness([existing]);
+    const separate = createDndStatBlock('npc-blank', '2024');
+    const colliding = { ...existing, dndEdition: '2024' as const };
+    const failure = expect(saveDndStatBlocks([separate, colliding])).rejects.toThrow(
+      '编号与其他版次冲突',
+    );
+    await storage.requested;
+    await failure;
+    expect(storage.events).toEqual(['readwrite', 'get', 'abort']);
+    expect(storage.value()).toEqual([existing]);
+  });
+
   it('uses its independent DB, captures incoming objects before await and resolves only on commit', async () => {
     const existing = card();
     const incoming = card();

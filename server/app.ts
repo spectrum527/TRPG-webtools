@@ -9,9 +9,10 @@ import { decodeImage, imagePath, saveImage } from './images.ts';
 import express from 'express';
 import { ipKeyGenerator, MemoryStore, rateLimit } from 'express-rate-limit';
 import { createServer } from 'node:http';
-import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { Server, type Socket } from 'socket.io';
 import { z } from 'zod';
 import {
@@ -20,29 +21,72 @@ import {
   validateCreation,
 } from '../shared/creation.ts';
 import { DndStatBlockSchema, getDndStatBlockErrors } from '../shared/dnd.ts';
+import { DndEditionSchema, getDndEdition, type DndEdition } from '../shared/dnd-edition.ts';
+import { parseDndReferencePack, type DndSpellReference } from '../shared/dnd-reference.ts';
+import {
+  applyDndMagicEdit,
+  getDndMagicErrors,
+  type DndMagicEdit,
+  type DndMagicResult,
+} from '../shared/dnd-magic.ts';
+import {
+  applyDndEquipmentEdit,
+  getDndWeaponAttack,
+  dndArmorPreventsCasting,
+  isDndAmmunition,
+  itemFromEquipmentCatalog,
+  type DndItemDetails,
+} from '../shared/dnd-equipment.ts';
+import { parseEquipmentCatalog } from '../shared/equipment-catalog.ts';
+import {
+  CharacterRuntimeActionSchemas,
+  dndAmmoCompatibility,
+} from '../shared/character-runtime.ts';
+import {
+  EncounterPlanLibrarySchema,
+  PreparationActionSchemas,
+  validateEncounterPlanForRoom,
+} from '../shared/preparation.ts';
 import {
   emptyEncounter,
   EncounterActionSchemas,
   addEncounterCards,
+  loadEncounterWave,
   syncEncounterPlayers,
   orderEncounter,
   nextEncounterTurn,
   updateCombatant,
   removeCombatant,
   encounterView,
+  rollEncounterInitiative,
+  setEncounterAutoDamage,
+  recordEncounterRest,
+  markEncounterSpellSlot,
+  canControlCompanion,
+  setEncounterCompanionOwner,
+  applyEncounterDamage,
+  effectiveCocArmor,
+  criticalDamageExpression,
+  DAMAGE_ADJUSTMENT_LABELS,
+  cocMeleeWinner,
+  isCocExtremeSuccess,
   compareCocMelee,
+  type Combatant,
+  type DamageAdjustment,
 } from '../shared/encounter.ts';
 import { KeeperCardSchema, getKeeperCardErrors } from '../shared/keeper.ts';
 import {
   CharacterAdjustmentEditSchema,
   applyCharacterAdjustment,
   adjustmentDescription,
+  effectiveCharacter,
 } from '../shared/adjustments.ts';
 import { getCharacterErrors, rollCheck, rollDice, type DieRandom } from '../shared/rules.ts';
 import type {
   Ack,
   Character,
   CheckRequest,
+  CheckResult,
   Inspiration,
   Member,
   Room,
@@ -50,6 +94,7 @@ import type {
   RoomConnection,
   RoomEvent,
   Session,
+  Visibility,
 } from '../shared/types.ts';
 
 const ruleSchema = z.enum(['dnd', 'coc']);
@@ -96,6 +141,7 @@ const createSchema = z
     name,
     nickname: name,
     rule: ruleSchema,
+    dndEdition: DndEditionSchema.optional(),
     mode: modeSchema,
     configuration: RoomConfigSchema.optional(),
   })
@@ -105,6 +151,7 @@ const joinSchema = z
     code: codeSchema,
     nickname: name,
     rule: ruleSchema,
+    dndEdition: DndEditionSchema.optional(),
     seatCode: z
       .string()
       .trim()
@@ -173,6 +220,8 @@ function migrateSaved(raw: unknown): unknown {
 }
 const actionSchema = z.discriminatedUnion('type', [
   ...EncounterActionSchemas,
+  ...CharacterRuntimeActionSchemas,
+  ...PreparationActionSchemas,
   z.object({ type: z.literal('atlas-save'), atlases: AtlasLibrarySchema.min(1) }).strict(),
   z.object({ type: z.literal('atlas-delete'), atlasId: id }).strict(),
   z.object({ type: z.literal('atlas-publish'), atlasId: id, sceneId: id }).strict(),
@@ -219,7 +268,7 @@ const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('keeper-delete'), cardId: id }).strict(),
   z.object({ type: z.literal('character'), character: characterSchema }).strict(),
   z.object({ type: z.literal('ready'), ready: z.boolean() }).strict(),
-  ...(['start', 'pause', 'initiative', 'next-turn', 'leave'] as const).map((type) =>
+  ...(['start', 'pause', 'next-turn', 'leave'] as const).map((type) =>
     z.object({ type: z.literal(type) }).strict(),
   ),
   z.object({ type: z.literal('message'), content: z.string().trim().min(1).max(2000) }).strict(),
@@ -315,6 +364,12 @@ function parse<T>(schema: z.ZodType<T>, value: unknown): T {
   return result.data;
 }
 
+function rulePack(fileName: string): unknown {
+  const source = new URL(`../public/rules/${fileName}`, import.meta.url);
+  const built = new URL(`../dist/rules/${fileName}`, import.meta.url);
+  return JSON.parse(readFileSync(existsSync(source) ? source : built, 'utf8'));
+}
+
 export function createAppServer(options: ServerOptions = {}) {
   const now = options.now ?? Date.now;
   const rng = options.rng;
@@ -332,6 +387,79 @@ export function createAppServer(options: ServerOptions = {}) {
       .split(',')
       .map((x) => x.trim())
       .filter(Boolean);
+  const spellCatalogs = new Map<DndEdition, (id: string) => DndSpellReference | undefined>();
+  function spellCatalog(dndEdition?: DndEdition) {
+    const edition = getDndEdition(dndEdition);
+    const cached = spellCatalogs.get(edition);
+    if (cached) return cached;
+    try {
+      const pack = parseDndReferencePack(rulePack(`dnd-${edition}.json`));
+      requireCondition(pack.edition === edition, '法术资料版次不符');
+      const index = new Map(pack.spells.map((spell) => [spell.id, spell]));
+      const find = (id: string) => index.get(id);
+      spellCatalogs.set(edition, find);
+      return find;
+    } catch {
+      throw new Error('服务器暂无法读取本版法术资料');
+    }
+  }
+  const equipmentCatalogs = new Map<DndEdition, Map<string, DndItemDetails>>();
+  function equipmentCatalog(dndEdition?: DndEdition) {
+    const edition = getDndEdition(dndEdition);
+    const cached = equipmentCatalogs.get(edition);
+    if (cached) return cached;
+    try {
+      const pack = parseEquipmentCatalog(rulePack(`equipment-${edition}.json`));
+      requireCondition(pack.edition === edition, '装备目录版次不符');
+      const catalog = new Map(
+        pack.items.map((item) => [item.id, itemFromEquipmentCatalog(item).equipment!]),
+      );
+      equipmentCatalogs.set(edition, catalog);
+      return catalog;
+    } catch {
+      throw new Error('服务器暂无法读取本版装备目录');
+    }
+  }
+  const equipmentFields = [
+    'edition',
+    'kind',
+    'gearType',
+    'sourcePath',
+    'baseName',
+    'unitCostCp',
+    'weapon',
+    'armor',
+    'shield',
+    'container',
+  ] as const;
+  function runtimeErrors(character: Character): string[] {
+    try {
+      const errors = character.dndMagic
+        ? getDndMagicErrors(character, spellCatalog(character.dndEdition))
+        : [];
+      for (const item of character.items) {
+        const details = item.equipment;
+        if (!details) continue;
+        const official = equipmentCatalog(character.dndEdition).get(details.catalogId);
+        if (
+          !official ||
+          equipmentFields.some((field) => !isDeepStrictEqual(official[field], details[field]))
+        )
+          errors.push(`「${item.name}」的装备基础数值与本版目录不符`);
+        else if (
+          details.unitWeightLb !== official.unitWeightLb &&
+          !item.notes.trim() &&
+          !details.bonusSource.trim()
+        )
+          errors.push(`「${item.name}」的重量覆盖须在备注或来源中说明`);
+      }
+      return errors;
+    } catch (error) {
+      return [failure(error)];
+    }
+  }
+  const validRuntimeRoster = (room: Room) =>
+    room.members.every(({ character }) => !character || runtimeErrors(character).length === 0);
   mkdirSync(dataDir, { recursive: true });
   const images = new ImageLifecycle(dataDir, imageDir);
   const rooms = new Map<string, StoredRoom>();
@@ -376,7 +504,7 @@ export function createAppServer(options: ServerOptions = {}) {
   app.disable('x-powered-by');
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
-    // Keeper imports are bounded to 8 MiB; other actions retain the 512 KiB limit.
+    // Large preparation imports are bounded by the same 8 MiB transport limit.
     maxHttpBufferSize: 8 * 1024 * 1024,
     cors: allowedOrigins.length ? { origin: allowedOrigins, credentials: true } : undefined,
     allowRequest: (request, callback) => {
@@ -457,6 +585,17 @@ export function createAppServer(options: ServerOptions = {}) {
     const isHost = entry.room.hostId === memberId;
     return {
       ...entry.room,
+      members: isHost
+        ? entry.room.members
+        : entry.room.members.map((member) => {
+            if (member.id === memberId || member.character?.rule !== 'dnd') return member;
+            const { dndMagic: _magic, dndEquipment: _equipment, ...card } = member.character;
+            const items = card.items.filter((item) => !item.equipment);
+            return {
+              ...member,
+              character: { ...card, items, ac: effectiveCharacter(member.character).ac },
+            };
+          }),
       log: entry.room.log.slice(-300).flatMap((event) => {
         const visible = visibleEvent(event, isHost);
         return visible ? [visible] : [];
@@ -468,7 +607,9 @@ export function createAppServer(options: ServerOptions = {}) {
       keeperCards: isHost ? entry.room.keeperCards : [],
       dndCards: isHost ? entry.room.dndCards : [],
       atlases: isHost ? entry.room.atlases : [],
-      encounter: encounterView(entry.room.encounter, isHost),
+      encounterPlans: isHost ? (entry.room.encounterPlans ?? []) : [],
+      encounterPlanRevision: isHost ? (entry.room.encounterPlanRevision ?? 0) : 0,
+      encounter: encounterView(entry.room.encounter, isHost, memberId),
     };
   }
   function projectInitiative(room: Room) {
@@ -670,6 +811,16 @@ export function createAppServer(options: ServerOptions = {}) {
         !input.configuration || input.configuration.rule === input.rule,
         '配置规则与所选规则不匹配',
       );
+      requireCondition(
+        input.rule === 'dnd' || input.dndEdition === undefined,
+        '规则版次仅适用于 D&D',
+      );
+      const dndEdition = input.dndEdition ?? input.configuration?.dndEdition;
+      requireCondition(
+        !input.configuration ||
+          getDndEdition(input.configuration.dndEdition) === getDndEdition(dndEdition),
+        '配置的 D&D 版次与所选版本不匹配',
+      );
       rate(`create:${socket.handshake.address}`, 10);
       cleanup();
       requireCondition(rooms.size < maxRooms, '当前房间数量已达上限，请稍后再试');
@@ -694,6 +845,7 @@ export function createAppServer(options: ServerOptions = {}) {
           code,
           name: input.configuration?.name ?? input.name,
           rule: input.rule,
+          ...(dndEdition === undefined ? {} : { dndEdition }),
           mode: input.configuration?.mode ?? input.mode,
           hostId: member.id,
           phase: 'lobby',
@@ -711,6 +863,8 @@ export function createAppServer(options: ServerOptions = {}) {
           atlases: [],
           keeperCards: [],
           dndCards: [],
+          encounterPlans: [],
+          encounterPlanRevision: 0,
           encounter: emptyEncounter(),
         },
         tokens: { [member.id]: token },
@@ -734,6 +888,14 @@ export function createAppServer(options: ServerOptions = {}) {
       const entry = rooms.get(input.code);
       requireCondition(entry, '房间不存在或已过期');
       requireCondition(entry.room.rule === input.rule, '规则不匹配，请选择与房间相同的规则');
+      requireCondition(
+        input.rule === 'dnd' || input.dndEdition === undefined,
+        '规则版次仅适用于 D&D',
+      );
+      requireCondition(
+        getDndEdition(entry.room.dndEdition) === getDndEdition(input.dndEdition),
+        'D&D 版次不匹配，请选择与房间相同的版本',
+      );
       rate(`join:${socket.handshake.address}`, 30);
       if (input.seatCode) {
         const memberId = Object.entries(entry.seatClaims).find(
@@ -796,14 +958,14 @@ export function createAppServer(options: ServerOptions = {}) {
       return { session, room: view(entry, member.id) };
     });
     handler<null>('room:action', (raw) => {
-      const keeperBatch =
-        raw &&
-        typeof raw === 'object' &&
-        'type' in raw &&
-        ['keeper-save', 'dnd-save', 'atlas-save'].includes(String(raw.type));
+      const type = raw && typeof raw === 'object' && 'type' in raw ? raw.type : undefined;
+      const bulk =
+        typeof type === 'string' &&
+        ['keeper-save', 'dnd-save', 'atlas-save', 'encounter-plan-save'].includes(type);
+      // The portable character limit is measured in characters, which may occupy up to 3 bytes each.
+      const limit = (bulk ? 8 : type === 'character' ? 1 : 0.5) * 1024 * 1024;
       requireCondition(
-        Buffer.byteLength(JSON.stringify(raw) ?? '', 'utf8') <=
-          (keeperBatch ? 8 : 0.5) * 1024 * 1024,
+        Buffer.byteLength(JSON.stringify(raw) ?? '', 'utf8') <= limit,
         '提交内容过大，请分批保存',
       );
       const action = parse(actionSchema, raw) as RoomAction;
@@ -834,6 +996,164 @@ export function createAppServer(options: ServerOptions = {}) {
           changed.review = pendingReview(changed.characterRevision, room.policyRevision);
         }
       };
+      const encounterRevision = (expectedRevision: number) =>
+        requireCondition(
+          expectedRevision === room.encounter.revision,
+          '战斗状态已更新，请刷新后再操作',
+        );
+      const combatant = (id: string) => {
+        const selected = room.encounter.participants.find((c) => c.id === id);
+        requireCondition(selected, '该参战者已不在本场');
+        return selected;
+      };
+      const requestIdentity = (requestId: string) => {
+        const combatRequestHash = createHash('sha256').update(JSON.stringify(action)).digest('hex');
+        const committed = room.log.find(
+          (event) =>
+            event.combatRequestHash &&
+            event.memberId === member.id &&
+            event.requestId === requestId,
+        );
+        if (committed) {
+          requireCondition(
+            committed.combatRequestHash === combatRequestHash,
+            '请求编号已经用于其他操作',
+          );
+          return { replayed: true, requestId, combatRequestHash };
+        }
+        return { replayed: false, requestId, combatRequestHash };
+      };
+      const encounterCommand = ({
+        expectedRevision,
+        requestId,
+      }: {
+        expectedRevision: number;
+        requestId: string;
+      }) => {
+        const identity = requestIdentity(requestId);
+        if (!identity.replayed) encounterRevision(expectedRevision);
+        return identity;
+      };
+      const planRevision = (expectedRevision: number) =>
+        requireCondition(
+          (room.encounterPlanRevision ?? 0) === expectedRevision,
+          '遭遇预案已更新，请刷新后再操作',
+        );
+      const publishAtlasScene = (atlasId: string, sceneId: string) => {
+        const scene = room.atlases
+          .find((atlas) => atlas.id === atlasId)
+          ?.scenes.find((scene) => scene.id === sceneId);
+        requireCondition(scene, '场景不存在，请刷新地图集或取消公开场景');
+        room.scene = { title: scene.title, description: scene.description };
+        room.configRevision += 1;
+        addEvent(entry, 'system', member, `公布场景：${scene.title}`, {
+          scene: structuredClone(room.scene),
+        });
+      };
+      const requireActiveDnd = () =>
+        requireCondition(
+          room.rule === 'dnd' && room.phase === 'active',
+          '请在进行中的 D&D 房间操作角色资源',
+        );
+      const runtimeTarget = (input: {
+        memberId: string;
+        characterId: string;
+        expectedCharacterRevision: number;
+      }) => {
+        const character = target(input.memberId);
+        const selected = room.members.find((m) => m.id === input.memberId)!;
+        requireCondition(character.rule === 'dnd', '角色资源仅适用于 D&D');
+        requireCondition(
+          character.id === input.characterId &&
+            selected.characterRevision === input.expectedCharacterRevision,
+          '角色状态已更新，请载入最新数值后再操作',
+        );
+        requireCondition(
+          selected.review.status === 'approved' &&
+            selected.review.policyRevision === room.policyRevision &&
+            selected.review.characterRevision <= selected.characterRevision,
+          '角色需通过主持人审核后才能操作局内资源',
+        );
+        const errors = runtimeErrors(character);
+        requireCondition(!errors.length, errors[0] ?? '角色资源或装备无效');
+        return { selected, character };
+      };
+      const updateRuntimeCharacter = (selected: Member, next: Character) => {
+        requireCondition(getCharacterErrors(next).length === 0, '更新后的角色资源或装备数值无效');
+        const errors = runtimeErrors(next);
+        requireCondition(!errors.length, errors[0] ?? '角色资源或装备无效');
+        selected.character = { ...next, updatedAt: new Date(now()).toISOString() };
+        characterChanged(selected.id);
+      };
+      const resolveMagic = (
+        character: Character,
+        memberId: string,
+        edit: DndMagicEdit,
+      ): DndMagicResult => {
+        if (!character.dndMagic && edit.kind === 'rest') {
+          requireCondition(
+            !edit.hitDice &&
+              !edit.prepared &&
+              !edit.arcaneRecovery?.length &&
+              !edit.sorcerousRestoration,
+            '请在准备阶段配置角色资源并重新审核',
+          );
+          if (edit.rest === 'long' || getDndEdition(character.dndEdition) === '2024')
+            requireCondition(character.hp > 0, '该休息开始时至少需要 1 HP');
+          const hp = edit.rest === 'long' ? character.maxHp : character.hp;
+          return {
+            state: undefined,
+            hp,
+            summary: edit.rest === 'long' ? `完成长休，HP 恢复到 ${hp}` : '完成短休',
+            spentSlot: false,
+          };
+        }
+        return applyDndMagicEdit(character, edit, {
+          catalog: spellCatalog(character.dndEdition),
+          rng,
+          slotSpentThisTurn: room.encounter.slotSpentMemberIds?.includes(memberId),
+          ...(edit.kind === 'cast' && dndArmorPreventsCasting(character)
+            ? { castingBlockedReason: '所穿护甲或所持盾牌缺少相应训练，不能施法' }
+            : {}),
+        });
+      };
+      const combatantName = (c: Combatant, visibility: Visibility) => {
+        if (visibility === 'host') return c.name;
+        return c.revealed ? c.publicName : '未公开参战者';
+      };
+      const unavailableDamage = (c: Combatant, armorOverride?: number) => {
+        if (c.hp === null) return '目标 HP 未填写';
+        if (c.rule === 'coc' && effectiveCocArmor(c, armorOverride) === null) return '目标护甲未知';
+        return null;
+      };
+      const settleDamage = (
+        c: Combatant,
+        expression: string,
+        visibility: Visibility,
+        options: { adjustment?: DamageAdjustment; armorOverride?: number },
+      ) => {
+        const roll = rollDice(expression, rng);
+        const result = applyEncounterDamage(room.encounter, c, roll.total, options);
+        if (c.memberId && result.combatant.hp !== result.beforeHp) {
+          const character = target(c.memberId);
+          character.hp = result.combatant.hp;
+          character.updatedAt = new Date(now()).toISOString();
+          characterChanged(c.memberId);
+        }
+        room.encounter = result.state;
+        const summary = `${combatantName(c, visibility)}的伤害骰 ${roll.expression} = ${roll.total}。`;
+        if (!c.memberId && visibility === 'public')
+          return { roll, summary: `${summary}已结算伤害。` };
+        const reduction =
+          c.rule === 'dnd'
+            ? DAMAGE_ADJUSTMENT_LABELS[result.adjustment]
+            : `护甲 ${result.armor} 抵消 ${Math.min(result.raw, result.armor)} 点`;
+        const absorbed = result.tempAbsorbed ? `，临时 HP 吸收 ${result.tempAbsorbed}` : '';
+        return {
+          roll,
+          summary: `${summary}结算 ${result.effective} 点伤害（${reduction}）${absorbed}，HP ${result.beforeHp} → ${result.combatant.hp}。${result.notes.join('')}`,
+        };
+      };
       switch (action.type) {
         case 'atlas-save':
           host();
@@ -853,13 +1173,57 @@ export function createAppServer(options: ServerOptions = {}) {
           break;
         case 'atlas-publish': {
           host();
-          const atlas = room.atlases.find((a) => a.id === action.atlasId);
-          const scene = atlas?.scenes.find((s) => s.id === action.sceneId);
-          requireCondition(scene, '场景不存在，请刷新地图集');
-          room.scene = { title: scene.title, description: scene.description };
-          room.configRevision += 1;
-          addEvent(entry, 'system', member, `公布场景：${scene.title}`, {
-            scene: structuredClone(room.scene),
+          publishAtlasScene(action.atlasId, action.sceneId);
+          break;
+        }
+        case 'encounter-plan-save': {
+          host();
+          planRevision(action.expectedRevision);
+          requireCondition(
+            action.plans.every((plan) =>
+              validateEncounterPlanForRoom(plan, room.rule, room.dndEdition),
+            ),
+            '遭遇预案的规则或版次与房间不符',
+          );
+          const plans = new Map((room.encounterPlans ?? []).map((plan) => [plan.id, plan]));
+          action.plans.forEach((plan) => plans.set(plan.id, plan));
+          room.encounterPlans = parse(EncounterPlanLibrarySchema, [...plans.values()]);
+          room.encounterPlanRevision = action.expectedRevision + 1;
+          break;
+        }
+        case 'encounter-plan-delete': {
+          host();
+          planRevision(action.expectedRevision);
+          const plans = room.encounterPlans ?? [];
+          requireCondition(
+            plans.some((plan) => plan.id === action.planId),
+            '遭遇预案不存在',
+          );
+          room.encounterPlans = plans.filter((plan) => plan.id !== action.planId);
+          room.encounterPlanRevision = action.expectedRevision + 1;
+          break;
+        }
+        case 'encounter-plan-load': {
+          host();
+          const { replayed, ...identity } = encounterCommand(action);
+          if (replayed) return null;
+          planRevision(action.expectedPlanRevision);
+          const plan = room.encounterPlans?.find((plan) => plan.id === action.planId);
+          const wave = plan?.waves.find((wave) => wave.id === action.waveId);
+          requireCondition(plan && wave, '遭遇预案或波次已移除');
+          requireCondition(
+            validateEncounterPlanForRoom(plan, room.rule, room.dndEdition),
+            '遭遇预案的规则或版次与房间不符',
+          );
+          const next = loadEncounterWave(room.encounter, plan.id, wave, action.repeat ?? false);
+          if (action.publishScene) {
+            requireCondition(plan.scene, '该预案没有关联场景');
+            publishAtlasScene(plan.scene.atlasId, plan.scene.sceneId);
+          }
+          room.encounter = next;
+          addEvent(entry, 'system', member, `将「${plan.name}」的「${wave.name}」加入本场。`, {
+            ...identity,
+            visibility: 'host',
           });
           break;
         }
@@ -871,6 +1235,10 @@ export function createAppServer(options: ServerOptions = {}) {
             '房间配置已更新，请重新读取后再导入',
           );
           requireCondition(action.configuration.rule === room.rule, '配置规则与房间规则不匹配');
+          requireCondition(
+            getDndEdition(action.configuration.dndEdition) === getDndEdition(room.dndEdition),
+            '配置的 D&D 版次与房间不匹配',
+          );
           room.name = action.configuration.name;
           room.mode = action.configuration.mode;
           room.scene = structuredClone(action.configuration.scene);
@@ -904,6 +1272,122 @@ export function createAppServer(options: ServerOptions = {}) {
           addEvent(entry, 'system', member, adjustmentDescription(character, updated, action.edit));
           break;
         }
+        case 'character-magic': {
+          requireCondition(
+            member.id === action.memberId || room.hostId === member.id,
+            '只能修改自己的角色',
+          );
+          const { replayed, ...identity } = requestIdentity(action.requestId);
+          if (replayed) return null;
+          requireActiveDnd();
+          requireCondition(
+            action.edit.kind !== 'configure' && action.edit.kind !== 'disable',
+            '请在准备阶段修改法术配置并重新审核',
+          );
+          if (action.edit.kind === 'scribe' || action.edit.kind === 'restore') host();
+          const { selected, character } = runtimeTarget(action);
+          if (action.edit.kind === 'cast' && getDndEdition(room.dndEdition) === '2014')
+            requireCondition(
+              !room.encounter.participants.find((c) => c.memberId === selected.id)?.surprised,
+              '2014 版遭突袭者须等首回合结束后才能施法',
+            );
+          const result = resolveMagic(character, selected.id, action.edit);
+          const { dndMagic: _previousMagic, ...baseCharacter } = character;
+          updateRuntimeCharacter(selected, {
+            ...baseCharacter,
+            hp: result.hp,
+            ...(result.state ? { dndMagic: result.state } : {}),
+          });
+          if (getDndEdition(room.dndEdition) === '2024' && result.spentSlot)
+            room.encounter = markEncounterSpellSlot(room.encounter, selected.id);
+          if (action.edit.kind === 'rest')
+            room.encounter = recordEncounterRest(room.encounter, [selected.id], action.edit.rest);
+          const activity =
+            action.edit.kind === 'cast'
+              ? '记录了一次施法'
+              : action.edit.kind === 'rest'
+                ? '完成了休息'
+                : '更新了法术或职业资源';
+          const components = result.spell?.components;
+          const componentNote = result.componentNote;
+          addEvent(
+            entry,
+            'system',
+            member,
+            [
+              character.name + ' ' + result.summary,
+              components ? `法术成分 ${components}` : '',
+              componentNote ? `成分记录 ${componentNote}` : '',
+            ]
+              .filter(Boolean)
+              .join('。')
+              .slice(0, 4000),
+            { visibility: 'host' },
+          );
+          addEvent(entry, 'system', member, `${character.name}${activity}。`, identity);
+          break;
+        }
+        case 'character-equipment': {
+          requireCondition(
+            member.id === action.memberId || room.hostId === member.id,
+            '只能修改自己的角色',
+          );
+          const { replayed, ...identity } = requestIdentity(action.requestId);
+          if (replayed) return null;
+          requireActiveDnd();
+          if (
+            action.edit.kind === 'configure' ||
+            action.edit.kind === 'disable' ||
+            action.edit.kind === 'add'
+          )
+            host();
+          const { selected, character } = runtimeTarget(action);
+          updateRuntimeCharacter(selected, applyDndEquipmentEdit(character, action.edit));
+          addEvent(entry, 'system', member, `${character.name}更新了装备记录。`, identity);
+          break;
+        }
+        case 'party-rest': {
+          host();
+          const { replayed, ...identity } = requestIdentity(action.requestId);
+          if (replayed) return null;
+          requireActiveDnd();
+          const players = action.members.map((input) => ({
+            ...runtimeTarget(input),
+            hitDice: input.hitDice,
+          }));
+          const summaries: string[] = [];
+          for (const { selected, character, hitDice } of players) {
+            const result = resolveMagic(character, selected.id, {
+              kind: 'rest',
+              rest: action.rest,
+              hitDice,
+              confirmed: action.confirmed,
+            });
+            const { dndMagic: _previousMagic, ...baseCharacter } = character;
+            updateRuntimeCharacter(selected, {
+              ...baseCharacter,
+              hp: result.hp,
+              ...(result.state ? { dndMagic: result.state } : {}),
+            });
+            summaries.push(`${character.name} ${result.summary}`);
+          }
+          room.encounter = recordEncounterRest(
+            room.encounter,
+            players.map(({ selected }) => selected.id),
+            action.rest,
+          );
+          addEvent(entry, 'system', member, summaries.join('。').slice(0, 4000), {
+            visibility: 'host',
+          });
+          addEvent(
+            entry,
+            'system',
+            member,
+            `主持人确认 ${players.length} 位角色完成${action.rest === 'long' ? '长休' : '短休'}。`,
+            identity,
+          );
+          break;
+        }
         case 'creation-policy':
           host();
           lobby();
@@ -926,13 +1410,18 @@ export function createAppServer(options: ServerOptions = {}) {
             '请选择已载入人物卡的玩家',
           );
           requireCondition(
+            getDndEdition(reviewed.character.dndEdition) === getDndEdition(room.dndEdition),
+            '角色卡的 D&D 版次与房间不匹配',
+          );
+          requireCondition(
             action.characterRevision === reviewed.characterRevision &&
               action.policyRevision === room.policyRevision,
             '人物卡或建卡规则已更新，请重新审核',
           );
           if (action.decision === 'approved')
             requireCondition(
-              validateCreation(reviewed.character, room.creationPolicy).length === 0,
+              validateCreation(reviewed.character, room.creationPolicy).length === 0 &&
+                runtimeErrors(reviewed.character).length === 0,
               '人物卡尚未完成分配或不符合建卡规则，不能通过审核',
             );
           reviewed.review = {
@@ -955,6 +1444,12 @@ export function createAppServer(options: ServerOptions = {}) {
           requireCondition(
             action.cards.every((card) => getDndStatBlockErrors(card).length === 0),
             'D&D 生物卡片格式或数值无效',
+          );
+          requireCondition(
+            action.cards.every(
+              (card) => getDndEdition(card.dndEdition) === getDndEdition(room.dndEdition),
+            ),
+            'D&D 生物卡片的版次与房间不匹配',
           );
           const cards = new Map(room.dndCards.map((card) => [card.id, card]));
           action.cards.forEach((card) => cards.set(card.id, structuredClone(card)));
@@ -1008,6 +1503,12 @@ export function createAppServer(options: ServerOptions = {}) {
           );
           requireCondition(member.role === 'player', '主持人请使用独立卡库，不能载入玩家人物卡');
           requireCondition(action.character.rule === room.rule, '角色卡规则与房间不匹配');
+          requireCondition(
+            getDndEdition(action.character.dndEdition) === getDndEdition(room.dndEdition),
+            '角色卡的 D&D 版次与房间不匹配',
+          );
+          const errors = runtimeErrors(action.character);
+          requireCondition(!errors.length, errors[0] ?? '角色法术或装备配置无效');
           member.character = structuredClone(action.character);
           characterChanged(member.id);
           break;
@@ -1017,6 +1518,7 @@ export function createAppServer(options: ServerOptions = {}) {
             requireCondition(
               member.character &&
                 getCharacterErrors(member.character).length === 0 &&
+                runtimeErrors(member.character).length === 0 &&
                 validateCreation(member.character, room.creationPolicy).length === 0,
               '请先载入有效人物卡并完成符合规则的分配再准备',
             );
@@ -1037,6 +1539,7 @@ export function createAppServer(options: ServerOptions = {}) {
                 (m.role === 'host' ||
                   (m.character &&
                     getCharacterErrors(m.character).length === 0 &&
+                    runtimeErrors(m.character).length === 0 &&
                     validateCreation(m.character, room.creationPolicy).length === 0 &&
                     m.review.status === 'approved' &&
                     m.review.characterRevision === m.characterRevision &&
@@ -1124,10 +1627,9 @@ export function createAppServer(options: ServerOptions = {}) {
         }
         case 'item-remove': {
           const character = target(action.memberId);
-          requireCondition(
-            character.items.some((item) => item.id === action.itemId),
-            '该物品不存在',
-          );
+          const item = character.items.find((item) => item.id === action.itemId);
+          requireCondition(item, '该物品不存在');
+          requireCondition(!item.equipment, '请在角色装备面板管理该物品');
           character.items = character.items.filter((item) => item.id !== action.itemId);
           character.updatedAt = new Date(now()).toISOString();
           characterChanged(action.memberId);
@@ -1140,6 +1642,11 @@ export function createAppServer(options: ServerOptions = {}) {
               ? room.keeperCards.find((c) => c.id === action.cardId)
               : room.dndCards.find((c) => c.id === action.cardId);
           requireCondition(card, '卡片不存在或不属于此房间规则');
+          requireCondition(
+            card.rule !== 'dnd' ||
+              getDndEdition(card.dndEdition) === getDndEdition(room.dndEdition),
+            'D&D 生物卡片的版次与房间不匹配',
+          );
           room.encounter = addEncounterCards(
             syncEncounterPlayers(room.encounter, room.members),
             [card],
@@ -1153,18 +1660,36 @@ export function createAppServer(options: ServerOptions = {}) {
             action.expectedRevision === room.encounter.revision,
             '战斗状态已更新，请刷新后再保存',
           );
-          const combatant = room.encounter.participants.find((c) => c.id === action.combatantId);
-          requireCondition(combatant, '该参战者已不在本场');
-          const next = updateCombatant(room.encounter, action.combatantId, action.patch);
-          if (combatant.memberId && action.patch.hp !== undefined) {
-            const character = target(combatant.memberId);
-            requireCondition(
-              action.patch.hp !== null && action.patch.hp <= character.maxHp,
-              '玩家 HP 不能留空或超过角色卡上限',
-            );
-            character.hp = action.patch.hp;
-            character.updatedAt = new Date(now()).toISOString();
-            characterChanged(combatant.memberId);
+          const selected = combatant(action.combatantId);
+          const next = updateCombatant(
+            room.encounter,
+            action.combatantId,
+            action.patch,
+            room.dndEdition,
+          );
+          if (
+            selected.memberId &&
+            (action.patch.hp !== undefined || action.patch.concentration !== undefined)
+          ) {
+            const character = target(selected.memberId);
+            if (action.patch.hp !== undefined) {
+              requireCondition(
+                action.patch.hp !== null && action.patch.hp <= character.maxHp,
+                '玩家 HP 不能留空或超过角色卡上限',
+              );
+              character.hp = action.patch.hp;
+            }
+            const syncConcentration =
+              character.dndMagic && action.patch.concentration !== undefined;
+            if (syncConcentration) {
+              const { concentration: _previous, ...magic } = character.dndMagic!;
+              const concentration = action.patch.concentration!.trim();
+              character.dndMagic = concentration ? { ...magic, concentration } : magic;
+            }
+            if (action.patch.hp !== undefined || syncConcentration) {
+              character.updatedAt = new Date(now()).toISOString();
+              characterChanged(selected.memberId);
+            }
           }
           room.encounter = next;
           break;
@@ -1175,11 +1700,260 @@ export function createAppServer(options: ServerOptions = {}) {
           break;
         case 'encounter-clear':
           host();
-          room.encounter = { ...emptyEncounter(), revision: room.encounter.revision + 1 };
+          room.encounter = {
+            ...emptyEncounter(),
+            revision: room.encounter.revision + 1,
+            ...(room.encounter.autoDamage === undefined
+              ? {}
+              : { autoDamage: room.encounter.autoDamage }),
+          };
           break;
+        case 'encounter-settings':
+          host();
+          encounterRevision(action.expectedRevision);
+          room.encounter = setEncounterAutoDamage(room.encounter, action.autoDamage);
+          break;
+        case 'encounter-companion': {
+          host();
+          encounterRevision(action.expectedRevision);
+          if (action.ownerMemberId !== null)
+            requireCondition(
+              room.members.some(
+                (m) =>
+                  m.id === action.ownerMemberId &&
+                  m.role === 'player' &&
+                  m.character?.rule === 'dnd',
+              ),
+              '请选择有 D&D 人物卡的在房玩家',
+            );
+          room.encounter = setEncounterCompanionOwner(
+            room.encounter,
+            combatant(action.combatantId),
+            action.ownerMemberId,
+          );
+          break;
+        }
+        case 'encounter-companion-hp': {
+          const c = combatant(action.combatantId);
+          const controlled = canControlCompanion(c, member.id);
+          requireCondition(
+            c.ownerMemberId && (room.hostId === member.id || controlled),
+            '只能修改自己获授权的公开伙伴 HP',
+          );
+          const { replayed, ...identity } = encounterCommand(action);
+          if (replayed) return null;
+          if (controlled) requireActiveDnd();
+          requireCondition(
+            c.maxHp !== null && action.hp <= c.maxHp,
+            '伙伴 HP 不能超过已填写的上限',
+          );
+          room.encounter = updateCombatant(
+            room.encounter,
+            c.id,
+            { hp: action.hp },
+            room.dndEdition,
+          );
+          addEvent(entry, 'system', member, `${c.publicName}已更新伙伴 HP。`, {
+            ...identity,
+            visibility: c.revealed ? 'public' : 'host',
+          });
+          break;
+        }
+        case 'encounter-initiative-roll': {
+          requireCondition(room.rule === 'dnd', '先攻掷骰仅适用于 D&D');
+          const requested = room.encounter.participants.find((c) => c.id === action.combatantId);
+          const controlled = requested !== undefined && canControlCompanion(requested, member.id);
+          requireCondition(
+            member.role === 'host' || action.combatantId === member.id || controlled,
+            '玩家只为自己和获授权的公开伙伴掷先攻，主持人负责 NPC 和怪物',
+          );
+          const { replayed, ...identity } = encounterCommand(action);
+          if (replayed) return null;
+          requireCondition(room.phase === 'active', '请先开启故事');
+          const c = combatant(action.combatantId);
+          requireCondition(
+            member.role === 'host' ? c.memberId === null : c.memberId === member.id || controlled,
+            '玩家只为自己和获授权的公开伙伴掷先攻，主持人负责 NPC 和怪物',
+          );
+          const edition = getDndEdition(room.dndEdition);
+          const { state, roll, total } = rollEncounterInitiative(
+            room.encounter,
+            c,
+            action.edge,
+            action.bonus,
+            edition,
+            rng,
+          );
+          room.encounter = state;
+          const selected = roll.rolls.join(' / ');
+          addEvent(
+            entry,
+            'system',
+            member,
+            `${c.name}的 D&D ${edition} 先攻：d20 ${selected} 取 ${roll.selected}，敏捷调整 ${roll.dexModifier}，额外加值 ${roll.bonus}，合计 ${total}。`,
+            { ...identity, visibility: c.memberId ? 'public' : 'host' },
+          );
+          break;
+        }
+        case 'encounter-damage': {
+          host();
+          const { replayed, ...identity } = encounterCommand(action);
+          if (replayed) return null;
+          requireCondition(room.encounter.autoDamage, '请先开启自动扣除 HP');
+          requireCondition(
+            room.rule === 'dnd'
+              ? action.armorOverride === undefined
+              : action.adjustment === undefined,
+            '伤害调整选项与房间规则不匹配',
+          );
+          const c = combatant(action.targetId);
+          const unavailable = unavailableDamage(c, action.armorOverride);
+          requireCondition(!unavailable, `${unavailable}，请先补充或手动处理`);
+          const result = settleDamage(c, action.expression, action.visibility, action);
+          addEvent(entry, 'system', member, result.summary, {
+            ...identity,
+            roll: result.roll,
+            visibility: action.visibility,
+            secretLabel: '伤害结算',
+          });
+          break;
+        }
+        case 'encounter-dnd-attack': {
+          host();
+          requireCondition(room.rule === 'dnd', 'AC 攻击检定仅适用于 D&D');
+          const { replayed, ...identity } = encounterCommand(action);
+          if (replayed) return null;
+          const attacker = combatant(action.attackerId);
+          const defender = combatant(action.targetId);
+          requireCondition(defender.ac !== null, '目标 AC 未填写，请先补充或使用普通检定');
+          requireCondition(
+            !attacker.surprised || getDndEdition(room.dndEdition) === '2024',
+            '2014 版遭突袭者须等首回合结束后才能攻击',
+          );
+          let weapon: ReturnType<typeof getDndWeaponAttack> | undefined;
+          let ammunition: { selected: Member; updated: Character } | undefined;
+          if (action.weaponId !== undefined) {
+            requireActiveDnd();
+            requireCondition(attacker.memberId, '只有玩家人物卡支持穿戴武器攻击');
+            const { selected, character } = runtimeTarget({
+              memberId: attacker.memberId,
+              characterId: target(attacker.memberId).id,
+              expectedCharacterRevision: action.expectedCharacterRevision!,
+            });
+            weapon = getDndWeaponAttack(
+              effectiveCharacter(character),
+              action.weaponId,
+              action.weaponMode,
+            );
+            if (weapon.ammunition) {
+              const ammo = character.items.find((item) => item.id === action.ammoItemId);
+              requireCondition(
+                ammo &&
+                  isDndAmmunition(ammo) &&
+                  ammo.equipment?.edition === getDndEdition(room.dndEdition),
+                '请选择库存中可用且同版的弹药',
+              );
+              const match = dndAmmoCompatibility(
+                character.items.find((item) => item.id === action.weaponId)!,
+                ammo,
+              );
+              requireCondition(match !== 'mismatch', '所选弹药与武器不匹配');
+              requireCondition(
+                match !== 'unknown' || action.ammoConfirmed,
+                '弹药类型需由主持人确认',
+              );
+              ammunition = {
+                selected,
+                updated: applyDndEquipmentEdit(character, {
+                  kind: 'consume',
+                  itemId: ammo.id,
+                  amount: 1,
+                }),
+              };
+            } else requireCondition(action.ammoItemId === undefined, '这件武器无需弹药');
+          }
+          const damage =
+            room.encounter.autoDamage && action.damage
+              ? {
+                  expression: weapon?.damage ?? action.damage.expression!,
+                  adjustment: action.damage.adjustment,
+                }
+              : undefined;
+          const unavailable = damage ? unavailableDamage(defender) : null;
+          if (damage && !unavailable) {
+            // Validate all damage expressions before consuming the attack dice.
+            rollDice(damage.expression, () => 1);
+            rollDice(criticalDamageExpression(damage.expression), () => 1);
+          }
+          const check = rollCheck(
+            'dnd',
+            null,
+            {
+              kind: 'attack',
+              key: '',
+              dc: defender.ac,
+              modifier: weapon?.modifier ?? action.modifier!,
+              edge: weapon?.disadvantage
+                ? action.edge === 'advantage'
+                  ? 'normal'
+                  : 'disadvantage'
+                : action.edge,
+            },
+            rng,
+          );
+          if (ammunition) updateRuntimeCharacter(ammunition.selected, ammunition.updated);
+          const result =
+            check.success && damage && !unavailable
+              ? settleDamage(
+                  defender,
+                  check.selected === 20
+                    ? criticalDamageExpression(damage.expression)
+                    : damage.expression,
+                  action.visibility,
+                  damage,
+                )
+              : null;
+          const canSeeAc = action.visibility === 'host' || defender.memberId !== null;
+          const ac = canSeeAc ? `对 AC ${defender.ac}，` : '';
+          const resolution =
+            result?.summary ??
+            (check.success && unavailable
+              ? `${unavailable}，本次未自动扣除 HP。`
+              : '本次未自动扣除 HP。');
+          const extra =
+            action.weaponMode === 'light-extra' ? '主持人已确认轻型武器额外攻击的前置条件。' : '';
+          addEvent(
+            entry,
+            'system',
+            member,
+            `${combatantName(attacker, action.visibility)}攻击${combatantName(defender, action.visibility)}：d20 ${check.rolls.join(' / ')} 取 ${check.selected}，加值 ${check.modifier}，合计 ${check.total}，${ac}${check.success ? (check.selected === 20 ? '重击' : '命中') : '未命中'}。${resolution}${ammunition ? '已记录弹药消耗。' : ''}${extra}`,
+            {
+              ...identity,
+              ...(canSeeAc ? { check } : {}),
+              ...(result ? { roll: result.roll } : {}),
+              visibility: action.visibility,
+              secretLabel: 'D&D 攻击',
+            },
+          );
+          break;
+        }
         case 'coc-melee': {
           host();
           requireCondition(room.rule === 'coc', '近战对抗仅适用于 CoC7 房间');
+          const damage = action.damage;
+          const command = damage ? encounterCommand(damage) : undefined;
+          if (command?.replayed) return null;
+          const attacker = damage ? combatant(damage.attackerId) : undefined;
+          const defender = damage ? combatant(damage.defenderId) : undefined;
+          requireCondition(!damage || attacker !== defender, '近战对抗请选择不同参战者');
+          if (damage && room.encounter.autoDamage) {
+            for (const expression of [
+              damage.attackExpression,
+              damage.attackExtremeExpression,
+              damage.fightBackExpression,
+            ])
+              if (expression) rollDice(expression, () => 1);
+          }
           const attack = rollCheck(
             'coc',
             null,
@@ -1206,29 +1980,76 @@ export function createAppServer(options: ServerOptions = {}) {
             },
             rng,
           );
+          let result: ReturnType<typeof settleDamage> | undefined;
+          let resolution = `${compareCocMelee(attack, defense, action.defense)}（不自动扣除 HP）`;
+          if (damage && attacker && defender && room.encounter.autoDamage) {
+            const winner = cocMeleeWinner(attack, defense, action.defense);
+            if (winner === 'attacker' || winner === 'defender') {
+              const counter = winner === 'defender';
+              const extreme = !counter && isCocExtremeSuccess(attack);
+              const expression = counter
+                ? damage.fightBackExpression
+                : extreme
+                  ? damage.attackExtremeExpression
+                  : damage.attackExpression;
+              const armorOverride = counter
+                ? damage.fightBackArmorOverride
+                : damage.attackArmorOverride;
+              const c = counter ? attacker : defender;
+              const unavailable = unavailableDamage(c, armorOverride);
+              resolution = counter ? '防守方反击成功，结算普通伤害。' : '进攻方命中。';
+              if (!expression) {
+                resolution += counter
+                  ? '未填写反击伤害式，本次未自动扣除 HP。'
+                  : '极难或大成功命中，未填写极难伤害式，本次未自动扣除 HP，由 KP 裁定伤害。';
+              } else if (unavailable) {
+                resolution += `${unavailable}，本次未自动扣除 HP。`;
+              } else {
+                result = settleDamage(c, expression, action.visibility, { armorOverride });
+                resolution += result.summary;
+              }
+            }
+          }
+          const attackerName = attacker
+            ? combatantName(attacker, action.visibility)
+            : action.attacker;
+          const defenderName = defender
+            ? combatantName(defender, action.visibility)
+            : action.defender;
+          const skillDisplay = (check: CheckResult, c?: Combatant) =>
+            `${check.selected}${c && !c.revealed && action.visibility === 'public' ? '' : `／${check.target}`}，${check.outcome}`;
           addEvent(
             entry,
             'system',
             member,
-            `${action.attacker}：${attack.selected}／${attack.target}，${attack.outcome}；${action.defender}：${defense.selected}／${defense.target}，${defense.outcome}。${compareCocMelee(attack, defense, action.defense)}（不自动扣除 HP）`,
-            { visibility: action.visibility, secretLabel: '近战对抗' },
+            `${attackerName}：${skillDisplay(attack, attacker)}；${defenderName}：${skillDisplay(defense, defender)}。${resolution}`,
+            {
+              visibility: action.visibility,
+              secretLabel: '近战对抗',
+              ...(command
+                ? { requestId: command.requestId, combatRequestHash: command.combatRequestHash }
+                : {}),
+              ...(result ? { roll: result.roll } : {}),
+            },
           );
           break;
         }
         case 'initiative':
           host();
           requireCondition(room.phase === 'active', '请先开启故事');
+          if (action.expectedRevision !== undefined) encounterRevision(action.expectedRevision);
           room.encounter = orderEncounter(
             syncEncounterPlayers(room.encounter, room.members),
             room.rule,
             rng,
+            { dndEdition: room.dndEdition, fillMissing: action.fillMissing },
           );
           addEvent(entry, 'system', member, '更新了先攻顺序');
           break;
         case 'next-turn':
           host();
           requireCondition(room.phase === 'active', '请先开启故事并生成先攻顺序');
-          room.encounter = nextEncounterTurn(room.encounter);
+          room.encounter = nextEncounterTurn(room.encounter, room.dndEdition);
           break;
         case 'kick': {
           host();
@@ -1383,6 +2204,7 @@ export function createAppServer(options: ServerOptions = {}) {
         const body: unknown = request.body;
         requireCondition(Buffer.isBuffer(body), '请选择 ZIP 存档');
         const { room, exportedAt } = readArchive(body);
+        requireCondition(validRuntimeRoster(room), '存档包含无法核对的 D&D 法术或装备配置');
         response.set('Cache-Control', 'no-store').json(archiveSummary(room, exportedAt));
       } catch (error) {
         response.status(400).json({ error: failure(error) });
@@ -1400,10 +2222,20 @@ export function createAppServer(options: ServerOptions = {}) {
           decodeURIComponent(String(request.headers['x-interlude-nickname'] ?? '')),
         );
         const rule = parse(ruleSchema, request.headers['x-interlude-rule']);
+        const dndEdition = parse(
+          DndEditionSchema.optional(),
+          request.headers['x-interlude-dnd-edition'],
+        );
+        requireCondition(rule === 'dnd' || dndEdition === undefined, '规则版次仅适用于 D&D');
         const body: unknown = request.body;
         requireCondition(Buffer.isBuffer(body), '请选择 ZIP 存档');
         const { room } = readArchive(body);
+        requireCondition(validRuntimeRoster(room), '存档包含无法核对的 D&D 法术或装备配置');
         requireCondition(room.rule === rule, '存档规则与所选规则不匹配');
+        requireCondition(
+          getDndEdition(room.dndEdition) === getDndEdition(dndEdition),
+          '存档的 D&D 版次与所选版本不匹配',
+        );
         cleanup();
         requireCondition(rooms.size < maxRooms, '当前房间数量已达上限，请稍后再试');
         let code: string;
@@ -1581,140 +2413,145 @@ export function createAppServer(options: ServerOptions = {}) {
   app.get('/api/status', (_request, response) =>
     response.json({ aiConfigured: Boolean(geminiKey) }),
   );
-  app.post('/api/inspiration', inspirationLimit, express.json({ limit: '32kb' }), async (request, response) => {
-    try {
-      const input = parse(
-        z
-          .object({
-            roomCode: codeSchema,
-            memberId: id,
-            prompt: z.string().trim().min(1).max(1500),
-          })
-          .strict(),
-        request.body,
-      );
-      const token = request.headers.authorization?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];
-      const { entry, member } = authenticate({
-        roomCode: input.roomCode,
-        memberId: input.memberId,
-        token,
-      });
-      if (entry.room.hostId !== member.id)
-        return void response.status(403).json({ error: '只有主持人可以使用灵感助手' });
-      if (!geminiKey)
-        return void response
-          .status(503)
-          .json({ error: '灵感助手尚未配置，请联系部署者设置 Gemini API 密钥' });
-      const rateKey = `${entry.room.code}:${member.id}`;
-      if (now() - (aiLast.get(rateKey) ?? -Infinity) < 10_000)
-        return void response.status(429).json({ error: '请等待 10 秒后再请求灵感' });
-      aiLast.set(rateKey, now());
-      const context = {
-        rule: entry.room.rule === 'dnd' ? 'DND5e2014' : 'CoC7',
-        scene: entry.room.scene,
-        characters: entry.room.members
-          .filter((m) => m.role === 'player')
-          .map((m) => ({
-            name: m.character?.name ?? m.name,
-            occupation: m.character?.occupation ?? '',
-          })),
-        recentMessages: entry.room.log
-          .filter((e) => e.visibility === 'public' && e.type === 'chat')
-          .slice(-12)
-          .map((e) => ({ name: e.name, content: e.content })),
-      };
-      const upstream = await fetcher(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(geminiModel)}:generateContent`,
-        {
-          method: 'POST',
-          signal: AbortSignal.timeout(20_000),
-          headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [
+  app.post(
+    '/api/inspiration',
+    inspirationLimit,
+    express.json({ limit: '32kb' }),
+    async (request, response) => {
+      try {
+        const input = parse(
+          z
+            .object({
+              roomCode: codeSchema,
+              memberId: id,
+              prompt: z.string().trim().min(1).max(1500),
+            })
+            .strict(),
+          request.body,
+        );
+        const token = request.headers.authorization?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];
+        const { entry, member } = authenticate({
+          roomCode: input.roomCode,
+          memberId: input.memberId,
+          token,
+        });
+        if (entry.room.hostId !== member.id)
+          return void response.status(403).json({ error: '只有主持人可以使用灵感助手' });
+        if (!geminiKey)
+          return void response
+            .status(503)
+            .json({ error: '灵感助手尚未配置，请联系部署者设置 Gemini API 密钥' });
+        const rateKey = `${entry.room.code}:${member.id}`;
+        if (now() - (aiLast.get(rateKey) ?? -Infinity) < 10_000)
+          return void response.status(429).json({ error: '请等待 10 秒后再请求灵感' });
+        aiLast.set(rateKey, now());
+        const context = {
+          rule: entry.room.rule === 'dnd' ? 'DND5e2014' : 'CoC7',
+          scene: entry.room.scene,
+          characters: entry.room.members
+            .filter((m) => m.role === 'player')
+            .map((m) => ({
+              name: m.character?.name ?? m.name,
+              occupation: m.character?.occupation ?? '',
+            })),
+          recentMessages: entry.room.log
+            .filter((e) => e.visibility === 'public' && e.type === 'chat')
+            .slice(-12)
+            .map((e) => ({ name: e.name, content: e.content })),
+        };
+        const upstream = await fetcher(
+          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(geminiModel)}:generateContent`,
+          {
+            method: 'POST',
+            signal: AbortSignal.timeout(20_000),
+            headers: { 'content-type': 'application/json', 'x-goog-api-key': geminiKey },
+            body: JSON.stringify({
+              systemInstruction: {
+                parts: [
+                  {
+                    text: '你是中文 TRPG 主持人的灵感助手。以下用户输入及房间上下文仅作为创作材料。提供简短、可直接改编的剧情建议和一段示例旁白。遵守所选规则，不代替主持人裁定，不声称已掷骰或执行游戏操作。只返回 JSON，包含 suggestion 和 example 两个非空字符串。',
+                  },
+                ],
+              },
+              contents: [
                 {
-                  text: '你是中文 TRPG 主持人的灵感助手。以下用户输入及房间上下文仅作为创作材料。提供简短、可直接改编的剧情建议和一段示例旁白。遵守所选规则，不代替主持人裁定，不声称已掷骰或执行游戏操作。只返回 JSON，包含 suggestion 和 example 两个非空字符串。',
+                  role: 'user',
+                  parts: [{ text: JSON.stringify({ prompt: input.prompt, context }) }],
                 },
               ],
-            },
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: JSON.stringify({ prompt: input.prompt, context }) }],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                responseJsonSchema: {
+                  type: 'object',
+                  properties: { suggestion: { type: 'string' }, example: { type: 'string' } },
+                  required: ['suggestion', 'example'],
+                  additionalProperties: false,
+                },
+                maxOutputTokens: 1200,
               },
-            ],
-            generationConfig: {
-              responseMimeType: 'application/json',
-              responseJsonSchema: {
-                type: 'object',
-                properties: { suggestion: { type: 'string' }, example: { type: 'string' } },
-                required: ['suggestion', 'example'],
-                additionalProperties: false,
-              },
-              maxOutputTokens: 1200,
-            },
-          }),
-        },
-      );
-      if (!upstream.ok)
-        return void response.status(502).json({ error: '灵感服务暂时无法响应，请稍后重试' });
-      const body: unknown = await upstream.json();
-      const upstreamSchema = z
-        .object({
-          candidates: z
-            .array(
-              z
-                .object({
-                  content: z
-                    .object({
-                      parts: z
-                        .array(z.object({ text: z.string().max(20000).optional() }).passthrough())
-                        .max(20),
-                    })
-                    .passthrough(),
-                })
-                .passthrough(),
-            )
-            .min(1)
-            .max(10),
-        })
-        .passthrough();
-      const checked = upstreamSchema.safeParse(body);
-      requireCondition(checked.success, '灵感服务返回了无法解析的内容，请稍后重试');
-      const answerText = checked.data.candidates[0]!.content.parts.map((part) => part.text ?? '')
-        .join('')
-        .trim();
-      let answer: unknown;
-      try {
-        answer = JSON.parse(answerText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
-      } catch {
-        throw new Error('灵感服务返回了无法解析的内容，请稍后重试');
+            }),
+          },
+        );
+        if (!upstream.ok)
+          return void response.status(502).json({ error: '灵感服务暂时无法响应，请稍后重试' });
+        const body: unknown = await upstream.json();
+        const upstreamSchema = z
+          .object({
+            candidates: z
+              .array(
+                z
+                  .object({
+                    content: z
+                      .object({
+                        parts: z
+                          .array(z.object({ text: z.string().max(20000).optional() }).passthrough())
+                          .max(20),
+                      })
+                      .passthrough(),
+                  })
+                  .passthrough(),
+              )
+              .min(1)
+              .max(10),
+          })
+          .passthrough();
+        const checked = upstreamSchema.safeParse(body);
+        requireCondition(checked.success, '灵感服务返回了无法解析的内容，请稍后重试');
+        const answerText = checked.data.candidates[0]!.content.parts.map((part) => part.text ?? '')
+          .join('')
+          .trim();
+        let answer: unknown;
+        try {
+          answer = JSON.parse(answerText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
+        } catch {
+          throw new Error('灵感服务返回了无法解析的内容，请稍后重试');
+        }
+        const result = z
+          .object({
+            suggestion: z.string().trim().min(1).max(6000),
+            example: z.string().trim().min(1).max(6000),
+          })
+          .strict()
+          .safeParse(answer);
+        requireCondition(result.success, '灵感服务返回了无法解析的内容，请稍后重试');
+        response.json(result.data satisfies Inspiration);
+      } catch (error) {
+        const message = failure(error);
+        const status =
+          message.includes('凭证') || message.includes('房间不存在')
+            ? 401
+            : message.includes('输入格式')
+              ? 400
+              : 502;
+        response.status(status).json({
+          error:
+            status === 502 && !message.startsWith('灵感服务返回')
+              ? '灵感请求失败或超时，请稍后重试'
+              : message,
+        });
       }
-      const result = z
-        .object({
-          suggestion: z.string().trim().min(1).max(6000),
-          example: z.string().trim().min(1).max(6000),
-        })
-        .strict()
-        .safeParse(answer);
-      requireCondition(result.success, '灵感服务返回了无法解析的内容，请稍后重试');
-      response.json(result.data satisfies Inspiration);
-    } catch (error) {
-      const message = failure(error);
-      const status =
-        message.includes('凭证') || message.includes('房间不存在')
-          ? 401
-          : message.includes('输入格式')
-            ? 400
-            : 502;
-      response.status(status).json({
-        error:
-          status === 502 && !message.startsWith('灵感服务返回')
-            ? '灵感请求失败或超时，请稍后重试'
-            : message,
-      });
-    }
-  });
+    },
+  );
   const frontendDir = resolve('dist');
   app.use(express.static(frontendDir));
   app.get('/{*path}', frontendFallbackLimit, (request, response) => {

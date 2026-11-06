@@ -20,14 +20,23 @@ import { KeeperImportGuide } from './KeeperImportGuide';
 import { ReviewDesk } from './ReviewDesk';
 import { Spinner } from './ui';
 import { DndToolkit } from './DndToolkit';
+import type { DndEdition } from '../../shared/dnd-edition';
+import { DndEditionSwitch } from './DndEditionSwitch';
+import { DndReferenceLibrary } from './DndReferenceLibrary';
+import { EquipmentLibrary } from './CharacterEquipment';
+import { EncounterPlans } from './EncounterPlans';
 
 export function HostToolkit({
+  dndEdition,
+  onDndEditionChange,
   room,
   memberId,
   onAction,
   onReturnRoom,
   notify,
 }: {
+  dndEdition: DndEdition;
+  onDndEditionChange: (edition: DndEdition) => void;
   room: Room | null;
   memberId?: string;
   onAction: (action: RoomAction) => Promise<void>;
@@ -35,8 +44,11 @@ export function HostToolkit({
   notify: (message: string, type?: 'success' | 'error') => void;
 }) {
   const [cards, setCards] = useState<KeeperCard[]>([]);
-  const [libraryRule, setLibraryRule] = useState<'coc' | 'dnd' | 'atlas'>(room?.rule ?? 'coc');
+  const [libraryRule, setLibraryRule] = useState<'coc' | 'dnd' | 'atlas' | 'plans'>(
+    room?.rule ?? 'coc',
+  );
   const [loading, setLoading] = useState(true);
+  const [dndSection, setDndSection] = useState<'blocks' | 'spell' | 'feat' | 'equipment'>('blocks');
   const [error, setError] = useState('');
   const [workshop, setWorkshop] = useState<{
     scope: 'personal' | 'room';
@@ -119,6 +131,12 @@ export function HostToolkit({
       </div>
       <div className="segmented toolkit-rule-switch" aria-label="备团资料规则">
         <button
+          className={libraryRule === 'plans' ? 'selected' : ''}
+          onClick={() => setLibraryRule('plans')}
+        >
+          遭遇预案
+        </button>
+        <button
           className={libraryRule === 'coc' ? 'selected' : ''}
           onClick={() => setLibraryRule('coc')}
         >
@@ -128,7 +146,7 @@ export function HostToolkit({
           className={libraryRule === 'dnd' ? 'selected' : ''}
           onClick={() => setLibraryRule('dnd')}
         >
-          D&D 5e · 2014
+          D&D 5e
         </button>
         <button
           className={libraryRule === 'atlas' ? 'selected' : ''}
@@ -137,16 +155,61 @@ export function HostToolkit({
           地图与场景
         </button>
       </div>
-      {libraryRule === 'atlas' ? (
+      {libraryRule === 'plans' ? (
+        <EncounterPlans room={room} isHost={isHost} edition={dndEdition} run={run} />
+      ) : libraryRule === 'atlas' ? (
         <AtlasToolkit room={room} isHost={isHost} onAction={onAction} />
       ) : libraryRule === 'dnd' ? (
-        <DndToolkit
-          room={room}
-          isHost={isHost}
-          onAction={onAction}
-          onReturnRoom={onReturnRoom}
-          onReview={() => setReview(true)}
-        />
+        <>
+          <div className="dnd-preparation-nav">
+            <div className="tabs" aria-label="D&D 备团工具">
+              <button
+                className={dndSection === 'equipment' ? 'active' : ''}
+                onClick={() => setDndSection('equipment')}
+              >
+                装备
+              </button>
+              <button
+                className={dndSection === 'blocks' ? 'active' : ''}
+                onClick={() => setDndSection('blocks')}
+              >
+                NPC 与怪物
+              </button>
+              <button
+                className={dndSection === 'spell' ? 'active' : ''}
+                onClick={() => setDndSection('spell')}
+              >
+                法术书
+              </button>
+              <button
+                className={dndSection === 'feat' ? 'active' : ''}
+                onClick={() => setDndSection('feat')}
+              >
+                专长
+              </button>
+            </div>
+            <DndEditionSwitch value={dndEdition} onChange={onDndEditionChange} />
+          </div>
+          {dndSection === 'blocks' ? (
+            <DndToolkit
+              key={dndEdition}
+              edition={dndEdition}
+              room={room}
+              isHost={isHost}
+              onAction={onAction}
+              onReturnRoom={onReturnRoom}
+              onReview={() => setReview(true)}
+            />
+          ) : dndSection === 'equipment' ? (
+            <EquipmentLibrary key={dndEdition} edition={dndEdition} />
+          ) : (
+            <DndReferenceLibrary
+              key={`${dndEdition}-${dndSection}`}
+              edition={dndEdition}
+              kind={dndSection}
+            />
+          )}
+        </>
       ) : (
         <>
           {error && (

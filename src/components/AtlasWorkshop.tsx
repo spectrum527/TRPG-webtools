@@ -272,7 +272,7 @@ export function AtlasWorkshop({
                   <h3>{a.name}</h3>
                   <p>{a.summary || '打开地图册，继续整理这段故事。'}</p>
                   <small>
-                    {a.rule === 'any' ? '通用资料' : a.rule === 'coc' ? 'CoC 7' : 'D&D 5e · 2014'}
+                    {a.rule === 'any' ? '通用资料' : a.rule === 'coc' ? 'CoC 7' : 'D&D 5e'}
                   </small>
                 </button>
               ))}
@@ -456,7 +456,7 @@ export function AtlasWorkshop({
                     >
                       <option value="any">通用</option>
                       <option value="coc">CoC 7</option>
-                      <option value="dnd">D&D 5e · 2014</option>
+                      <option value="dnd">D&D 5e</option>
                     </select>
                   </label>
                   <label className="field">

@@ -1,9 +1,11 @@
 import type { ChatImage } from './media';
 import type { Room, RuleId } from './types';
+import { getDndEdition, type DndEdition } from './dnd-edition';
 export const MAX_ARCHIVE_BYTES = 32 * 1024 * 1024;
 export interface ArchiveSummary {
   name: string;
   rule: RuleId;
+  dndEdition?: DndEdition;
   phase: Room['phase'];
   scene: string;
   exportedAt: string;
@@ -29,6 +31,7 @@ export function archiveSummary(room: Room, exportedAt: string): ArchiveSummary {
   return {
     name: room.name,
     rule: room.rule,
+    ...(room.rule === 'dnd' ? { dndEdition: getDndEdition(room.dndEdition) } : {}),
     phase: room.phase,
     scene: room.scene.title,
     exportedAt,

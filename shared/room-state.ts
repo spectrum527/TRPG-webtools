@@ -5,8 +5,10 @@ import { ChatImageSchema } from './media.ts';
 import { CreationPolicySchema } from './creation.ts';
 import { KeeperCardSchema } from './keeper.ts';
 import { DndStatBlockSchema } from './dnd.ts';
+import { DndEditionSchema, getDndEdition } from './dnd-edition.ts';
 import { EncounterSchema, validateEncounterReferences } from './encounter.ts';
 import { getCharacterErrors } from './rules.ts';
+import { EncounterPlanLibrarySchema, validateEncounterPlanForRoom } from './preparation.ts';
 import type { Character, Room, RoomEvent } from './types.ts';
 const id = z.string().min(1).max(100);
 const name = z.string().trim().min(1).max(60);
@@ -95,6 +97,10 @@ export const eventSchema = z
     createdAt: z.iso.datetime(),
     visibility: visibilitySchema,
     requestId: id.optional(),
+    combatRequestHash: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .optional(),
     image: ChatImageSchema.optional(),
     scene: PublicSceneSchema.optional(),
     imageDescription: z
@@ -105,12 +111,18 @@ export const eventSchema = z
     roll: diceSchema.optional(),
     check: checkResultSchema.optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (event) =>
+      event.combatRequestHash === undefined ||
+      (event.type === 'system' && event.requestId !== undefined),
+  );
 export const roomSchema = z
   .object({
     code: codeSchema,
     name,
     rule: ruleSchema,
+    dndEdition: DndEditionSchema.optional(),
     hostId: id,
     mode: modeSchema,
     phase: z.enum(['lobby', 'active']),
@@ -129,24 +141,41 @@ export const roomSchema = z
     keeperCards: z.array(KeeperCardSchema).max(200),
     dndCards: z.array(DndStatBlockSchema).max(200),
     encounter: EncounterSchema,
+    encounterPlans: EncounterPlanLibrarySchema.optional(),
+    encounterPlanRevision: revision.optional(),
   })
-  .strict();
+  .strict()
+  .refine((room) => room.rule === 'dnd' || room.dndEdition === undefined);
 
 export function validRoomReferences(room: Room): boolean {
   const ids = new Set(room.members.map((m) => m.id));
+  const combatRequests = room.log.filter((event) => event.combatRequestHash);
   return !(
     ids.size !== room.members.length ||
     !ids.has(room.hostId) ||
     room.members.filter((m) => m.role === 'host').length !== 1 ||
     room.members.find((m) => m.id === room.hostId)?.role !== 'host' ||
-    room.members.some((m) => m.character && m.character.rule !== room.rule) ||
+    room.members.some(
+      ({ character }) =>
+        character &&
+        (character.rule !== room.rule ||
+          getDndEdition(character.dndEdition) !== getDndEdition(room.dndEdition)),
+    ) ||
     room.creationPolicy.rule !== room.rule ||
     room.atlases.some((a) => a.rule !== 'any' && a.rule !== room.rule) ||
     (room.rule !== 'coc' && room.keeperCards.length > 0) ||
     (room.rule !== 'dnd' && room.dndCards.length > 0) ||
+    room.dndCards.some(
+      (card) => getDndEdition(card.dndEdition) !== getDndEdition(room.dndEdition),
+    ) ||
     new Set(room.dndCards.map((card) => card.id)).size !== room.dndCards.length ||
-    !validateEncounterReferences(room.encounter, room.members, room.rule) ||
+    !validateEncounterReferences(room.encounter, room.members, room.rule, room.dndEdition) ||
+    (room.encounterPlans ?? []).some(
+      (plan) => !validateEncounterPlanForRoom(plan, room.rule, room.dndEdition),
+    ) ||
     new Set(room.keeperCards.map((card) => card.id)).size !== room.keeperCards.length ||
+    new Set(combatRequests.map((event) => JSON.stringify([event.memberId, event.requestId])))
+      .size !== combatRequests.length ||
     room.initiative.some((i) => !ids.has(i.memberId)) ||
     new Set(room.initiative.map((i) => i.memberId)).size !== room.initiative.length ||
     (room.initiative.length > 0 && room.activeTurn >= room.initiative.length)
@@ -154,9 +183,13 @@ export function validRoomReferences(room: Room): boolean {
 }
 /** Whitelist visible fields. Never spread a private event into a player payload. */
 export function visibleEvent(event: RoomEvent, isHost: boolean): RoomEvent | null {
-  if (isHost || event.visibility === 'public') return event;
+  if (isHost || event.visibility === 'public') {
+    if (event.combatRequestHash === undefined) return event;
+    const { combatRequestHash: _combatRequestHash, ...visible } = event;
+    return visible;
+  }
   if (!['roll', 'check'].includes(event.type) && !event.secretLabel) return null;
-  const label = event.roll?.expression ?? event.check?.label ?? event.secretLabel ?? '暗骰';
+  const label = event.secretLabel ?? event.roll?.expression ?? event.check?.label ?? '暗骰';
   return {
     id: event.id,
     type: event.type === 'system' ? 'check' : event.type,

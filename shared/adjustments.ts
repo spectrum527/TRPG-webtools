@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { COC_ATTRIBUTES, COC_SKILLS, DND_ATTRIBUTES, DND_SKILLS } from './catalog';
 import { dndSkillModifier } from './creation';
 import type { Character } from './types';
+import { effectiveDndAC } from './dnd-equipment';
 
 const key = z
   .string()
@@ -111,7 +112,8 @@ export function effectiveCharacter(card: Character, includeTemporary = true): Ch
     if (entry.target === 'skill') skills[entry.key] += entry.amount;
   }
   // Resource limits and creation budgets are deliberately unchanged by numeric effects.
-  return { ...withAttributes, skills };
+  const effective = { ...withAttributes, skills };
+  return { ...effective, ac: effectiveDndAC(effective) };
 }
 
 export function adjustedValue(card: Character, target: AdjustmentTarget, key: string) {

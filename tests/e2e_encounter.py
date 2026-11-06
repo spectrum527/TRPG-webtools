@@ -121,7 +121,7 @@ with sync_playwright() as p:
     try:
         host.goto(args.url,wait_until='domcontentloaded')
         nav(host,'主持人工具集')
-        host.get_by_role('button',name='D&D 5e · 2014',exact=True).click()
+        host.get_by_role('button',name='D&D 5e',exact=True).click()
         host.get_by_role('button',name='打开个人数据块库',exact=True).click()
         host.get_by_label('从模板开始').select_option('npc-bridge-guard')
         host.get_by_role('button',name='使用此模板',exact=True).click()
@@ -160,7 +160,7 @@ with sync_playwright() as p:
         close(host)
         host.reload(wait_until='domcontentloaded')
         nav(host,'主持人工具集')
-        host.get_by_role('button',name='D&D 5e · 2014',exact=True).click()
+        host.get_by_role('button',name='D&D 5e',exact=True).click()
         host.get_by_role('button',name='打开个人数据块库',exact=True).click()
         expect(host.locator('.keeper-card-list > button')).to_have_count(4)
         close(host)

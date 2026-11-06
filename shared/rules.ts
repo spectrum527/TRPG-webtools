@@ -1,5 +1,20 @@
 import { z } from 'zod';
-import type { Character, CheckRequest, CheckResult, DiceGroup, DiceResult, RuleId } from './types';
+import type {
+  Character,
+  CheckRequest,
+  CheckResult,
+  DiceGroup,
+  DiceResult,
+  Edge,
+  RuleId,
+} from './types';
+import { DndEditionSchema, getDndEdition, type DndEdition } from './dnd-edition';
+import { DndMagicStateSchema, getDndMagicErrors } from './dnd-magic';
+import {
+  DndEquipmentStateSchema,
+  DndItemDetailsSchema,
+  getDndEquipmentErrors,
+} from './dnd-equipment';
 import { CreationAllocationSchema, defaultAllocation, syncAllocation } from './creation';
 import {
   rollCocAttributes,
@@ -16,6 +31,7 @@ import {
 
 /** An injectable die returns a whole number in the inclusive range 1..sides. */
 export type DieRandom = (sides: number) => number;
+export const MAX_CHARACTER_BYTES = 1024 * 1024;
 
 import { DND_ATTRIBUTES, COC_ATTRIBUTES, DND_SKILLS, COC_SKILLS } from './catalog';
 export * from './catalog';
@@ -100,6 +116,19 @@ export function abilityModifier(score: number): number {
 export function proficiencyBonus(level: number): number {
   integer(level, 1, 20, '等级');
   return 2 + Math.floor((level - 1) / 4);
+}
+
+/** Both editions use the effective Wisdom (Perception) modifier and the same ±5 for edge. */
+export function passivePerception(
+  character: Character,
+  { edge = 'normal', modifier = 0 }: { edge?: Edge; modifier?: number } = {},
+): number | null {
+  if (character.rule !== 'dnd') return null;
+  if (!['normal', 'advantage', 'disadvantage'].includes(edge))
+    throw new Error('察觉优劣势选项无效');
+  integer(modifier, -100, 100, '情境修正');
+  const edgeModifier = edge === 'advantage' ? 5 : edge === 'disadvantage' ? -5 : 0;
+  return 10 + effectiveCharacter(character).skills.perception + edgeModifier + modifier;
 }
 
 function selectedRoll(rolls: number[], edge: CheckRequest['edge'], lowerIsBetter = false): number {
@@ -245,6 +274,10 @@ const CharacterSchema = z
     schemaVersion: z.literal(1, { error: '只支持 schemaVersion: 1 的人物卡' }),
     id: identifier,
     rule: z.enum(['dnd', 'coc'], { error: '仅支持 dnd / coc 规则' }),
+    dndEdition: DndEditionSchema.optional(),
+    passivePerceptionEnabled: z.boolean().optional(),
+    dndMagic: DndMagicStateSchema.optional(),
+    dndEquipment: DndEquipmentStateSchema.optional(),
     name: string(80),
     occupation: string(80),
     ancestry: string(80),
@@ -274,6 +307,7 @@ const CharacterSchema = z
             name: string(120).refine((name) => name.trim().length > 0, '请填写物品名称'),
             quantity: whole(0, 9999),
             notes: string(1000),
+            equipment: DndItemDetailsSchema.optional(),
           })
           .strict(),
       )
@@ -285,6 +319,11 @@ const CharacterSchema = z
   .superRefine((character, ctx) => {
     const issue = (path: Array<string | number>, message: string) =>
       ctx.addIssue({ code: 'custom', path, message });
+    if (character.rule === 'coc') {
+      if (character.dndEdition !== undefined) issue(['dndEdition'], '仅适用于 D&D');
+      if (character.passivePerceptionEnabled !== undefined)
+        issue(['passivePerceptionEnabled'], '仅适用于 D&D');
+    }
     if (character.creation && character.creation.rule !== character.rule)
       issue(['creation'], '技能分配与人物规则不匹配');
     const expected = character.rule === 'dnd' ? DND_ATTRIBUTES : COC_ATTRIBUTES;
@@ -319,6 +358,8 @@ const CharacterSchema = z
     if (character.mp > character.maxMp) issue(['mp'], '当前 MP 不可超过上限');
     if (character.san > character.maxSan) issue(['san'], '当前 SAN 不可超过上限');
     for (const error of getAdjustmentErrors(character)) issue(['adjustments'], error);
+    for (const error of getDndEquipmentErrors(character)) issue(['dndEquipment'], error);
+    for (const error of getDndMagicErrors(character)) issue(['dndMagic'], error);
   });
 
 const FIELD_LABELS: Record<string, string> = {
@@ -347,6 +388,10 @@ const FIELD_LABELS: Record<string, string> = {
   updatedAt: '更新时间',
   id: '人物标识符',
   rule: '规则',
+  dndEdition: 'D&D 版次',
+  passivePerceptionEnabled: '被动察觉开关',
+  dndMagic: '法术与资源',
+  dndEquipment: '装备联动',
   schemaVersion: '格式版本',
 };
 
@@ -507,6 +552,7 @@ export function createCharacter(
   rule: RuleId,
   rng: DieRandom = secureDie,
   cocLimits?: CocAttributeRollLimits,
+  dndEdition?: DndEdition,
 ): Character {
   requireRule(rule);
   const now = new Date().toISOString();
@@ -515,6 +561,7 @@ export function createCharacter(
     schemaVersion: 1,
     id: globalThis.crypto.randomUUID(),
     rule,
+    ...(rule === 'dnd' && dndEdition !== undefined ? { dndEdition } : {}),
     name: '',
     occupation: '',
     ancestry: '',
@@ -621,7 +668,11 @@ export function rerollAttributes(
   };
 }
 
-function completedCharacter(value: unknown, expectedRule?: RuleId): Character {
+function completedCharacter(
+  value: unknown,
+  expectedRule?: RuleId,
+  expectedEdition?: DndEdition,
+): Character {
   if (expectedRule !== undefined) requireRule(expectedRule);
   const preflight = preflightCharacter(value);
   if (preflight) throw new Error(preflight);
@@ -637,15 +688,24 @@ function completedCharacter(value: unknown, expectedRule?: RuleId): Character {
     throw new Error(
       `人物卡规则不匹配：当前房间使用 ${expectedRule === 'dnd' ? 'D&D 5e' : 'CoC 7'}`,
     );
+  if (
+    expectedEdition &&
+    (character.rule !== 'dnd' || getDndEdition(character.dndEdition) !== expectedEdition)
+  )
+    throw new Error(`人物卡版次不匹配：当前使用 D&D ${expectedEdition} 规则`);
   const errors = getCharacterErrors(character);
   if (errors.length) throw new Error(errors.join('；'));
   return character;
 }
 
 /** Reads this app's JSON or a Markdown document with exactly one JSON fence. */
-export function parseCharacter(text: string, expectedRule?: RuleId): Character {
-  if (typeof text !== 'string' || text.length > 256000)
-    throw new Error('人物卡文件最多 256000 个字符');
+export function parseCharacter(
+  text: string,
+  expectedRule?: RuleId,
+  expectedEdition?: DndEdition,
+): Character {
+  if (typeof text !== 'string' || new TextEncoder().encode(text).byteLength > MAX_CHARACTER_BYTES)
+    throw new Error('人物卡文件不能超过 1 MiB');
   const trimmed = text.replace(/^\uFEFF/, '').trim();
   if (!trimmed) throw new Error('人物卡文件为空');
   let source = trimmed;
@@ -660,7 +720,7 @@ export function parseCharacter(text: string, expectedRule?: RuleId): Character {
   } catch {
     throw new Error('无法读取 JSON，请检查人物卡文件格式');
   }
-  return completedCharacter(parsed, expectedRule);
+  return completedCharacter(parsed, expectedRule, expectedEdition);
 }
 
 export function exportCharacter(character: Character, format: 'json' | 'md'): string {
@@ -669,6 +729,14 @@ export function exportCharacter(character: Character, format: 'json' | 'md'): st
   if (format === 'json') return `${json}\n`;
   if (format !== 'md') throw new Error('只支持 JSON 或 Markdown 导出');
   const heading = valid.name.replace(/[\r\n]/g, ' ');
+  const edition = getDndEdition(valid.dndEdition);
+  const rule =
+    valid.rule === 'coc'
+      ? 'Call of Cthulhu 7'
+      : edition === '2024'
+        ? 'D&D 5e (2024)'
+        : 'D&D 5e (2014) · SRD 5.1';
+  const passive = valid.passivePerceptionEnabled ? ` · 被动察觉 ${passivePerception(valid)}` : '';
   const effective = effectiveCharacter(valid);
   const clean = (text: string) => text.replace(/[\r\n|`]/g, ' ');
   const adjustments = hasAdjustments(valid)
@@ -677,5 +745,5 @@ export function exportCharacter(character: Character, format: 'json' | 'md'): st
   const rows = (valid.rule === 'dnd' ? DND_ATTRIBUTES : COC_ATTRIBUTES)
     .map(({ key, label }) => `| ${label} | ${valid.attributes[key]} |`)
     .join('\n');
-  return `# ${heading} · 人物卡\n\n规则：${valid.rule === 'dnd' ? 'D&D 5e (2014) · SRD 5.1' : 'Call of Cthulhu 7'}\n\n职业：${valid.occupation.replace(/[\r\n]/g, ' ')}\n\n| 属性 | 数值 |\n| --- | ---: |\n${rows}\n\nHP ${valid.hp}/${valid.maxHp}${valid.rule === 'coc' ? ` · MP ${valid.mp}/${valid.maxMp} · SAN ${valid.san}/${valid.maxSan}` : ` · AC ${valid.ac}`}${adjustments}\n\n## 可再次导入的数据\n\n下方 JSON 是完整、可移植的人物记录；上方摘要仅供阅读。重新导入时以 JSON 为准。\n\n\`\`\`json\n${json}\n\`\`\`\n`;
+  return `# ${heading} · 人物卡\n\n规则：${rule}\n\n职业：${valid.occupation.replace(/[\r\n]/g, ' ')}\n\n| 属性 | 数值 |\n| --- | ---: |\n${rows}\n\nHP ${valid.hp}/${valid.maxHp}${valid.rule === 'coc' ? ` · MP ${valid.mp}/${valid.maxMp} · SAN ${valid.san}/${valid.maxSan}` : ` · AC ${effective.ac}${passive}`}${adjustments}\n\n## 可再次导入的数据\n\n下方 JSON 是完整、可移植的人物记录；上方摘要仅供阅读。重新导入时以 JSON 为准。\n\n\`\`\`json\n${json}\n\`\`\`\n`;
 }

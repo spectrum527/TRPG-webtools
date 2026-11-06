@@ -16,6 +16,7 @@ import {
   encounterView,
   nextEncounterTurn,
   orderEncounter,
+  rollEncounterInitiative,
   removeCombatant,
   syncEncounterPlayers,
   updateCombatant,
@@ -214,6 +215,12 @@ describe('encounter initiative and turns', () => {
     const ordered = orderEncounter(state, 'coc', rng);
     expect(ordered.participants.map((entry) => entry.initiative)).toEqual([90, 80]);
     expect(ordered.participants[0].name).toContain('已备枪械');
+    const advanced = nextEncounterTurn(nextEncounterTurn(nextEncounterTurn(ordered)));
+    expect(advanced).toMatchObject({ activeId: ordered.participants[1].id, round: 2 });
+    expect(orderEncounter(advanced, 'coc', rng)).toMatchObject({
+      activeId: ordered.participants[0].id,
+      round: 1,
+    });
     expect(rng).not.toHaveBeenCalled();
   });
 
@@ -264,6 +271,41 @@ describe('encounter initiative and turns', () => {
     expect(wrapped.revision).toBe(state.revision + 3);
     expect(state).toEqual(before);
     expect(() => nextEncounterTurn(emptyEncounter())).toThrow('先生成');
+  });
+
+  it('keeps 2014 surprise until the surprised creature ends its first turn without changing its initiative dice', () => {
+    let state = addEncounterCards(
+      emptyEncounter(),
+      [dndCard('遭突袭', 14), dndCard('伏击者', 12)],
+      1,
+    );
+    const [surprised, ambusher] = state.participants;
+    state = updateCombatant(state, surprised.id, { surprised: true }, '2014');
+    const rng = sequence(5, 19, 9);
+    const first = rollEncounterInitiative(
+      state,
+      state.participants[0],
+      'advantage',
+      1,
+      '2014',
+      rng,
+    );
+    expect(first.roll).toMatchObject({
+      rolls: [5, 19],
+      selected: 19,
+      edge: 'advantage',
+      surprised: true,
+    });
+    expect(first.total).toBe(22);
+    state = rollEncounterInitiative(first.state, ambusher, 'normal', 0, '2014', rng).state;
+    state = orderEncounter(state, 'dnd', rng, { dndEdition: '2014', fillMissing: false });
+    expect(state.activeId).toBe(surprised.id);
+    expect(state.participants[0].surprised).toBe(true);
+    state = nextEncounterTurn(state, '2014');
+    expect(state.activeId).toBe(ambusher.id);
+    expect(state.participants[0].surprised).toBe(false);
+    expect(state.participants[0].initiativeRoll?.surprised).toBe(true);
+    expect(rng).toHaveBeenCalledTimes(3);
   });
 
   it('removes the active middle NPC by selecting its next surviving turn', () => {
@@ -544,6 +586,11 @@ describe('encounter visibility and player synchronization', () => {
     expect(syncEncounterPlayers(result, [kept, host, draft])).toBe(result);
     expect(validateEncounterReferences(result, [kept, host, draft], 'dnd')).toBe(true);
     expect(validateEncounterReferences(result, [kept, host, draft], 'coc')).toBe(false);
+    const mismatchedHp = {
+      ...result,
+      participants: [result.participants[0], { ...result.participants[1], hp: 5 }],
+    };
+    expect(validateEncounterReferences(mismatchedHp, [kept, host, draft], 'dnd')).toBe(false);
   });
 
   it('selects the first surviving successor when multiple players leave before and at the active turn', () => {
@@ -681,6 +728,12 @@ describe('D&D concentration and death-save suggestions', () => {
     [100000, 50000],
   ])('damage %i produces concentration DC %i with halves rounded down', (damage, dc) => {
     expect(concentrationDC(damage)).toBe(dc);
+  });
+
+  it('caps the concentration DC at 30 for D&D 2024 only', () => {
+    expect(concentrationDC(3, '2024')).toBe(10);
+    expect(concentrationDC(81, '2024')).toBe(30);
+    expect(concentrationDC(81, '2014')).toBe(40);
   });
 
   it.each([-1, 1.5, 100001, Number.NaN, Number.POSITIVE_INFINITY])(

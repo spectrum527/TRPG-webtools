@@ -14,6 +14,7 @@ import {
   Info,
   ArrowDownToLine,
   LockKeyhole,
+  Eye,
 } from 'lucide-react';
 import type { Character, RuleId } from '../../shared/types';
 import {
@@ -26,15 +27,16 @@ import {
   COC_ATTRIBUTES,
   DND_SKILLS,
   COC_SKILLS,
-  DND_CLASSES,
-  DND_ANCESTRIES,
   COC_OCCUPATIONS,
   abilityModifier,
   proficiencyBonus,
   getCharacterErrors,
   exportCharacter,
   parseCharacter,
+  passivePerception,
 } from '../../shared/rules';
+import { dndClasses, dndAncestries, DND_2024_BACKGROUNDS } from '../../shared/catalog';
+import { getDndEdition, type DndEdition } from '../../shared/dnd-edition';
 import { downloadFile, readStored, writeStored } from '../storage';
 import {
   cocAttributeCap,
@@ -42,7 +44,11 @@ import {
   cocAttributeTotal,
   scaleCocAttributes,
 } from '../../shared/coc-attributes';
-import { hasAdjustments } from '../../shared/adjustments';
+import { hasAdjustments, effectiveCharacter } from '../../shared/adjustments';
+import { CharacterMagic } from './CharacterMagic';
+import { CharacterEquipment } from './CharacterEquipment';
+import { getDndMagicErrors } from '../../shared/dnd-magic';
+import { loadMagicCatalog } from '../rule-catalogs';
 import { AdjustmentSummary } from './AdjustmentSummary';
 import {
   defaultCreationPolicy,
@@ -53,7 +59,7 @@ import {
 import { AllocationEditor } from './AllocationEditor';
 import { Modal, Spinner, DieIcon, ruleEdition } from './ui';
 
-type Section = 'identity' | 'attributes' | 'skills' | 'story';
+type Section = 'identity' | 'attributes' | 'skills' | 'story' | 'magic' | 'equipment';
 type RollLimitPreference = { enabled: boolean; max: string };
 const ROLL_LIMIT_STORAGE = 'interlude-coc-attribute-cap';
 function readRollLimit(): RollLimitPreference {
@@ -72,6 +78,7 @@ function readRollLimit(): RollLimitPreference {
 
 export function CharacterEditor({
   rule,
+  dndEdition = '2014',
   initial,
   onSave,
   onClose,
@@ -79,6 +86,7 @@ export function CharacterEditor({
   policy,
 }: {
   rule: RuleId;
+  dndEdition?: DndEdition;
   initial?: Character;
   onSave: (card: Character) => Promise<void>;
   onClose: () => void;
@@ -86,6 +94,8 @@ export function CharacterEditor({
   policy?: CreationPolicy;
 }) {
   const dnd = rule === 'dnd';
+  const edition = getDndEdition(initial?.dndEdition ?? dndEdition);
+  const classes = dndClasses(edition);
   const [rollLimit, setRollLimit] = useState(readRollLimit);
   const cocLimits = useMemo(() => {
     if (dnd) return undefined;
@@ -103,12 +113,16 @@ export function CharacterEditor({
   const [draft] = useState(() => {
     if (initial) return { card: structuredClone(initial), rolled: false, error: '' };
     try {
-      return { card: createCharacter(rule, undefined, cocLimits), rolled: true, error: '' };
+      return {
+        card: createCharacter(rule, undefined, cocLimits, edition),
+        rolled: true,
+        error: '',
+      };
     } catch (error) {
       // Incompatible room ranges must not produce a random card outside those ranges.
       // Keep a clearly marked manual draft so the user can still fill/import a card.
       return {
-        card: createCharacter(rule, () => 1),
+        card: createCharacter(rule, () => 1, undefined, edition),
         rolled: false,
         error: `${(error as Error).message} 当前为手填底稿，尚未生成骰点。`,
       };
@@ -206,14 +220,26 @@ export function CharacterEditor({
   };
   const save = async (e?: FormEvent) => {
     e?.preventDefault();
-    const invalid = getCharacterErrors(card);
-    setErrors(invalid);
-    if (invalid.length) {
-      setSection('identity');
-      return;
-    }
     setBusy(true);
     try {
+      const invalid = getCharacterErrors(card);
+      if (card.dndMagic) {
+        const pack = await loadMagicCatalog(edition);
+        const spells = new Map(pack.spells.map((spell) => [spell.id, spell]));
+        const magicErrors = getDndMagicErrors(card, (id) => spells.get(id));
+        if (magicErrors.length) {
+          setErrors(magicErrors);
+          setSection('magic');
+          return;
+        }
+      }
+      setErrors(invalid);
+      if (invalid.length) {
+        setSection(
+          invalid.some((error) => error.startsWith('装备联动')) ? 'equipment' : 'identity',
+        );
+        return;
+      }
       await onSave({ ...card, updatedAt: new Date().toISOString() });
     } catch (error) {
       setErrors([(error as Error).message]);
@@ -236,8 +262,8 @@ export function CharacterEditor({
   const importFile = async (file?: File) => {
     if (!file) return;
     try {
-      if (file.size > 256000) throw new Error('角色卡不能超过 256 KB。');
-      setCard(parseCharacter(await file.text(), rule));
+      if (file.size > 1024 * 1024) throw new Error('角色卡文件不能超过 1 MiB。');
+      setCard(parseCharacter(await file.text(), rule, dnd ? edition : undefined));
       setRollCount(0);
       setRollError('');
       setAttributeNotice('');
@@ -254,11 +280,17 @@ export function CharacterEditor({
     ['attributes', '属性与状态'],
     ['skills', '技能与熟练'],
     ['story', '故事与行囊'],
+    ...(dnd
+      ? ([
+          ['magic', '法术与资源'],
+          ['equipment', '装备与负重'],
+        ] as [Section, string][])
+      : []),
   ];
   return (
     <Modal
       title={initial ? `角色卡 · ${initial.name}` : '让一个角色，成为你。'}
-      subtitle={`${ruleEdition(rule)} · ${inRoom ? '保存后提交主持人审核' : '保存到你的角色档案'}`}
+      subtitle={`${ruleEdition(rule, edition)} · ${inRoom ? '保存后提交主持人审核' : '保存到你的角色档案'}`}
       onClose={onClose}
       className="character-editor"
       footer={
@@ -305,7 +337,7 @@ export function CharacterEditor({
             <div>
               {dnd ? <Shield size={15} /> : <Brain size={15} />}
               <span>{dnd ? '护甲' : '理智'}</span>
-              <b>{dnd ? card.ac : card.san}</b>
+              <b>{dnd ? effectiveCharacter(card).ac : card.san}</b>
             </div>
             {!dnd && (
               <div>
@@ -390,11 +422,11 @@ export function CharacterEditor({
                     required
                   >
                     <option value="">请选择职业</option>
-                    {!(dnd ? DND_CLASSES : COC_OCCUPATIONS).includes(card.occupation) &&
+                    {!(dnd ? classes : COC_OCCUPATIONS).includes(card.occupation) &&
                       card.occupation && (
                         <option value={card.occupation}>{card.occupation}（旧卡，需重选）</option>
                       )}
-                    {(dnd ? DND_CLASSES : COC_OCCUPATIONS).map((value) => (
+                    {(dnd ? classes : COC_OCCUPATIONS).map((value) => (
                       <option key={value} value={value}>
                         {value}
                       </option>
@@ -414,7 +446,7 @@ export function CharacterEditor({
                         maxLength={60}
                       />
                       <datalist id="character-ancestries">
-                        {DND_ANCESTRIES.map((value) => (
+                        {dndAncestries(edition).map((value) => (
                           <option key={value} value={value} />
                         ))}
                       </datalist>
@@ -457,19 +489,32 @@ export function CharacterEditor({
                   {dnd ? '背景' : '时代与生活背景'}
                   <input
                     value={card.background}
+                    list={dnd && edition === '2024' ? 'dnd-backgrounds-2024' : undefined}
                     onChange={(e) => patch({ background: e.target.value })}
                     maxLength={200}
                     placeholder={
                       dnd ? '例如：流浪的学者、退役的士兵' : '例如：1920 年代，在城市报社工作的记者'
                     }
                   />
+                  {dnd && edition === '2024' && (
+                    <>
+                      <datalist id="dnd-backgrounds-2024">
+                        {DND_2024_BACKGROUNDS.map((background) => (
+                          <option key={background.name} value={background.name} />
+                        ))}
+                      </datalist>
+                      <small>选择 2024 背景会带入对应技能；属性加值与起源专长请按背景核对。</small>
+                    </>
+                  )}
                 </label>
               </div>
               <div className="helper-callout">
                 <Info size={18} />
                 <p>
                   {dnd
-                    ? '熟练按职业、背景和种族分配；额外能力由主持人授予名额。种族加值与装备请依规则填写，随后接受剧本范围检查。'
+                    ? edition === '2024'
+                      ? '按 2024 职业、背景和种族分配熟练。背景的属性加值计入最终属性；起源专长可在备团资料中查阅，效果由主持人核对。'
+                      : '熟练按职业、背景和种族分配；额外能力由主持人授予名额。种族加值与装备请依规则填写，随后接受剧本范围检查。'
                     : '年龄修正请按规则填写。职业点与兴趣点在「技能与熟练」分别分配，信用评级、技能上限和剧本范围自动检查。'}
                 </p>
               </div>
@@ -648,12 +693,40 @@ export function CharacterEditor({
                 <span>{rollCount > 0 ? `第 ${rollCount} 组` : '尚未重掷'} · 重掷不限次数</span>
               </div>
               <div className="section-divider" />
+              {dnd && (
+                <div className="passive-perception-card">
+                  <label className="passive-perception-toggle">
+                    <Eye size={23} strokeWidth={1.5} />
+                    <span>
+                      <b>被动察觉</b>
+                      <small>10 + 感知（察觉）调整值</small>
+                    </span>
+                    <input
+                      type="checkbox"
+                      aria-label="启用被动察觉"
+                      checked={card.passivePerceptionEnabled === true}
+                      onChange={(event) =>
+                        patch({ passivePerceptionEnabled: event.target.checked })
+                      }
+                    />
+                  </label>
+                  {card.passivePerceptionEnabled && (
+                    <div className="passive-perception-result">
+                      <output aria-label="被动察觉值">{passivePerception(card)}</output>
+                      <p>
+                        随感知、熟练、专精和局内修正更新，不消耗属性点。情境优势 +5、劣势
+                        −5，由主持人判定。
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="editor-section-heading">
                 <div>
                   <h3>状态与资源</h3>
                   <p>
                     {dnd
-                      ? '生命上限与护甲请按职业、等级和装备填写。'
+                      ? '生命上限按职业与等级填写；启用装备联动后，护甲由穿戴决定。'
                       : '生命与魔法上限按属性自动计算；理智上限为 99 − 克苏鲁神话。'}
                   </p>
                 </div>
@@ -688,11 +761,19 @@ export function CharacterEditor({
                 {dnd ? (
                   <label className="field">
                     护甲等级 AC
+                    {card.dndEquipment && card.dndEquipment.armorMode !== 'manual' && (
+                      <span className="auto-label">装备联动</span>
+                    )}
                     <input
                       type="number"
                       min={0}
                       max={40}
-                      value={card.ac}
+                      value={
+                        card.dndEquipment && card.dndEquipment.armorMode !== 'manual'
+                          ? effectiveCharacter(card).ac
+                          : card.ac
+                      }
+                      readOnly={!!card.dndEquipment && card.dndEquipment.armorMode !== 'manual'}
                       onChange={(e) => patch({ ac: Number(e.target.value) })}
                     />
                   </label>
@@ -732,6 +813,8 @@ export function CharacterEditor({
               />
             </div>
           )}
+          {section === 'magic' && dnd && <CharacterMagic card={card} onChange={setCard} />}
+          {section === 'equipment' && dnd && <CharacterEquipment card={card} onChange={setCard} />}
           {section === 'story' && (
             <div className="editor-section page-enter">
               <div className="editor-section-heading">

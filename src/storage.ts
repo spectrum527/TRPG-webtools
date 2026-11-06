@@ -1,5 +1,6 @@
 import type { Character, Session } from '../shared/types';
 import { parseCharacter } from '../shared/rules';
+import { getDndEdition } from '../shared/dnd-edition';
 
 export function readStored<T>(key: string, fallback: T): T {
   try {
@@ -31,7 +32,14 @@ export function getLibrary(): Character[] {
 export function saveToLibrary(character: Character) {
   const library = getLibrary();
   const index = library.findIndex((card) => card.id === character.id);
-  if (index < 0) library.unshift(character);
+  const previous = library[index];
+  if (!previous) library.unshift(character);
+  else if (
+    previous.rule !== character.rule ||
+    (character.rule === 'dnd' &&
+      getDndEdition(previous.dndEdition) !== getDndEdition(character.dndEdition))
+  )
+    library.unshift({ ...character, id: globalThis.crypto.randomUUID() });
   else library[index] = character;
   if (!writeStored('interlude-library', library)) {
     throw new Error('浏览器存储空间不可用，角色档案未保存。请先导出文件备份。');

@@ -8,7 +8,7 @@ import {
   SlidersHorizontal,
   Trash2,
 } from 'lucide-react';
-import type { Character, Member, Room, RoomAction } from '../../shared/types';
+import type { Character, Item, Member, Room, RoomAction } from '../../shared/types';
 import { COC_ATTRIBUTES, COC_SKILLS, DND_ATTRIBUTES, DND_SKILLS } from '../../shared/rules';
 import {
   CreationPolicySchema,
@@ -22,6 +22,16 @@ import {
 import { Modal, Spinner } from './ui';
 import { ValidationSummary } from './AllocationEditor';
 import { AdjustmentSummary } from './AdjustmentSummary';
+import { effectiveCharacter } from '../../shared/adjustments';
+import { getDndEdition } from '../../shared/dnd-edition';
+import { hasDndArmorTraining, type DndEquipmentState } from '../../shared/dnd-equipment';
+import {
+  getDndMagicProfile,
+  type DndMagicState,
+  type DndResourceRecovery,
+  type DndSpellGrant,
+} from '../../shared/dnd-magic';
+import { loadEquipmentCatalog, loadMagicCatalog, useRuleCatalog } from '../rule-catalogs';
 
 export function ReviewDesk({
   room,
@@ -198,6 +208,9 @@ export function reviewLabel(member: Member, room: Room) {
 function AuditCard({ card }: { card: Character }) {
   const attrs = card.rule === 'coc' ? COC_ATTRIBUTES : DND_ATTRIBUTES;
   const b = card.rule === 'coc' ? cocBudget(card) : null;
+  const ac = card.dndEquipment ? effectiveCharacter(card).ac : card.ac;
+  const allocation = card.creation?.rule === 'dnd' ? card.creation : null;
+  const edition = getDndEdition(card.dndEdition);
   return (
     <div className="audit-card">
       <p>
@@ -217,12 +230,34 @@ function AuditCard({ card }: { card: Character }) {
         HP {card.hp}/{card.maxHp} ·{' '}
         {card.rule === 'coc'
           ? `MP ${card.mp}/${card.maxMp} · SAN ${card.san}/${card.maxSan}`
-          : `AC ${card.ac}`}
+          : `AC ${ac}`}
       </p>
       {b && (
         <p className="subtle-note">
           职业点 {b.spentOccupation}/{b.occupational} · 兴趣点 {b.spentPersonal}/{b.personal}
         </p>
+      )}
+      {allocation && (allocation.extraSkills.length > 0 || allocation.extraSaves.length > 0) && (
+        <p className="subtle-note">
+          <b>额外熟练</b>
+          {' · '}
+          {allocation.extraSkills.length > 0 &&
+            `技能 ${allocation.extraSkills.map((key) => DND_SKILLS.find((skill) => skill.key === key)?.label ?? key).join('、')}`}
+          {allocation.extraSkills.length > 0 && allocation.extraSaves.length > 0 && ' · '}
+          {allocation.extraSaves.length > 0 &&
+            `豁免 ${allocation.extraSaves.map(abilityLabel).join('、')}`}
+        </p>
+      )}
+      {card.dndMagic && (
+        <MagicAudit key={`${card.id}-${edition}-magic`} card={card} state={card.dndMagic} />
+      )}
+      {card.dndEquipment && (
+        <EquipmentAudit
+          key={`${card.id}-${edition}-equipment`}
+          card={card}
+          state={card.dndEquipment}
+          ac={ac}
+        />
       )}
       <details>
         <summary>技能与分配来源</summary>
@@ -254,12 +289,11 @@ function AuditCard({ card }: { card: Character }) {
                 'backgroundSkills',
                 'ancestrySkills',
                 'replacementSkills',
-                'extraSkills',
                 'expertise',
               ] as const
             ).map((key, i) => (
               <span className="audit-source" key={key}>
-                {['职业', '背景', '种族', '重复替代', '额外', '专精'][i]}：
+                {['职业', '背景', '种族', '重复替代', '专精'][i]}：
                 {card.creation?.rule === 'dnd'
                   ? card.creation[key]
                       .map((s) => DND_SKILLS.find((k) => k.key === s)?.label)
@@ -295,6 +329,261 @@ function AuditCard({ card }: { card: Character }) {
     </div>
   );
 }
+
+const signed = (value: number) => (value > 0 ? `+${value}` : String(value));
+const abilityLabel = (key: string) =>
+  DND_ATTRIBUTES.find((attribute) => attribute.key === key)?.label ?? key;
+const grantSourceLabel: Record<DndSpellGrant['source'], string> = {
+  species: '种族',
+  feat: '专长',
+  item: '物品',
+  class: '职业／子职',
+  dm: '主持人',
+};
+const recoveryLabel: Record<DndResourceRecovery, string> = {
+  short: '短休或长休回满',
+  long: '长休回满',
+  'short-one': '短休回一次，长休回满',
+  none: '手动恢复',
+};
+
+function MagicAudit({ card, state }: { card: Character; state: DndMagicState }) {
+  const edition = getDndEdition(card.dndEdition);
+  const catalog = useRuleCatalog(edition, loadMagicCatalog);
+  const spells = catalog.data?.edition === edition ? catalog.data.spells : [];
+  const names = new Map(
+    spells.map((spell) => [spell.id, spell.nameZh || spell.nameEn || spell.id]),
+  );
+  const profile = getDndMagicProfile(card);
+  if (!profile) return null;
+  const cantrips = new Set([
+    ...state.cantrips,
+    ...(profile.requiredCantrip ? [profile.requiredCantrip] : []),
+  ]);
+  const total = new Set([
+    ...cantrips,
+    ...state.known,
+    ...state.prepared,
+    ...state.spellbook,
+    ...state.secrets,
+    ...state.arcanum,
+    ...state.grants.map(({ spellId }) => spellId),
+    ...profile.automaticSpells.map(({ spellId }) => spellId),
+  ]).size;
+  const slotBudget = profile.slots.flatMap((max, index) =>
+    max ? [`${index + 1} 环 ${max - state.slotsUsed[index]}/${max}`] : [],
+  );
+  const selected = [
+    profile.cantripLimit > 0 && `戏法 ${cantrips.size}/${profile.cantripLimit}`,
+    profile.knownLimit > 0 &&
+      `已知 ${state.known.length + state.secrets.length}/${profile.knownLimit}`,
+    profile.preparedLimit > 0 && `已准备 ${state.prepared.length}/${profile.preparedLimit}`,
+    profile.mode === 'spellbook' && `法术书 ${state.spellbook.length} 道`,
+    state.arcanum.length > 0 && `玄奥秘法 ${state.arcanum.length} 道`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <section className="audit-prose" aria-label="法术与资源审核">
+      <b>法术与资源</b>
+      <p>
+        法术 {total} 道 · 额外授予 {state.grants.length} 项 · 自定义资源{' '}
+        {state.customResources.length} 项
+      </p>
+      {selected && <p>{selected}</p>}
+      <p>
+        普通法术位 {slotBudget.join(' · ') || '无'}
+        {profile.pact &&
+          ` · 契约 ${profile.pact.level} 环 ${profile.pact.max - state.pactUsed}/${profile.pact.max}`}
+        {profile.hitDie &&
+          ` · 生命骰 ${card.level - state.hitDiceUsed}/${card.level}d${profile.hitDie}`}
+      </p>
+      {state.grants.length > 0 && (
+        <>
+          <b>额外法术授权</b>
+          {state.grants.some((grant) => !names.has(grant.spellId)) && (
+            <p className="subtle-note">
+              {catalog.error || catalog.data
+                ? '以下部分法术只能显示编号，当前无法从目录确认其名称与规则。'
+                : '正在读取本版法术目录，待名称载入后核对额外授予。'}
+            </p>
+          )}
+          {state.grants.map((grant) => {
+            const methods = [
+              grant.allowSlots && '可用法术位',
+              grant.allowRitual && '可作仪式',
+              grant.free &&
+                (grant.free.max === null
+                  ? '可随意施展'
+                  : `不耗位 ${grant.free.max - grant.free.used}/${grant.free.max} 次，${recoveryLabel[grant.free.recovery]}`),
+            ].filter(Boolean);
+            const stats = [
+              (grant.ability ?? profile.ability) &&
+                `施法属性 ${abilityLabel((grant.ability ?? profile.ability)!)}`,
+              grant.attackBonus !== undefined && `固定法术攻击 ${signed(grant.attackBonus)}`,
+              grant.saveDc !== undefined && `固定豁免 DC ${grant.saveDc}`,
+            ].filter(Boolean);
+            return (
+              <p key={grant.id}>
+                <b>{names.get(grant.spellId) ?? grant.spellId}</b>
+                {' · '}
+                {grantSourceLabel[grant.source]} · {grant.label}
+                <br />
+                {[...methods, ...stats].join(' · ')}
+              </p>
+            );
+          })}
+        </>
+      )}
+      {state.customResources.length > 0 && (
+        <>
+          <b>自定义资源</b>
+          {state.customResources.map((resource) => (
+            <p key={resource.id}>
+              {resource.name} · 剩余 {resource.max - resource.used}/{resource.max} ·{' '}
+              {recoveryLabel[resource.recovery]}
+            </p>
+          ))}
+        </>
+      )}
+    </section>
+  );
+}
+
+const trainingLabels: Record<string, string> = {
+  'armor:light': '轻甲',
+  'armor:medium': '中甲',
+  'armor:heavy': '重甲',
+  'armor:shield': '盾牌',
+  'weapon:simple': '简易武器',
+  'weapon:martial': '军用武器',
+};
+
+function EquipmentAudit({
+  card,
+  state,
+  ac,
+}: {
+  card: Character;
+  state: DndEquipmentState;
+  ac: number;
+}) {
+  const edition = getDndEdition(card.dndEdition);
+  const catalog = useRuleCatalog(edition, loadEquipmentCatalog);
+  const items = catalog.data?.edition === edition ? catalog.data.items : [];
+  const names = new Map(items.map((item) => [item.id, item.name]));
+  const equipmentName = (item: Item) => {
+    const catalogId = item.equipment?.catalogId ?? '';
+    const base = names.get(catalogId) ?? catalogId;
+    return base && item.name !== base ? `${item.name}（${base}）` : item.name;
+  };
+  const equipped = card.items.filter((item) => item.quantity > 0 && item.equipment?.equipped);
+  const armor = equipped.find((item) => item.equipment?.armor);
+  const armorRule = armor?.equipment?.armor;
+  const shield = equipped.find((item) => item.equipment?.shield);
+  const shieldEligible = edition === '2014' || hasDndArmorTraining(card, 'shield');
+  let formula = '10 + 敏捷调整值';
+  if (armor && armorRule) {
+    const dex = armorRule.addsDex
+      ? ` + 敏捷调整值${armorRule.dexCap === null ? '' : `（上限 ${armorRule.dexCap}）`}`
+      : '';
+    formula = `${equipmentName(armor)} ${armorRule.baseAC ?? '基础 AC 待核对'}${dex}`;
+  } else if (state.armorMode === 'barbarian') formula += ' + 体质调整值';
+  else if (state.armorMode === 'monk' && !shield) formula += ' + 感知调整值';
+  if (shield && shieldEligible)
+    formula += ` + ${equipmentName(shield)} ${shield.equipment?.shield?.bonusAC ?? '待核对'}`;
+  if (state.acBonus) formula += ` · 角色 AC 修正 ${signed(state.acBonus)}`;
+  const gearBonus = equipped.reduce((sum, item) => {
+    const gear = item.equipment!;
+    return (
+      sum +
+      ((!gear.requiresAttunement || gear.attuned) && (!gear.shield || shieldEligible)
+        ? gear.acBonus
+        : 0)
+    );
+  }, 0);
+  if (gearBonus) formula += ` · 装备 AC 修正 ${signed(gearBonus)}`;
+  if (state.armorMode === 'manual') formula = `使用手填 AC ${card.ac}`;
+
+  const specialGear = card.items.flatMap((item) => {
+    const gear = item.equipment;
+    return gear &&
+      (gear.bonusSource ||
+        gear.attackBonus ||
+        gear.damageBonus ||
+        gear.acBonus ||
+        gear.ability !== 'auto' ||
+        gear.requiresAttunement)
+      ? [{ item, gear }]
+      : [];
+  });
+  const extraTraining = state.extraProficiencies.map((entry) => {
+    const catalogId = entry.startsWith('weapon:') ? entry.slice(7) : '';
+    const label = Object.hasOwn(trainingLabels, entry)
+      ? trainingLabels[entry]
+      : names.get(catalogId);
+    return { entry, label };
+  });
+  const defense = state.armorMode === 'manual' ? [] : [armor, shieldEligible ? shield : undefined];
+  const unverified =
+    [...defense, ...specialGear.map(({ item }) => item)].some(
+      (item) => item?.equipment && !names.has(item.equipment.catalogId),
+    ) || extraTraining.some(({ label }) => !label);
+  const settings = [
+    state.acBonus !== 0 && `角色 AC ${signed(state.acBonus)}`,
+    state.capacityMultiplier !== 1 && `负重容量倍率 ${state.capacityMultiplier}`,
+    state.attunementLimit !== 3 && `同调上限 ${state.attunementLimit} 件`,
+  ].filter(Boolean);
+
+  return (
+    <section className="audit-prose" aria-label="装备联动审核">
+      <b>装备联动</b>
+      <p>
+        生效 AC {ac} · {formula}
+      </p>
+      {settings.length > 0 && <p>额外设定 · {settings.join(' · ')}</p>}
+      {extraTraining.length > 0 && (
+        <p>额外装备熟练 · {extraTraining.map(({ entry, label }) => label ?? entry).join('、')}</p>
+      )}
+      {state.sourceNotes && <p>设定与熟练来源 · {state.sourceNotes}</p>}
+      {unverified && (
+        <p className="subtle-note">
+          {catalog.error || catalog.data
+            ? '以下部分装备只能以编号核对，当前无法从目录确认名称。'
+            : '正在读取本版装备目录。'}
+        </p>
+      )}
+      {specialGear.length > 0 && <b>装备特殊加值与同调</b>}
+      {specialGear.map(({ item, gear }) => {
+        const traits = [
+          gear.attackBonus !== 0 && `攻击 ${signed(gear.attackBonus)}`,
+          gear.damageBonus !== 0 && `伤害 ${signed(gear.damageBonus)}`,
+          gear.acBonus !== 0 && `AC ${signed(gear.acBonus)}`,
+          gear.ability !== 'auto' && `使用${abilityLabel(gear.ability)}攻击`,
+          gear.requiresAttunement && (gear.attuned ? '已同调' : '需同调，尚未同调'),
+        ].filter(Boolean);
+        return (
+          <p key={item.id}>
+            <b>{equipmentName(item)}</b> · {gear.equipped ? '已装备' : '未装备'}
+            {traits.length > 0 && (
+              <>
+                <br />
+                {traits.join(' · ')}
+              </>
+            )}
+            {gear.bonusSource && (
+              <>
+                <br />
+                来源 · {gear.bonusSource}
+              </>
+            )}
+          </p>
+        );
+      })}
+    </section>
+  );
+}
+
 function PolicyEditor({
   room,
   isHost,

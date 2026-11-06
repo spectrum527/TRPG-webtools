@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DndEditionSchema, getDndEdition, type DndEdition } from './dnd-edition';
 
 export type DndKind = 'npc' | 'monster';
 export type DndAttributeKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
@@ -23,6 +24,7 @@ export interface DndStatBlock {
   schemaVersion: 1;
   documentType: 'dnd-statblock';
   rule: 'dnd';
+  dndEdition?: DndEdition;
   id: string;
   kind: DndKind;
   name: string;
@@ -134,6 +136,7 @@ const CardObjectSchema = z
     schemaVersion: z.literal(1),
     documentType: z.literal('dnd-statblock'),
     rule: z.literal('dnd'),
+    dndEdition: DndEditionSchema.optional(),
     id: identifier,
     kind: z.enum(['npc', 'monster']),
     name: nameText(120),
@@ -330,6 +333,7 @@ function materializeSource(
     schemaVersion: 1,
     documentType: 'dnd-statblock',
     rule: 'dnd',
+    ...(source.dndEdition !== undefined ? { dndEdition: source.dndEdition } : {}),
     id: makeId(),
     kind: source.kind,
     name: source.name,
@@ -386,12 +390,24 @@ export const DndSourceSchema = preflight(1000000, 10).pipe(
       schemaVersion: z.literal(1),
       documentType: z.literal('dnd-source'),
       rule: z.literal('dnd'),
+      dndEdition: DndEditionSchema.optional(),
       cards: z
         .array(DndSourceCardSchema)
         .min(1, '未提取到数据块，请补充来源内容')
         .max(MAX_DND_CARDS, '每批最多 200 张数据块'),
     })
-    .strict(),
+    .strict()
+    .superRefine((document, ctx) => {
+      if (document.dndEdition === undefined) return;
+      for (const [index, card] of document.cards.entries()) {
+        if (card.dndEdition !== undefined && card.dndEdition !== document.dndEdition)
+          ctx.addIssue({
+            code: 'custom',
+            path: ['cards', index, 'dndEdition'],
+            message: '数据块版次与导入文档的版次不匹配',
+          });
+      }
+    }),
 );
 export type DndSourceDocument = z.infer<typeof DndSourceSchema>;
 
@@ -538,10 +554,17 @@ export const DND_TEMPLATES: DndTemplate[] = [
   },
 ];
 
-export function createDndStatBlock(templateId = 'npc-blank'): DndStatBlock {
+export function createDndStatBlock(
+  templateId = 'npc-blank',
+  dndEdition?: DndEdition,
+): DndStatBlock {
   const template = DND_TEMPLATES.find((entry) => entry.id === templateId);
   if (!template) throw new Error('未找到对应的 D&D 数据块模板');
-  const source = DndSourceCardSchema.parse({ ...template.data, source: template.source });
+  const source = DndSourceCardSchema.parse({
+    ...template.data,
+    dndEdition,
+    source: template.source,
+  });
   return materializeSource(source, newId, new Date().toISOString());
 }
 
@@ -617,7 +640,13 @@ export function parseDndStatBlocks(text: string): DndStatBlock[] {
           .join('；'),
       );
     const timestamp = new Date().toISOString();
-    return result.data.cards.map((source) => materializeSource(source, newId, timestamp));
+    return result.data.cards.map((source) =>
+      materializeSource(
+        { ...source, dndEdition: source.dndEdition ?? result.data.dndEdition },
+        newId,
+        timestamp,
+      ),
+    );
   }
   if (
     value &&
@@ -640,14 +669,14 @@ export function parseDndStatBlocks(text: string): DndStatBlock[] {
   return result.data.cards;
 }
 
-const markdown = (heading: string, json: string) =>
+const markdown = (heading: string, editions: string, json: string) =>
   ensureFileSize(
-    `# ${heading.replace(/[\r\n]/g, ' ')}\n\nD&D 5e（2014 / SRD 5.1）数据块备份；包含主持人私密备注。数值与骰式按保存内容保留。\n\n\`\`\`json\n${json}\n\`\`\`\n`,
+    `# ${heading.replace(/[\r\n]/g, ' ')}\n\nD&D 5e（${editions === '2014' ? '2014 / SRD 5.1' : editions}）数据块备份，包含主持人私密备注。数值与骰式按保存内容保留。\n\n\`\`\`json\n${json}\n\`\`\`\n`,
   );
 export const dndCardJSON = (card: DndStatBlock): string =>
   ensureFileSize(JSON.stringify(requireCard(card), null, 2));
 export const dndCardMD = (card: DndStatBlock): string =>
-  markdown(requireCard(card).name, dndCardJSON(card));
+  markdown(requireCard(card).name, getDndEdition(card.dndEdition), dndCardJSON(card));
 export function dndCollectionJSON(cards: readonly DndStatBlock[]): string {
   const input = { schemaVersion: 1, documentType: 'dnd-collection', rule: 'dnd', cards };
   const result = DndCollectionSchema.safeParse(input);
@@ -660,8 +689,14 @@ export function dndCollectionJSON(cards: readonly DndStatBlock[]): string {
     );
   return ensureFileSize(JSON.stringify(result.data, null, 2));
 }
-export const dndCollectionMD = (cards: readonly DndStatBlock[]): string =>
-  markdown('D&D 主持人数据块资料集', dndCollectionJSON(cards));
+export function dndCollectionMD(cards: readonly DndStatBlock[]): string {
+  const json = dndCollectionJSON(cards);
+  return markdown(
+    'D&D 主持人数据块资料集',
+    [...new Set(cards.map((card) => getDndEdition(card.dndEdition)))].sort().join(' / '),
+    json,
+  );
+}
 export const cardMD = dndCardMD;
 export const collectionJSON = dndCollectionJSON;
 export const collectionMD = dndCollectionMD;

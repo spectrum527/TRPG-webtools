@@ -17,21 +17,25 @@ import { getDndLibrary, removeDndStatBlock, saveDndStatBlocks } from '../dnd-sto
 import { DndWorkshop } from './DndWorkshop';
 import { DndImportGuide } from './DndImportGuide';
 import { Spinner } from './ui';
+import { getDndEdition, type DndEdition } from '../../shared/dnd-edition';
 
 export function DndToolkit({
+  edition,
   room,
   isHost,
   onAction,
   onReturnRoom,
   onReview,
 }: {
+  edition: DndEdition;
   room: Room | null;
   isHost: boolean;
   onAction: (action: RoomAction) => Promise<void>;
   onReturnRoom: () => void;
   onReview: () => void;
 }) {
-  const [cards, setCards] = useState<DndStatBlock[]>([]);
+  const [allCards, setCards] = useState<DndStatBlock[]>([]);
+  const cards = allCards.filter((card) => getDndEdition(card.dndEdition) === edition);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [workshop, setWorkshop] = useState<{
@@ -40,7 +44,8 @@ export function DndToolkit({
   } | null>(null);
   const [guide, setGuide] = useState(false);
   const guideRef = useRef<HTMLDivElement>(null);
-  const dndRoom = isHost && room?.rule === 'dnd' ? room : null;
+  const dndRoom =
+    isHost && room?.rule === 'dnd' && getDndEdition(room.dndEdition) === edition ? room : null;
   const load = async () => {
     setLoading(true);
     try {
@@ -107,7 +112,7 @@ export function DndToolkit({
             <span className="toolkit-icon">
               <Shield size={24} strokeWidth={1.4} />
             </span>
-            <span className="mini-label">D&D 5E · 2014 / SRD 5.1</span>
+            <span className="mini-label">D&D 5e · {edition}</span>
             <span className="toolkit-count">{loading ? '读取中' : `${cards.length} / 200`}</span>
           </div>
           <h2>NPC 与怪物数据块</h2>
@@ -180,7 +185,7 @@ export function DndToolkit({
               <span>01</span>
               <div>
                 <b>复制提示词</b>
-                <small>明确 2014 版规则与提取范围</small>
+                <small>明确 {edition} 版规则与提取范围</small>
               </div>
             </li>
             <li>
@@ -215,7 +220,9 @@ export function DndToolkit({
                 ? '个人原稿、房间资料与本场个体分别保存。'
                 : room.rule === 'coc'
                   ? '当前为 CoC 房间。D&D 资料可继续在个人库备团。'
-                  : '你当前以玩家身份入席，个人备团库仍可使用。'}
+                  : isHost
+                    ? `当前房间使用 ${getDndEdition(room.dndEdition)} 版，请切换到相同版本后带入资料。`
+                    : '你当前以玩家身份入席，个人备团库仍可使用。'}
             </p>
           </div>
           <div className="toolkit-room-actions">
@@ -248,11 +255,12 @@ export function DndToolkit({
       )}
       {guide && (
         <div ref={guideRef} className="toolkit-full-guide panel">
-          <DndImportGuide />
+          <DndImportGuide edition={edition} />
         </div>
       )}
       {workshop?.scope === 'personal' && (
         <DndWorkshop
+          edition={edition}
           library={cards}
           scope="personal"
           initialKind={workshop.kind}
@@ -264,6 +272,7 @@ export function DndToolkit({
       )}
       {workshop?.scope === 'room' && dndRoom && (
         <DndWorkshop
+          edition={getDndEdition(dndRoom.dndEdition)}
           library={dndRoom.dndCards}
           scope="room"
           onSave={async (cards) => onAction({ type: 'dnd-save', cards })}
