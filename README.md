@@ -185,6 +185,15 @@ tests/     规则测试、多人会话测试、浏览器测试
 docs/      使用说明、规则、模板、README 图片
 ```
 
+## 贡献者
+
+- Alex Xiao
+- Codex（OpenAI，AI 协作贡献者）
+
+## Vibe Coding 声明
+
+本项目在开发过程中使用了 Vibe Coding，ChatGPT 参与了实现过程。
+
 ## 许可
 
 代码使用 [MIT License](LICENSE)，© 2026 Alex Xiao。

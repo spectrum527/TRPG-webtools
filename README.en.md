@@ -187,6 +187,15 @@ tests/     Rule tests, multiplayer tests, browser tests
 docs/      Guides, rules, templates, README images
 ```
 
+## Contributors
+
+- Alex Xiao
+- Codex (OpenAI, AI contributor)
+
+## Vibe Coding disclosure
+
+Vibe Coding was used during development, and ChatGPT contributed to the implementation.
+
 ## License
 
 Code is under the [MIT License](LICENSE), © 2026 Alex Xiao.
