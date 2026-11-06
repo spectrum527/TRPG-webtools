@@ -188,7 +188,7 @@ docs/      使用说明、规则、模板、README 图片
 ## 贡献者
 
 - Alex Xiao
-- Codex（OpenAI，AI 协作贡献者）
+- [Codex](https://github.com/codex)（OpenAI，AI 协作贡献者）
 
 ## Vibe Coding 声明
 
