@@ -477,7 +477,6 @@ h1 {
 h1 > span {
   color: var(--green);
 }
-.welcome-heading p,
 .page-heading p {
   color: var(--muted);
   margin-top: 11px;
@@ -698,47 +697,20 @@ h1 > span {
 .welcome-bottom {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 20px;
   padding: 31px 2px;
 }
-.welcome-note {
-  display: flex;
-  align-items: center;
-  gap: 17px;
-}
-.note-icon {
-  color: var(--green);
-  border: 1px solid var(--line);
-  background: var(--panel);
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-}
-.welcome-note h3 {
-  font-size: 14px;
-  font-weight: 500;
-}
-.welcome-note p {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--muted);
-}
 .welcome-footer {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 15px;
+  gap: 16px;
   border-top: 1px solid var(--line);
-  padding-top: 21px;
+  padding-top: 20px;
   color: var(--muted);
-  font-size: 11px;
-}
-.welcome-footer > span:first-child {
-  font-family: 'Songti SC', serif;
-  font-size: 13px;
-  letter-spacing: 1px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 .back-button {
   margin-bottom: 25px;
@@ -769,21 +741,6 @@ h1 > span {
   font-weight: 450;
   margin-top: 21px;
   line-height: 1.4;
-}
-.gateway-intro > p {
-  margin-top: 17px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.9;
-}
-.gateway-intro-footer {
-  font-size: 12px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: auto;
-  padding-top: 15px;
 }
 .gateway-form {
   padding: 34px 35px;
@@ -3370,14 +3327,6 @@ h1 > span {
   .character-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .welcome-bottom {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .welcome-bottom > .text-button {
-    margin-left: 64px;
-  }
   .step-indicator {
     display: none;
   }
@@ -3615,14 +3564,6 @@ h1 > span {
     font-size: 32px;
     line-height: 1.45;
   }
-  .welcome-heading h1 > span {
-    display: block;
-  }
-  .welcome-heading p {
-    font-size: 12px;
-    line-height: 1.9;
-    max-width: 290px;
-  }
   .rule-grid {
     gap: 16px;
   }
@@ -3661,33 +3602,11 @@ h1 > span {
     width: 28px;
     height: 28px;
   }
-  .welcome-note h3 {
-    font-size: 12px;
-  }
-  .welcome-note p {
-    font-size: 11px;
-  }
-  .note-icon {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-  }
-  .welcome-note {
-    gap: 12px;
-  }
   .welcome-bottom {
     padding: 25px 0;
   }
   .welcome-bottom > .text-button {
-    margin-left: 52px;
     font-size: 11px;
-  }
-  .welcome-footer {
-    font-size: 9px;
-    flex-wrap: wrap;
-  }
-  .welcome-footer > span:first-child {
-    font-size: 12px;
   }
   .gateway-grid {
     grid-template-columns: 1fr;
@@ -3704,19 +3623,8 @@ h1 > span {
   .gateway-intro h1 br {
     display: none;
   }
-  .gateway-intro > p {
-    font-size: 12px;
-    margin-top: 9px;
-  }
-  .gateway-intro > p br {
-    display: none;
-  }
   .gateway-intro .preview-table {
     display: none;
-  }
-  .gateway-intro-footer {
-    font-size: 10px;
-    padding-top: 13px;
   }
   .gateway-form {
     padding: 23px 27px;
@@ -8225,6 +8133,11 @@ h1 > span {
   gap: 16px;
 }
 .gateway-intro > .dnd-edition-switch {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
   margin: 12px 0 20px;
 }
 .new-character-edition {

@@ -227,12 +227,12 @@ export default function App() {
               <Logo />
             </span>
             <span className="desktop-context">
-              {page === 'library' || page === 'host-tools'
-                ? '我的空间'
-                : page === 'room'
-                  ? '同桌空间'
-                  : '跑团同桌'}
-              <span className="context-slash">/</span>
+              {(page === 'library' || page === 'host-tools' || page === 'room') && (
+                <>
+                  {page === 'room' ? '同桌空间' : '我的空间'}
+                  <span className="context-slash">/</span>
+                </>
+              )}
               <span className="muted">
                 {page === 'host-tools'
                   ? '主持人工具集'

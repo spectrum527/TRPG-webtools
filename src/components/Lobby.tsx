@@ -21,7 +21,6 @@ import {
   MoreHorizontal,
   Trash2,
   Download,
-  Shield,
   Eye,
 } from 'lucide-react';
 import type {
@@ -36,6 +35,7 @@ import { readStored, writeStored, downloadFile } from '../storage';
 import { DieIcon, Spinner, Modal, ruleName, ruleEdition } from './ui';
 import { getDndEdition, type DndEdition } from '../../shared/dnd-edition';
 import { DndEditionSwitch } from './DndEditionSwitch';
+import { version as appVersion } from '../../package.json';
 
 export function RuleSelection({
   dndEdition,
@@ -57,10 +57,7 @@ export function RuleSelection({
       </div>
       <div className="welcome-heading">
         <div>
-          <h1>
-            好故事，<span>从同桌开始。</span>
-          </h1>
-          <p>选一套规则，邀几位同伴。把想象留给你们，琐事交给幕间。</p>
+          <h1>请选择规则框架</h1>
         </div>
         <span className="step-indicator">
           <span className="step-current">01 选择规则</span>
@@ -79,23 +76,14 @@ export function RuleSelection({
         <RuleCard rule="coc" onSelect={onSelect} onRules={onRules} />
       </div>
       <div className="welcome-bottom">
-        <div className="welcome-note">
-          <span className="note-icon">
-            <Users size={21} />
-          </span>
-          <div>
-            <h3>为你们的下一次相聚，留一张桌子。</h3>
-            <p>一位主持人，几位玩家；一串房间码，就能入席。</p>
-          </div>
-        </div>
         <button className="text-button" onClick={onLibrary}>
           <FileText size={16} /> 整理我的角色档案 <ArrowUpRight size={16} />
         </button>
       </div>
-      <div className="welcome-footer">
-        <span>骰子会停下，故事不会。</span>
-        <span>角色卡 · 骰子与检定 · 共同叙事</span>
-      </div>
+      <footer className="welcome-footer" aria-label="版本与作者">
+        <span>版本：v{appVersion}</span>
+        <span>作者：Liino/Alex9125</span>
+      </footer>
     </div>
   );
 }
@@ -257,15 +245,7 @@ export function Gateway({
             <br />
             <span>请入席。</span>
           </h1>
-          <p>
-            属于你们的角色、骰子和冒险，
-            <br />
-            都在这一张桌上。
-          </p>
           <PreviewTable />
-          <div className="gateway-intro-footer">
-            <Shield size={15} /> 主持人掌舵，所有人共同书写
-          </div>
         </div>
         <div className="gateway-form">
           <div className="gateway-rule">
