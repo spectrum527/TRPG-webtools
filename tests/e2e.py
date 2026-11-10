@@ -100,7 +100,7 @@ with sync_playwright() as p:
     for page in [host,player]:
         page.on('pageerror', lambda error: (errors.append(str(error)), print('BROWSER ERROR', str(error), flush=True)))
     host.goto(args.url, wait_until='domcontentloaded')
-    expect(host.get_by_role('heading', name='好故事，从同桌开始。')).to_be_visible()
+    expect(host.get_by_role('heading', name='请选择规则框架')).to_be_visible()
     host.screenshot(path=str(out/'01-welcome-light.png'), full_page=True, animations='disabled')
     host.get_by_role('button', name='切换深色模式').click()
     expect(host.locator('html')).to_have_attribute('data-theme','dark')

@@ -122,7 +122,6 @@ export function HostToolkit({
         <div>
           <span className="mini-label">BEHIND THE SCREEN</span>
           <h1>主持人工具集</h1>
-          <p>整理角色、地点与场景，为下一次开团做好准备。</p>
         </div>
         <span className="toolkit-private">
           <EyeOff size={16} />
