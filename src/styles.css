@@ -4368,26 +4368,11 @@ h1 > span {
   margin-top: 8px;
   cursor: pointer;
 }
-.allocation-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 22px;
-}
-.allocation-heading h3 {
-  font-size: 19px;
-  margin: 7px 0;
-}
-.allocation-heading p,
 .proficiency-group p,
 .policy-section-heading p {
   color: var(--muted);
   font-size: 12px;
   margin: 5px 0 12px;
-}
-.allocation-heading .button {
-  flex: 0 0 auto;
 }
 .point-budgets {
   display: grid;
@@ -5246,12 +5231,6 @@ h1 > span {
   }
 }
 @media (max-width: 480px) {
-  .allocation-heading {
-    flex-wrap: wrap;
-  }
-  .allocation-heading h3 {
-    font-size: 17px;
-  }
   .point-budgets {
     grid-template-columns: 1fr 1fr;
   }

@@ -123,16 +123,12 @@ export function AllocationEditor({
     );
   const recommend = () => onChange(suggestAllocation(card, policy));
   const header = (
-    <div
-      className={
-        card.rule === 'dnd' ? 'prep-section-heading editor-tab-heading' : 'allocation-heading'
-      }
-    >
+    <div className="prep-section-heading editor-tab-heading">
       <div>
         <span className="mini-label">
           {card.rule === 'dnd'
             ? `SKILLS & PROFICIENCIES · ${getDndEdition(card.dndEdition)}`
-            : 'CHARACTER ALLOCATION'}
+            : 'SKILL ALLOCATION · COC 7'}
         </span>
         <h3>技能与熟练</h3>
         <p>
