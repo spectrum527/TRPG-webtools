@@ -242,7 +242,7 @@ export default function App() {
                       ? room?.name
                       : page === 'gateway'
                         ? '准备入席'
-                        : '选择你的故事'}
+                        : '选择规则'}
               </span>
             </span>
           </div>
@@ -252,7 +252,6 @@ export default function App() {
                 <ArrowLeft size={15} /> 返回房间
               </button>
             )}
-            <span className="header-caption">让想象，有处安放。</span>
             <ThemeToggle
               theme={theme}
               onToggle={() => setTheme((v) => (v === 'light' ? 'dark' : 'light'))}

@@ -188,7 +188,7 @@ with sync_playwright() as p:
 
     host.get_by_role('button',name=re.compile('灵感小窗')).click()
     expect(host.get_by_text('Gemini 尚未连接',exact=True)).to_be_visible()
-    expect(host.get_by_role('button',name='寻找一点灵感')).to_be_disabled()
+    expect(host.get_by_role('button',name='生成建议',exact=True)).to_be_disabled()
     host.get_by_role('button',name='关闭窗口').click()
     check('AI unconfigured state is explicit; no fabricated response')
     host.screenshot(path=str(out/'03-room-light.png'),full_page=True, animations='disabled')

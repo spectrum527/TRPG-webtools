@@ -211,9 +211,7 @@ export function DndReferenceLibrary({
           <div>
             <h2>{kind === 'spell' ? '法术书' : '专长'}</h2>
             <p>
-              {kind === 'spell'
-                ? '查阅法术，收好这场冒险需要的魔法。'
-                : '查阅先决条件与能力，整理角色的成长选择。'}
+              {kind === 'spell' ? '查阅与收藏法术' : '查阅先决条件与能力，整理角色的成长选择。'}
             </p>
           </div>
         </div>

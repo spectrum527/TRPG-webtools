@@ -244,7 +244,7 @@ export function CharacterEquipment({
           <Shield size={30} />
         </span>
         <span className="mini-label">EQUIPMENT & LOADOUT</span>
-        <h3>带上装备，也带上它的规则。</h3>
+        <h3>装备管理暂未启用</h3>
         <p>启用后，穿戴决定 AC，武器关联攻击加值与伤害，数量计入负重。旧物品可以继续保留。</p>
         {onChange ? (
           <button
@@ -268,7 +268,6 @@ export function CharacterEquipment({
         <div>
           <span className="mini-label">EQUIPMENT & LOADOUT · {edition}</span>
           <h3>装备与负重</h3>
-          <p>每一件物品，只在同一个行囊里记账。</p>
         </div>
         {onChange && (
           <button className="text-button" onClick={() => void act({ kind: 'disable' })}>
@@ -298,7 +297,7 @@ export function CharacterEquipment({
           style={{ width: `${Math.min(100, (load.weight / Math.max(1, load.capacity)) * 100)}%` }}
         />
         <span>
-          {load.unknown ? '重量未完整，负重待核对' : load.burden} · 同调{' '}
+          {load.unknown ? '部分物品未填写重量，负重统计不完整' : load.burden} · 同调{' '}
           {card.items.filter((i) => i.equipment?.attuned).length}/{state.attunementLimit}
         </span>
       </div>

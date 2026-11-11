@@ -82,7 +82,6 @@ export default function RoomArchive({
   return (
     <Modal
       title="全局存档"
-      subtitle="把这一晚的故事，留给下一次相聚。"
       onClose={() => {
         if (!saving) onClose();
       }}
@@ -127,7 +126,7 @@ export default function RoomArchive({
           <div>
             <div className="section-eyebrow">SESSION ARCHIVE</div>
             <h3>
-              <Archive size={20} /> 保存整段旅程
+              <Archive size={20} /> 导出房间存档
             </h3>
           </div>
           <button
@@ -179,9 +178,7 @@ export default function RoomArchive({
                     ? '在原服务器恢复时读取仍在保留期内的图片。也可以补充描述，图片过期后仍能了解其中的线索。'
                     : '请描述图片中对续团有用的信息，如地图出口、标注或线索。恢复后在原消息位置显示这些文字。'}
                 </p>
-                {!data.images.length && (
-                  <p className="archive-empty">暂无图片，可以直接保存。</p>
-                )}
+                {!data.images.length && <p className="archive-empty">暂无图片，可以直接保存。</p>}
                 {data.images
                   .slice(page * 8, (page + 1) * 8)
                   .map(({ image, path, sender, content, createdAt }, index) => (

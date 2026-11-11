@@ -51,6 +51,6 @@ export function exportRoomConfig(config: RoomConfig, format: 'json' | 'md') {
     : portableMarkdown(
         `${checked.name} · 房间配置`,
         checked,
-        '包含房名、规则、演绎方式、制卡要求与当前公开场景。人员、凭证、记录和备团库另行保存。',
+        '仅包含房名、规则、跑团方式、制卡要求与当前公开场景，不含角色、房间码、登录凭证、聊天记录和备团库。导入不会覆盖这些数据，但会重置角色审核与成员准备状态。',
       );
 }

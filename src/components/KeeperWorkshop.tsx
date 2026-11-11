@@ -169,7 +169,7 @@ export function KeeperWorkshop({
   );
   return (
     <Modal
-      title="帷幕之后，万千面孔。"
+      title="NPC 与怪物卡库"
       subtitle={`${scope === 'personal' ? '个人备团库 · 保存在此浏览器' : '当前房间 · 仅主持人可见'} · ${library.length} / 200 张`}
       className="keeper-workshop"
       onClose={onClose}

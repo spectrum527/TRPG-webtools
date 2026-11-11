@@ -61,6 +61,15 @@
 .prep-section-heading > .text-button {
   flex-shrink: 0;
 }
+.dnd-editor-section {
+  padding-top: 24px;
+}
+.editor-tab-heading {
+  margin-bottom: 24px;
+}
+.editor-tab-heading > .button {
+  flex-shrink: 0;
+}
 .prep-main-tabs {
   display: flex;
   gap: 24px;
@@ -936,6 +945,9 @@
   .prep-section-heading h3 {
     font-size: 21px;
   }
+  .editor-tab-heading {
+    margin-bottom: 20px;
+  }
   .prep-metrics {
     gap: 8px;
   }
@@ -1014,6 +1026,11 @@
   }
   .prep-empty h3 {
     font-size: 20px;
+  }
+}
+@media (max-width: 480px) {
+  .editor-tab-heading {
+    flex-wrap: wrap;
   }
 }
 @media (max-width: 380px) {

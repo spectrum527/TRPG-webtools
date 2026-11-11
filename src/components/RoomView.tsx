@@ -297,7 +297,7 @@ export function RoomView({
           {isHost ? (
             <div className="host-workbench">
               <span className="mini-label">BEHIND THE SCREEN</span>
-              <h3>你是故事的引路人。</h3>
+              <h3>主持人准备</h3>
               <p>主持人无需玩家角色。先设置制卡要求，再审核同伴的故事与数值。</p>
               <button className="button primary full compact" onClick={() => setShowReview(true)}>
                 <ClipboardCheck size={16} />
@@ -389,8 +389,8 @@ export function RoomView({
                   <div className="empty-icon small">
                     <FileText size={26} strokeWidth={1.2} />
                   </div>
-                  <h3>{'主角，该你登场了。'}</h3>
-                  <p>创建角色，或从档案带来一位老朋友。</p>
+                  <h3>暂无角色</h3>
+                  <p>创建角色，或从角色档案载入。</p>
                   <button
                     className="button primary full compact"
                     onClick={() => onEdit(null)}
@@ -463,14 +463,14 @@ export function RoomView({
                 <span className={`connection-dot ${connected ? '' : 'offline'}`} />
                 <span>
                   {room.phase === 'active'
-                    ? room.scene.title || '故事正慢慢展开'
+                    ? room.scene.title || '暂未设置场景'
                     : players.length === 0
-                      ? '把空着的座位，留给你的同伴。'
+                      ? '等待玩家加入'
                       : canStart
                         ? '大家都已准备好，等待主持人开启故事。'
                         : players.some((p) => !isApproved(p, room))
                           ? '等待角色卡通过数值检查与主持人审核。'
-                          : '同伴正在准备，故事很快就要开始。'}
+                          : '等待所有成员准备'}
                 </span>
               </div>
               {isHost && (
@@ -596,7 +596,7 @@ export function RoomView({
                 <button aria-label="全局存档" onClick={() => setShowArchive(true)}>
                   <Archive size={18} />
                   <span>
-                    全局存档<small>保存完整旅程，下次从此处续团</small>
+                    全局存档<small>导出房间状态与完整记录</small>
                   </span>
                   <ChevronRight size={16} />
                 </button>
@@ -618,7 +618,7 @@ export function RoomView({
                   <button className="inspiration-link" onClick={() => setShowInspiration(true)}>
                     <Sparkles size={19} />
                     <span>
-                      灵感小窗<small>故事卡住时，一点新的可能</small>
+                      灵感小窗<small>根据当前剧情生成建议与示例</small>
                     </span>
                     <ArrowUpRight size={16} />
                   </button>
@@ -695,7 +695,7 @@ export function RoomView({
       )}
       {showLibrary && !isHost && (
         <Modal
-          title="带一位老朋友入席"
+          title="从档案载入角色"
           subtitle={`只展示 ${ruleEdition(room.rule, room.dndEdition)} 的角色`}
           onClose={() => setShowLibrary(false)}
         >
@@ -832,12 +832,12 @@ export function RoomView({
       )}
       {leave && (
         <Modal
-          title="暂别这张桌子？"
+          title="离开房间？"
           onClose={() => setLeave(false)}
           footer={
             <>
               <button className="button secondary" onClick={() => setLeave(false)}>
-                继续留在这里
+                取消
               </button>
               <button className="button danger" onClick={() => void run({ type: 'leave' })}>
                 离开房间
@@ -905,10 +905,12 @@ function RoundTable({
               <div key={latest.id} className="table-result">
                 {latest.check?.total ?? latest.roll?.total}
               </div>
-              <span className="table-result-caption">
-                {latest.check?.outcome ?? '让命运落定'}
-                {latest.visibility === 'host' && ' · 暗骰'}
-              </span>
+              {(latest.check || latest.visibility === 'host') && (
+                <span className="table-result-caption">
+                  {latest.check?.outcome}
+                  {latest.visibility === 'host' && (latest.check ? ' · 暗骰' : '暗骰')}
+                </span>
+              )}
             </>
           ) : (
             <>
@@ -1179,7 +1181,7 @@ function StoryLog({
         ) : (
           <div className="empty-log">
             <DieIcon size={29} />
-            <p>{filter === 'rolls' ? '掷出第一枚骰子，让命运作答。' : '故事将在这里留下痕迹。'}</p>
+            <p>{filter === 'rolls' ? '暂无掷骰记录' : '暂无消息记录'}</p>
           </div>
         )}
       </div>
@@ -1277,7 +1279,7 @@ function StoryLog({
       ) : (
         <div className="external-mode-note">
           <Headphones size={17} />
-          <span>你们在外部演绎故事。这里记录骰子与检定，陪伴每一次选择。</span>
+          <span>外部跑团模式：记录掷骰与检定</span>
         </div>
       )}
     </div>
@@ -1420,10 +1422,10 @@ function DiceTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
         </div>
         <span>
           {rolling
-            ? '命运正在转动…'
+            ? '正在掷骰…'
             : latest?.roll
               ? `${latest.roll.expression} · ${latest.roll.groups.map((g) => g.rolls.join(' + ')).join(' / ')}`
-              : '下一次可能，就在手中'}
+              : '等待掷骰'}
         </span>
       </div>
       <form
@@ -1599,7 +1601,7 @@ function CheckTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
       </div>
       {kind !== 'sanity' && (
         <>
-          <span className="mini-label">{dnd ? '本次骰况' : '奖励与惩罚骰'}</span>
+          <span className="mini-label">{dnd ? '优势与劣势' : '奖励与惩罚骰'}</span>
           <div className="edge-options">
             {(
               [
@@ -2127,7 +2129,7 @@ function InspirationWindow({
   };
   return (
     <Modal
-      title="给故事，留一扇窗。"
+      title="AI 剧情建议"
       subtitle="灵感小窗 · 仅主持人可见"
       onClose={onClose}
       className="inspiration-modal"
@@ -2136,14 +2138,7 @@ function InspirationWindow({
         <span className="inspiration-orb">
           <Sparkles size={28} strokeWidth={1.1} />
         </span>
-        <p>
-          不必急着找到完美的下一句。
-          <br />
-          让一个意外、一条线索，带故事走远一点。
-        </p>
-      </div>
-      <div className="context-chip">
-        <FileText size={13} /> 将参考当前场景与最近的公开叙事
+        <p>根据当前场景与最近的公开叙事生成剧情建议和示例。</p>
       </div>
       <form onSubmit={generate}>
         <label className="field">
@@ -2179,7 +2174,7 @@ function InspirationWindow({
           disabled={busy || !configured || !prompt.trim()}
         >
           {busy ? <Spinner /> : <Sparkles size={17} />}
-          {busy ? '正在寻找下一种可能…' : result ? '再给我一点灵感' : '寻找一点灵感'}
+          {busy ? '正在生成…' : result ? '重新生成' : '生成建议'}
         </button>
       </form>
       {result && (
