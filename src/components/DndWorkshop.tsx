@@ -346,7 +346,7 @@ export function DndWorkshop({
               ))}
           </div>
           {!library.length && (
-            <p className="subtle-note">还没有资料。新建空白数据块，或从示例开始。</p>
+            <p className="subtle-note">暂无数据块。可新建、使用模板或导入资料。</p>
           )}
           <div className="dnd-template-picker">
             <label className="field">
@@ -379,7 +379,7 @@ export function DndWorkshop({
           {!draft ? (
             <div className="dnd-empty">
               <Shield size={40} strokeWidth={1} />
-              <h3>每个相遇，都有一份记录。</h3>
+              <h3>{library.length ? '请选择数据块' : '暂无数据块'}</h3>
               <p>选择左侧资料，或制作一份新的 NPC／怪物数据块。</p>
             </div>
           ) : (

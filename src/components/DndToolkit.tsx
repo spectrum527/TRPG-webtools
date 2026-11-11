@@ -135,7 +135,7 @@ export function DndToolkit({
               ))
             ) : (
               <div className="toolkit-preview-empty">
-                <span>等待相遇的面孔</span>
+                <span>暂无数据块</span>
                 <small>创建空白数据块、使用原创示例，或导入外部剧本资料。</small>
               </div>
             )}

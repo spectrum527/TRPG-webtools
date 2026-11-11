@@ -78,6 +78,7 @@ export function EquipmentLibrary({
           </div>
           <div className="prep-spell-columns">
             <div className="prep-spell-list" aria-label="装备目录列表">
+              {!items.length && <p className="prep-list-empty">暂无匹配的装备</p>}
               {items.map((i) => (
                 <button
                   key={i.id}

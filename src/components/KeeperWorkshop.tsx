@@ -416,7 +416,10 @@ export function KeeperWorkshop({
               </button>
             ))}
             {!cards.length && (
-              <p className="subtle-note">这里还没有资料卡。可以新建、套用模板或导入一个资料集。</p>
+              <p className="subtle-note">
+                {library.length ? '暂无匹配的资料卡。' : '暂无 NPC 与怪物卡。'}
+                可新建、套用模板或导入资料集。
+              </p>
             )}
           </div>
         </aside>
@@ -870,12 +873,8 @@ export function KeeperWorkshop({
               <div>
                 <EyeOff size={36} strokeWidth={1} />
                 <span className="mini-label">BEHIND THE SCREEN</span>
-                <h3>这里，藏着故事的另一半。</h3>
-                <p>
-                  为即将出场的 NPC 或怪物准备资料，
-                  <br />
-                  或从模板一次生成一组不同个体。
-                </p>
+                <h3>{library.length ? '请选择 NPC 或怪物卡' : '暂无 NPC 与怪物卡'}</h3>
+                <p>可新建资料卡、使用模板或导入资料集。</p>
                 <button className="button primary" onClick={() => setBatch(true)}>
                   <Layers size={16} />
                   浏览模板

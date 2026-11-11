@@ -251,8 +251,8 @@ export function HostToolkit({
                   ))
                 ) : (
                   <div className="toolkit-preview-empty">
-                    <span>尚未落笔的档案</span>
-                    <small>从一个路人、一位线人，或一段未知开始。</small>
+                    <span>暂无 NPC 与怪物卡</span>
+                    <small>新建或导入 NPC、怪物卡。</small>
                   </div>
                 )}
               </div>

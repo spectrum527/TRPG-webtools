@@ -2793,13 +2793,8 @@ h1 > span {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  font-family: 'Songti SC', serif;
   color: var(--muted);
-  font-size: 11px;
   padding: 18px 20px 25px;
-  line-height: 1.8;
-  letter-spacing: 0.5px;
 }
 .tool-tip > svg {
   opacity: 0.5;

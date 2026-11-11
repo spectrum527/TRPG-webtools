@@ -160,9 +160,6 @@ export default function RoomArchive({
                   />
                   <span>
                     <b>导出图片（仅保留路径引用）</b>
-                    <small>
-                      默认开启。上下文指向服务端对应图片，ZIP 不包含图片文件，也不会下载原图。
-                    </small>
                   </span>
                 </label>
                 <p className="archive-retention-note">
@@ -183,7 +180,7 @@ export default function RoomArchive({
                     : '请描述图片中对续团有用的信息，如地图出口、标注或线索。恢复后在原消息位置显示这些文字。'}
                 </p>
                 {!data.images.length && (
-                  <p className="archive-empty">没有需要处理的图片，可以直接保存。</p>
+                  <p className="archive-empty">暂无图片，可以直接保存。</p>
                 )}
                 {data.images
                   .slice(page * 8, (page + 1) * 8)

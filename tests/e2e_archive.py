@@ -234,7 +234,7 @@ with sync_playwright() as p:
         returning.reload(wait_until='domcontentloaded'); expect(returning.locator('.resource-control').first.locator('b')).to_have_text(hp)
         resumed.reload(wait_until='domcontentloaded'); expect(resumed.locator('.room-title h1')).to_have_text('钟楼 · 未完的旅程')
         tools(resumed,'全局存档'); expect(resumed.locator('.archive-seats')).to_have_count(0)
-        expect(resumed.get_by_text('没有需要处理的图片，可以直接保存。',exact=True)).to_be_visible()
+        expect(resumed.get_by_text('暂无图片，可以直接保存。',exact=True)).to_be_visible()
         check('Resumed play synchronizes and survives reload; consumed recovery code disappears and descriptions need no re-entry')
         close(resumed)
         # Malformed archive and rule mismatch surface errors without creating a room.

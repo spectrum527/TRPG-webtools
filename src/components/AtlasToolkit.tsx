@@ -96,8 +96,8 @@ export function AtlasToolkit({
               <div>
                 <Map size={40} strokeWidth={1} />
                 <span>
-                  <b>地点之间，故事正在发生。</b>
-                  <small>多张地图、多个场景，也容得下一条未解的线索。</small>
+                  <b>暂无地图册</b>
+                  <small>新建地图册，或导入地图与场景资料。</small>
                 </span>
               </div>
             )}
