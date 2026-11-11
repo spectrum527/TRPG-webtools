@@ -287,10 +287,14 @@ export function CharacterEditor({
         ] as [Section, string][])
       : []),
   ];
+  const sectionClassName = `editor-section page-enter${dnd ? ' dnd-editor-section' : ''}`;
+  const headingClassName = dnd
+    ? 'prep-section-heading editor-tab-heading'
+    : 'editor-section-heading';
   return (
     <Modal
-      title={initial ? `角色卡 · ${initial.name}` : '让一个角色，成为你。'}
-      subtitle={`${ruleEdition(rule, edition)} · ${inRoom ? '保存后提交主持人审核' : '保存到你的角色档案'}`}
+      title={initial ? `角色卡 · ${initial.name}` : '新建角色卡'}
+      subtitle={`${ruleEdition(rule, edition)}${inRoom ? ' · 保存后提交主持人审核' : ''}`}
       onClose={onClose}
       className="character-editor"
       footer={
@@ -320,7 +324,7 @@ export function CharacterEditor({
             <span>{card.name.slice(0, 1) || '?'}</span>
           </div>
           <h3>{card.name || '未命名的角色'}</h3>
-          <p>{card.occupation || (dnd ? '一位未来的冒险者' : '一位未来的调查员')}</p>
+          <p>{card.occupation || '未选择职业'}</p>
           <span className="pill">
             {dnd
               ? `Lv.${card.level} · 熟练 +${proficiencyBonus(card.level)}`
@@ -395,10 +399,11 @@ export function CharacterEditor({
             </div>
           )}
           {section === 'identity' && (
-            <div className="editor-section page-enter">
-              <div className="editor-section-heading">
+            <div className={sectionClassName}>
+              <div className={headingClassName}>
                 <div>
-                  <h3>先认识一下，你是谁？</h3>
+                  {dnd && <span className="mini-label">CHARACTER DETAILS · {edition}</span>}
+                  <h3>角色资料</h3>
                   <p>姓名与职业为必填项，其余资料可慢慢补全。</p>
                 </div>
                 <span className="field-tag manual">手动填写</span>
@@ -409,7 +414,7 @@ export function CharacterEditor({
                   <input
                     value={card.name}
                     onChange={(e) => patch({ name: e.target.value })}
-                    placeholder={dnd ? '你的名字，将成为传说的开头' : '写下调查员的姓名'}
+                    placeholder="输入角色姓名"
                     maxLength={40}
                     required
                   />
@@ -527,10 +532,11 @@ export function CharacterEditor({
             </div>
           )}
           {section === 'attributes' && (
-            <div className="editor-section page-enter">
-              <div className="editor-section-heading">
+            <div className={sectionClassName}>
+              <div className={headingClassName}>
                 <div>
-                  <h3>命运，允许多掷几次。</h3>
+                  {dnd && <span className="mini-label">ATTRIBUTES & STATUS · {edition}</span>}
+                  <h3>属性与状态</h3>
                   <p>
                     {dnd
                       ? '4D6 去掉最低骰 · 属性加值可直接修改'
@@ -805,7 +811,7 @@ export function CharacterEditor({
             </div>
           )}
           {section === 'skills' && (
-            <div className="editor-section page-enter">
+            <div className={sectionClassName}>
               <AllocationEditor
                 card={card}
                 policy={policy ?? defaultCreationPolicy(rule)}
@@ -816,10 +822,11 @@ export function CharacterEditor({
           {section === 'magic' && dnd && <CharacterMagic card={card} onChange={setCard} />}
           {section === 'equipment' && dnd && <CharacterEquipment card={card} onChange={setCard} />}
           {section === 'story' && (
-            <div className="editor-section page-enter">
-              <div className="editor-section-heading">
+            <div className={sectionClassName}>
+              <div className={headingClassName}>
                 <div>
-                  <h3>数值之外，还有故事。</h3>
+                  {dnd && <span className="mini-label">STORY & INVENTORY · {edition}</span>}
+                  <h3>故事与行囊</h3>
                   <p>给角色一点小习惯、一个执念，或一段未说出口的过去。</p>
                 </div>
                 <button
@@ -870,7 +877,7 @@ export function CharacterEditor({
               <div className="section-divider" />
               <div className="editor-section-heading">
                 <div>
-                  <h3>出发时，带上什么？</h3>
+                  <h3>随身物品</h3>
                   <p>装备数量与备注可随时修改。</p>
                 </div>
                 <button

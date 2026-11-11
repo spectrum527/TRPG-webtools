@@ -123,10 +123,18 @@ export function AllocationEditor({
     );
   const recommend = () => onChange(suggestAllocation(card, policy));
   const header = (
-    <div className="allocation-heading">
+    <div
+      className={
+        card.rule === 'dnd' ? 'prep-section-heading editor-tab-heading' : 'allocation-heading'
+      }
+    >
       <div>
-        <span className="mini-label">CHARACTER ALLOCATION</span>
-        <h3>每一份能力，都有来处。</h3>
+        <span className="mini-label">
+          {card.rule === 'dnd'
+            ? `SKILLS & PROFICIENCIES · ${getDndEdition(card.dndEdition)}`
+            : 'CHARACTER ALLOCATION'}
+        </span>
+        <h3>技能与熟练</h3>
         <p>
           {card.rule === 'coc'
             ? '基础值 + 职业投入 + 兴趣投入 = 最终技能值'

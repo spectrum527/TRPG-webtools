@@ -143,11 +143,7 @@ export function AtlasWorkshop({
   return (
     <Modal
       title={scope === 'personal' ? '个人地图集' : '房间地图与场景'}
-      subtitle={
-        scope === 'personal'
-          ? '整理地点与场景，准备每一次相遇。'
-          : '选择场景，核对公开描述，再公布给同桌。'
-      }
+      subtitle={scope === 'personal' ? '管理地图与场景' : '选择场景，核对公开描述，再公布给同桌。'}
       className="atlas-modal"
       onClose={() => {
         if (!busy && confirmDiscard()) onClose();

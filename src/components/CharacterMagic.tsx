@@ -106,7 +106,7 @@ export function CharacterMagic({
           <WandSparkles size={30} />
         </span>
         <span className="mini-label">SPELLS & RESOURCES</span>
-        <h3>让每一次施法，都有据可查。</h3>
+        <h3>法术与资源暂未启用</h3>
         <p>按 {edition} 版职业与等级建立法术位、生命骰和职业资源。原有笔记会继续保留。</p>
         {onChange ? (
           <button className="button primary" onClick={() => patch(createDndMagicState())}>
@@ -451,8 +451,13 @@ export function CharacterMagic({
                   ))}
                   {!filtered.length && (
                     <p className="prep-list-empty">
-                      这里还没有法术。
-                      {onChange ? '尝试切换分类或搜索词。' : '请在制卡时选择并准备法术。'}
+                      {pickedList.length
+                        ? '暂无匹配的法术。请调整搜索词或环阶筛选。'
+                        : onChange
+                          ? currentShelf === 'prepared' && profile.mode === 'spellbook'
+                            ? '法术书暂无可准备的法术。请先在「法术书」中添加法术。'
+                            : '当前分类暂无可选法术。请核对职业、等级或切换分类。'
+                          : '暂无已选法术。请在制卡时选择并准备法术。'}
                     </p>
                   )}
                   {filtered.length > 80 && (

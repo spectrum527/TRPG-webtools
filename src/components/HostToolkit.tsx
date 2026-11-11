@@ -232,7 +232,7 @@ export function HostToolkit({
                 </span>
               </div>
               <h2>NPC 与怪物卡库</h2>
-              <p>还没入席，也可以先备好一整幕故事。制作、整理与复用你的私密资料。</p>
+              <p>制作、导入和管理 NPC 与怪物卡。</p>
               <div className="toolkit-preview" aria-label="个人备团库摘要">
                 {cards.length ? (
                   cards.slice(0, 3).map((card) => (

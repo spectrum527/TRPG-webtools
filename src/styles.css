@@ -428,10 +428,6 @@ button svg {
   align-items: center;
   flex-shrink: 0;
 }
-.header-caption {
-  font-size: 12px;
-  color: var(--muted);
-}
 .theme-button {
   border: 1px solid var(--line);
   background: var(--panel);
@@ -3150,18 +3146,6 @@ h1 > span {
   line-height: 1.9;
   color: var(--muted);
 }
-.context-chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  background: var(--panel-soft);
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  color: var(--muted);
-  font-size: 11px;
-  margin-bottom: 20px;
-}
 .ai-status {
   display: flex;
   gap: 10px;
@@ -3494,8 +3478,7 @@ h1 > span {
   .mobile-menu {
     display: flex;
   }
-  .desktop-context,
-  .header-caption {
+  .desktop-context {
     display: none;
   }
   .mobile-logo {

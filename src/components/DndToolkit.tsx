@@ -116,7 +116,7 @@ export function DndToolkit({
             <span className="toolkit-count">{loading ? '读取中' : `${cards.length} / 200`}</span>
           </div>
           <h2>NPC 与怪物数据块</h2>
-          <p>从一名城门守卫，到盘踞山谷的巨龙。先整理资料，再让它们走进故事。</p>
+          <p>制作、导入和管理 NPC 与怪物数据块。</p>
           <div className="toolkit-preview" aria-label="D&D 个人数据块摘要">
             {cards.length ? (
               cards.slice(0, 3).map((c) => (

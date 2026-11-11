@@ -27,12 +27,7 @@ export function PartyOverview({
     [confirmed, setConfirmed] = useState(false);
   const command = useEncounterCommand(room, run);
   return (
-    <Modal
-      title="队伍总览"
-      subtitle="主持人私密视图 · 一眼核对状态，再决定下一步"
-      onClose={onClose}
-      className="preparation-modal"
-    >
+    <Modal title="队伍总览" subtitle="仅主持人可见" onClose={onClose} className="preparation-modal">
       <div className="prep-stack">
         <div className="party-overview-grid">
           {members.map((m) => {

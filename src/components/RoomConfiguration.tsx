@@ -169,7 +169,7 @@ export function RoomConfiguration({
         />
       </div>
       <p className="subtle-note">
-        配置包含房名、规则、演绎方式、制卡要求与当前公开场景。角色、房间码、会话凭证、聊天和备团库各自保留。
+        配置文件仅包含房名、规则、跑团方式、制卡要求与当前公开场景，不含角色、房间码、登录凭证、聊天记录和备团库。导入不会覆盖这些数据，但会重置角色审核与成员准备状态。
       </p>
       {room.phase !== 'lobby' && (
         <p className="allocation-policy-note">故事进行中可以导出；返回准备阶段后才能导入配置。</p>

@@ -150,9 +150,7 @@ function RuleCard({
         </h2>
         <div className="rule-chinese">{ruleName(rule)}</div>
         <p>
-          {dnd
-            ? '成为故事中的英雄。让每一次选择，打开新的可能。'
-            : '有些秘密，等待被发现。有些真相，最好永不知晓。'}
+          {dnd ? '使用 D20 检定，管理角色、法术与装备。' : '使用 D100 检定，管理属性、技能与理智。'}
         </p>
       </div>
       <button className="rule-choose" onClick={() => onSelect(rule)}>
@@ -240,11 +238,7 @@ export function Gateway({
         <div className={`gateway-intro ${rule}`}>
           <div className="section-eyebrow">{ruleEdition(rule, dndEdition)}</div>
           {rule === 'dnd' && <DndEditionSwitch value={dndEdition} onChange={onDndEditionChange} />}
-          <h1>
-            故事将启，
-            <br />
-            <span>请入席。</span>
-          </h1>
+          <h1>创建或加入房间</h1>
           <PreviewTable />
         </div>
         <div className="gateway-form">
@@ -407,7 +401,7 @@ export function Gateway({
                 </label>
                 {!archive && (
                   <fieldset className="mode-field">
-                    <legend>这次在哪里演绎故事？</legend>
+                    <legend>跑团方式</legend>
                     <button
                       type="button"
                       aria-pressed={mode === 'in-room'}
@@ -416,7 +410,7 @@ export function Gateway({
                     >
                       <MessageSquare size={20} />
                       <span>
-                        <b>就在这里</b>
+                        <b>房间内文字跑团</b>
                         <small>文字叙事、公共记录和主持人灵感小窗</small>
                       </span>
                       <span className="radio-mark">
@@ -431,7 +425,7 @@ export function Gateway({
                     >
                       <Headphones size={20} />
                       <span>
-                        <b>在其他地方</b>
+                        <b>外部跑团</b>
                         <small>线下或语音跑团，这里专注制卡与掷骰</small>
                       </span>
                       <span className="radio-mark">
@@ -562,7 +556,6 @@ export function Library({
       <div className="page-heading">
         <div>
           <h1>角色档案馆</h1>
-          <p>收藏你的角色，下次冒险时，再次相见。</p>
         </div>
         <div className="button-row">
           <button className="button secondary" onClick={() => fileRef.current?.click()}>
@@ -674,7 +667,7 @@ export function Library({
         <p>角色档案存储在当前浏览器。离开这台设备前，记得导出一份 JSON 或 Markdown 备份。</p>
       </div>
       {newCard && (
-        <Modal title="为哪段故事创造角色？" onClose={() => setNewCard(false)}>
+        <Modal title="选择角色规则" onClose={() => setNewCard(false)}>
           <div className="new-character-edition">
             <span>D&D 规则版本</span>
             <DndEditionSwitch value={dndEdition} onChange={onDndEditionChange} />
