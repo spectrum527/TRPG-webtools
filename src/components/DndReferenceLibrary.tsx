@@ -360,9 +360,13 @@ export function DndReferenceLibrary({
               <div className="reference-empty">
                 <BookOpen size={30} strokeWidth={1.3} />
                 <p>
-                  {scope === 'saved'
-                    ? '个人清单中还没有符合条件的资料。'
-                    : '没有符合条件的资料，试试其他筛选。'}
+                  {scope === 'saved' && !personal.length
+                    ? kind === 'spell'
+                      ? '暂无法术'
+                      : '暂无专长'
+                    : kind === 'spell'
+                      ? '暂无匹配的法术'
+                      : '暂无匹配的专长'}
                 </p>
                 {scope === 'saved' && (
                   <button className="text-button" onClick={() => setScope('catalog')}>

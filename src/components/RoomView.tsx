@@ -637,11 +637,6 @@ export function RoomView({
           </div>
           <div className="tool-tip">
             <DieIcon size={20} />
-            <span>
-              骰子给出可能，
-              <br />
-              你们决定故事。
-            </span>
           </div>
         </aside>
       </div>

@@ -270,7 +270,7 @@ export function AtlasWorkshop({
                     {a.maps.length} 张地图 · {a.scenes.length} 个场景
                   </span>
                   <h3>{a.name}</h3>
-                  <p>{a.summary || '打开地图册，继续整理这段故事。'}</p>
+                  <p>{a.summary || '暂无简介'}</p>
                   <small>
                     {a.rule === 'any' ? '通用资料' : a.rule === 'coc' ? 'CoC 7' : 'D&D 5e'}
                   </small>
@@ -280,7 +280,7 @@ export function AtlasWorkshop({
           ) : (
             <div className="atlas-empty">
               <Map size={44} strokeWidth={1} />
-              <h3>为下一幕，记下一处地点。</h3>
+              <h3>暂无地图册</h3>
               <p>手动创建地图册，或使用提取模板导入多个地图和场景。</p>
             </div>
           )}

@@ -366,7 +366,7 @@ export function EncounterPlans({
               </select>
               {!source.length && (
                 <p className="subtle-note">
-                  对应规则卡库还没有资料。先制作或导入 NPC / 怪物，再回到这里编排。
+                  暂无可用的 NPC／怪物资料。请先制作或导入。
                 </p>
               )}
             </section>
@@ -567,7 +567,7 @@ export function EncounterPlans({
               {!list.length && (
                 <div className="prep-empty">
                   <Layers size={30} />
-                  <h3>下一场遭遇，从这里准备。</h3>
+                  <h3>暂无遭遇预案</h3>
                   <p>先从卡库挑选参战者，按波次组织。个人预案可在入房前制作，也能导出备份。</p>
                 </div>
               )}
@@ -585,9 +585,7 @@ export function EncounterPlans({
           e.target.value = '';
         }}
       />
-      <p className="subtle-note">
-        预案、未载入波次与笔记仅主持人可见。载入采用资料快照，不改变原卡库；不会替你执行战术或分配奖励。
-      </p>
+      <p className="subtle-note">预案、未载入波次与笔记仅主持人可见。</p>
     </div>
   );
 }

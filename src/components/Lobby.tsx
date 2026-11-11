@@ -561,9 +561,7 @@ export function Library({
       <div className="section-eyebrow">CHARACTER ARCHIVE</div>
       <div className="page-heading">
         <div>
-          <h1>
-            每个名字，<span>都有来处。</span>
-          </h1>
+          <h1>角色档案馆</h1>
           <p>收藏你的角色，下次冒险时，再次相见。</p>
         </div>
         <div className="button-row">
@@ -596,7 +594,7 @@ export function Library({
             </button>
           ))}
         </div>
-        <span>{filtered.length} 位角色 · 保存在此浏览器</span>
+        <span>{filtered.length} 位角色</span>
       </div>
       {filtered.length ? (
         <div className="character-grid">
@@ -664,7 +662,7 @@ export function Library({
           <span className="empty-icon">
             <FileText size={35} strokeWidth={1} />
           </span>
-          <h2>故事的主角，还没有登场。</h2>
+          <h2>暂无角色</h2>
           <p>从一张新角色卡开始，或导入之前导出的 JSON / Markdown 文件。</p>
           <button className="button primary" onClick={() => setNewCard(true)}>
             <Plus size={16} /> 创造第一个角色
