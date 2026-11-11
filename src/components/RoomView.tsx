@@ -1,6 +1,8 @@
 import { IMAGE_MIMES, MAX_IMAGE_BYTES } from '../../shared/media';
 import { ChatImage } from './ChatImage';
 import { RoomConfiguration } from './RoomConfiguration';
+import { useHealthActions } from './HealthConfirmation';
+import { injuryLabels } from '../../shared/injury';
 import {
   lazy,
   Suspense,
@@ -148,7 +150,7 @@ export function RoomView({
   useEffect(() => {
     writeStored('interlude-room-immersive', immersive);
   }, [immersive]);
-  const run = async (action: RoomAction) => {
+  const sendAction = async (action: RoomAction) => {
     if (!connected) {
       notify('连接尚未恢复，请稍候。', 'error');
       return false;
@@ -161,6 +163,13 @@ export function RoomView({
       return false;
     }
   };
+  const { run, dialog: healthConfirmation } = useHealthActions(
+    room,
+    session.memberId,
+    connected,
+    sendAction,
+    notify,
+  );
   if (!me) return null;
   const players = room.members.filter((m) => m.role === 'player');
   const readyCount = room.members.filter((m) => m.ready && m.online).length;
@@ -175,6 +184,7 @@ export function RoomView({
             validateCreation(m.character, room.creationPolicy).length === 0)),
     ) && players.length > 0;
   const card = isHost ? null : me.character;
+  const myCombatant = room.encounter.participants.find((c) => c.memberId === me.id);
   const cardErrors = card ? validateCreation(card, room.creationPolicy) : [];
   const focused = room.members.find((m) => m.id === selectedMember);
   const copy = async () => {
@@ -187,6 +197,7 @@ export function RoomView({
   };
   return (
     <div className={`room-view page-enter${immersive ? ' room-immersive' : ''}`}>
+      {healthConfirmation}
       <div className="room-heading">
         <div className="room-title">
           <span className={`room-rule-mark ${room.rule}`}>
@@ -344,6 +355,13 @@ export function RoomView({
                       <Eye size={15} />
                       <span>被动察觉</span>
                       <b>{passivePerception(card)}</b>
+                    </div>
+                  )}
+                  {myCombatant && (
+                    <div className="encounter-tags my-injuries" aria-label="我的伤势">
+                      {injuryLabels(myCombatant).map((label) => (
+                        <span key={label}>{label}</span>
+                      ))}
                     </div>
                   )}
                   <div className="my-resources">

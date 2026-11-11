@@ -1,4 +1,78 @@
 /* Character preparation follows the existing paper, forest and glass palette. */
+.auto-life-setting {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+.health-confirmation {
+  width: min(480px, calc(100vw - 24px));
+}
+.health-change-values {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 12px;
+  border-radius: 14px;
+  background: var(--panel-soft);
+  color: var(--green);
+}
+.health-change-values span,
+.health-change-values strong {
+  font-size: clamp(24px, 6vw, 36px);
+  font-weight: 500;
+}
+.health-change-values small {
+  color: var(--muted);
+}
+.health-confirmation.is-fatal .health-change-values {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.health-confirmation-state {
+  margin: 22px 0 14px;
+  line-height: 1.8;
+}
+.health-confirmation .subtle-note {
+  margin-top: 12px;
+}
+.health-confirmation .modal-footer {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.health-confirmation .modal-footer .button {
+  min-width: 0;
+  font-size: 13px;
+}
+.injury-care {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-soft);
+}
+.injury-care summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  cursor: pointer;
+  color: var(--green);
+}
+.injury-care summary span {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+}
+.injury-care[open] summary {
+  margin-bottom: 18px;
+}
+.injury-care .button {
+  margin-top: 14px;
+}
+.injury-status {
+  margin-top: 15px;
+}
 .preparation-modal {
   width: min(1080px, calc(100vw - 48px));
 }

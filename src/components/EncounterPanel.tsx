@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   BookOpen,
   Check,
@@ -31,6 +31,13 @@ import { abilityModifier, proficiencyBonus } from '../../shared/rules';
 import { effectiveCharacter } from '../../shared/adjustments';
 import { DndBlockPreview } from './DndWorkshop';
 import { Spinner } from './ui';
+import { InjuryCare } from './InjuryCare';
+import {
+  applyConstitution,
+  applyDeathSave,
+  injuryLabels,
+  usesDeathSaves,
+} from '../../shared/injury';
 import {
   InitiativeCheck,
   AutoDamageSetting,
@@ -73,6 +80,9 @@ const editable = [
   'stable',
   'majorWound',
   'dying',
+  'dead',
+  'unconscious',
+  'deathSaveMode',
   'firearmReady',
   'notes',
   'abilities',
@@ -146,7 +156,13 @@ export default function EncounterPanel({
             <button
               className="button primary compact"
               disabled={busy || room.phase !== 'active' || !state.activeId}
-              onClick={() => void perform({ type: 'next-turn' })}
+              onClick={() =>
+                void perform({
+                  type: 'next-turn',
+                  expectedRevision: room.encounter.revision,
+                  requestId: crypto.randomUUID(),
+                })
+              }
             >
               下一位
               <ChevronRight size={16} />
@@ -322,12 +338,12 @@ export default function EncounterPanel({
                         </p>
                       )}
                     </>
-                  ) : (
-                    <div className="encounter-tags">
-                      {current.majorWound && <span>重伤</span>}
-                      {current.dying && <span>濒死</span>}
-                    </div>
+                  ) : null)}
+                <div className="encounter-tags">
+                  {injuryLabels(current).map((label) => (
+                    <span key={label}>{label}</span>
                   ))}
+                </div>
                 {current.ownerMemberId && (
                   <p className="subtle-note">
                     伙伴归属：
@@ -414,7 +430,7 @@ function CombatantEditor({
   const [removing, setRemoving] = useState(false);
   const [customCondition, setCustomCondition] = useState('');
   const [counterName, setCounterName] = useState('');
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!touched) {
       setDraft(c);
       baseline.current = c;
@@ -434,6 +450,8 @@ function CombatantEditor({
         changes[key] = draft[key];
     if (!Object.keys(changes).length) {
       setTouched(false);
+      setSaved(true);
+      setError('');
       return;
     }
     setBusy(true);
@@ -704,6 +722,41 @@ function CombatantEditor({
             </p>
           </>
         )}
+        <div className="combatant-injuries">
+          <label className="combatant-checkbox">
+            <input
+              type="checkbox"
+              checked={draft.unconscious ?? false}
+              onChange={(e) => patch({ unconscious: e.target.checked })}
+            />
+            昏迷
+          </label>
+          <label className="combatant-checkbox">
+            <input
+              type="checkbox"
+              checked={draft.dead ?? false}
+              onChange={(e) =>
+                patch({ dead: e.target.checked, ...(e.target.checked ? { hp: 0 } : {}) })
+              }
+            />
+            死亡
+          </label>
+          {draft.rule === 'dnd' && !draft.memberId && (
+            <label className="combatant-checkbox">
+              <input
+                type="checkbox"
+                checked={usesDeathSaves(draft)}
+                onChange={(e) =>
+                  patch({ deathSaveMode: e.target.checked ? 'character' : 'instant' })
+                }
+              />
+              0 HP 时使用死亡豁免
+            </label>
+          )}
+        </div>
+        <div className="encounter-counters-note subtle-note">
+          死亡角色须先确认复活才能恢复 HP；昏迷、死亡会结束 D&D 专注。
+        </div>
         <div className="combatant-counters">
           <h4>能力与资源次数</h4>
           {draft.abilities.map((a) => (
@@ -836,8 +889,12 @@ function CombatantEditor({
             <button
               className="text-button"
               onClick={() => {
+                setDraft(c);
+                baseline.current = c;
+                setRevision(room.encounter.revision);
                 setTouched(false);
                 setError('');
+                setSaved(false);
               }}
             >
               重新载入最新记录
@@ -862,6 +919,12 @@ function CombatantEditor({
           </button>
         </div>
       </div>
+      <div className="encounter-tags injury-status" aria-label="当前伤势">
+        {injuryLabels(c).map((label) => (
+          <span key={label}>{label}</span>
+        ))}
+      </div>
+      <InjuryCare room={room} combatant={c} run={run} disabled={touched || busy} />
       <CombatantRolls
         c={c}
         room={room}
@@ -984,15 +1047,29 @@ function CombatantRolls({
   }, [pending]);
   const roll = async (kind: string, dice?: string, check?: CheckRequest) => {
     const requestId = crypto.randomUUID();
-    setPending({ id: requestId, kind });
+    const automated =
+      room.encounter.autoLifeChecks &&
+      (kind === 'death' || (kind === 'constitution' && (c.dying || c.injuryChecks?.conPending)));
+    setPending({ id: requestId, kind: automated ? 'applied-life' : kind });
     setResult(null);
     setApplied(false);
     setTimedOut(false);
     if (
       !(await run(
-        check
-          ? { type: 'check', check, visibility, requestId }
-          : { type: 'roll', expression: dice!, visibility, requestId },
+        automated
+          ? {
+              type: 'encounter-life-check',
+              combatantId: c.id,
+              kind: kind as 'death' | 'constitution',
+              modifier: 0,
+              edge: 'normal',
+              visibility,
+              expectedRevision: room.encounter.revision,
+              requestId,
+            }
+          : check
+            ? { type: 'check', check, visibility, requestId }
+            : { type: 'roll', expression: dice!, visibility, requestId },
       ))
     )
       setPending(null);
@@ -1152,7 +1229,16 @@ function CombatantRolls({
           <div className="combatant-inline">
             <button
               className="button secondary compact"
-              disabled={locked || c.hp !== 0 || c.stable}
+              disabled={
+                locked ||
+                c.hp !== 0 ||
+                c.stable ||
+                c.dead ||
+                c.deathFailures >= 3 ||
+                !usesDeathSaves(c) ||
+                (!!room.encounter.activeId &&
+                  c.injuryChecks?.lastDeathRound === room.encounter.round)
+              }
               onClick={() => void roll('death', '1d20')}
             >
               <Dices size={15} />
@@ -1176,7 +1262,9 @@ function CombatantRolls({
         <div className="combatant-inline">
           <button
             className="button secondary compact"
-            disabled={locked || ((sourceCon === null || sourceCon === undefined) && !memberCard)}
+            disabled={
+              locked || c.dead || ((sourceCon === null || sourceCon === undefined) && !memberCard)
+            }
             onClick={() =>
               void roll('constitution', undefined, {
                 kind: 'ability',
@@ -1236,24 +1324,60 @@ function CombatantRolls({
               <p>{death.text}</p>
               <button
                 className="button primary compact"
-                disabled={disabled || applied || applying || c.hp !== 0}
-                onClick={() =>
-                  void apply(
-                    death.heal
-                      ? { hp: 1, deathSuccesses: 0, deathFailures: 0, stable: false }
-                      : c.deathSuccesses + death.successes >= 3
-                        ? { stable: true }
-                        : {
-                            deathSuccesses: Math.min(3, c.deathSuccesses + death.successes),
-                            deathFailures: Math.min(3, c.deathFailures + death.failures),
-                          },
-                  )
+                disabled={
+                  disabled ||
+                  applied ||
+                  applying ||
+                  c.hp !== 0 ||
+                  c.dead ||
+                  c.stable ||
+                  c.deathFailures >= 3 ||
+                  !usesDeathSaves(c) ||
+                  (!!room.encounter.activeId &&
+                    c.injuryChecks?.lastDeathRound === room.encounter.round)
                 }
+                onClick={() => {
+                  const next = applyDeathSave(c, result.event.roll!.total);
+                  void apply({
+                    hp: next.hp,
+                    deathSuccesses: next.deathSuccesses,
+                    deathFailures: next.deathFailures,
+                    stable: next.stable,
+                    dying: next.dying,
+                    dead: next.dead ?? false,
+                    unconscious: next.unconscious ?? false,
+                    concentration: next.concentration,
+                  });
+                }}
               >
                 {applied ? '结果已记录' : '确认记录此结果'}
               </button>
             </>
           )}
+          {result.kind === 'constitution' &&
+            result.event.check &&
+            !c.dead &&
+            (c.dying || c.injuryChecks?.conPending) && (
+              <button
+                className="button primary compact"
+                disabled={disabled || applied || applying}
+                onClick={() => {
+                  const next = applyConstitution(
+                    c,
+                    result.event.check!.success,
+                    room.encounter.round,
+                  );
+                  void apply({
+                    dead: next.dead ?? false,
+                    unconscious: next.unconscious ?? false,
+                    dying: next.dying,
+                    stable: next.stable,
+                  });
+                }}
+              >
+                {applied ? '结果已记录' : '确认应用体质结果'}
+              </button>
+            )}
           {result.kind === 'concentration' && result.event.check?.success === false && (
             <button
               className="button secondary compact"

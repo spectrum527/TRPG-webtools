@@ -217,7 +217,7 @@ export function AutoDamageSetting({ room, run }: { room: Room; run: Run }) {
         <Heart size={19} />
         <span>
           <b>自动扣减生命值</b>
-          <small>有明确目标的攻击与伤害同步到角色和本场记录</small>
+          <small>同步伤害、HP 与重伤、濒死、死亡状态</small>
         </span>
         <input
           type="checkbox"
@@ -243,6 +243,37 @@ export function AutoDamageSetting({ room, run }: { room: Room; run: Run }) {
           ? '已开启。普通骰子仍只记骰点；下方定向攻击命中后，自动处理伤害与 HP。'
           : '关闭时只掷骰、记录结果。开启后，主持人可让定向攻击与伤害直接扣除 HP。'}
       </p>
+      <label className="auto-life-setting">
+        <Shield size={19} />
+        <span>
+          <b>自动伤势检定</b>
+          <small>
+            {room.rule === 'coc'
+              ? '重伤体质检定，以及濒死后的轮末检定'
+              : '濒死角色回合开始时进行死亡豁免'}
+          </small>
+        </span>
+        <input
+          type="checkbox"
+          aria-label="自动伤势检定"
+          checked={room.encounter.autoLifeChecks ?? false}
+          disabled={busy || room.phase !== 'active'}
+          onChange={async (e) => {
+            setBusy(true);
+            try {
+              await run({
+                type: 'encounter-settings',
+                autoDamage: room.encounter.autoDamage ?? false,
+                autoLifeChecks: e.target.checked,
+                expectedRevision: room.encounter.revision,
+              });
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      </label>
+      <p>自动检定会立即更新伤势。特殊能力、额外加值或需要自行掷骰时，可关闭此项后手动确认结果。</p>
     </div>
   );
 }
