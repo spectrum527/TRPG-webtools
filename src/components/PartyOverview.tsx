@@ -4,6 +4,7 @@ import type { Room, RoomAction } from '../../shared/types';
 import { effectiveCharacter } from '../../shared/adjustments';
 import { getDndMagicProfile } from '../../shared/dnd-magic';
 import { passivePerception } from '../../shared/rules';
+import { injuryLabels } from '../../shared/injury';
 import { CombatCommandStatus, useEncounterCommand } from './CombatActions';
 import { Modal } from './ui';
 export function PartyOverview({
@@ -106,6 +107,9 @@ export function PartyOverview({
                 {combatant?.conditions.length ? (
                   <p className="party-state-note">状态 · {combatant.conditions.join('、')}</p>
                 ) : null}
+                {combatant && injuryLabels(combatant).length > 0 && (
+                  <p className="party-state-note">伤势 · {injuryLabels(combatant).join('、')}</p>
+                )}
                 {dnd && (
                   <button className="text-button" onClick={() => onPrepare(m.id)}>
                     打开法术与装备 →

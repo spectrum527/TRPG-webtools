@@ -11,6 +11,7 @@ import type { DndMagicState } from './dnd-magic';
 import type { DndEquipmentState, DndItemDetails } from './dnd-equipment';
 import type { CharacterRuntimeAction } from './character-runtime';
 import type { EncounterPlan, PreparationAction } from './preparation';
+import type { HpConfirmation } from './injury';
 
 export type { DndEdition } from './dnd-edition';
 export type RuleId = 'dnd' | 'coc';
@@ -218,10 +219,16 @@ export type RoomAction =
   | { type: 'check'; check: CheckRequest; visibility: Visibility; requestId?: string }
   | { type: 'scene'; title: string; description: string }
   | { type: 'mode'; mode: RoomMode }
-  | { type: 'resource'; memberId: string; resource: 'hp' | 'mp' | 'san'; value: number }
+  | {
+      type: 'resource';
+      memberId: string;
+      resource: 'hp' | 'mp' | 'san';
+      value: number;
+      hpConfirmation?: HpConfirmation;
+    }
   | { type: 'item-add'; memberId: string; item: Item }
   | { type: 'item-remove'; memberId: string; itemId: string }
-  | { type: 'next-turn' }
+  | { type: 'next-turn'; expectedRevision?: number; requestId?: string }
   | { type: 'kick'; memberId: string }
   | { type: 'transfer-host'; memberId: string }
   | { type: 'leave' };

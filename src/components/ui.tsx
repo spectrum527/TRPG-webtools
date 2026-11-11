@@ -68,6 +68,9 @@ export function Toast({
     </div>
   );
 }
+const modalStack: HTMLElement[] = [];
+let modalPageState: { overflow: string; inert: boolean; ariaHidden: string | null } | null = null;
+
 export function Modal({
   title,
   subtitle,
@@ -88,13 +91,24 @@ export function Modal({
   onCloseRef.current = onClose;
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
     const root = document.getElementById('root');
-    const previousInert = root?.inert ?? false;
-    const previousAriaHidden = root?.getAttribute('aria-hidden') ?? null;
+    const node = ref.current!;
+    if (!modalStack.length)
+      modalPageState = {
+        overflow: document.body.style.overflow,
+        inert: root?.inert ?? false,
+        ariaHidden: root?.getAttribute('aria-hidden') ?? null,
+      };
+    const underneath = modalStack.at(-1);
+    if (underneath) {
+      underneath.inert = true;
+      underneath.setAttribute('aria-hidden', 'true');
+    }
+    modalStack.push(node);
     if (root) root.inert = true;
     document.body.style.overflow = 'hidden';
     const handle = (e: KeyboardEvent) => {
+      if (modalStack.at(-1) !== node) return;
       if (e.key === 'Escape') onCloseRef.current();
       if (e.key === 'Tab') {
         const nodes = Array.from(
@@ -116,12 +130,22 @@ export function Modal({
     ref.current?.focus();
     root?.setAttribute('aria-hidden', 'true');
     return () => {
-      document.body.style.overflow = previousOverflow;
-      if (previousAriaHidden === null) root?.removeAttribute('aria-hidden');
-      else root?.setAttribute('aria-hidden', previousAriaHidden);
-      if (root) root.inert = previousInert;
+      modalStack.splice(modalStack.indexOf(node), 1);
+      const top = modalStack.at(-1);
+      if (top) {
+        top.inert = false;
+        top.removeAttribute('aria-hidden');
+      } else if (modalPageState) {
+        document.body.style.overflow = modalPageState.overflow;
+        if (modalPageState.ariaHidden === null) root?.removeAttribute('aria-hidden');
+        else root?.setAttribute('aria-hidden', modalPageState.ariaHidden);
+        if (root) root.inert = modalPageState.inert;
+        modalPageState = null;
+      }
       document.removeEventListener('keydown', handle);
-      if (previous?.isConnected) previous.focus();
+      if (previous?.isConnected && !previous.closest('[inert]') && !previous.matches(':disabled'))
+        previous.focus();
+      else top?.focus();
     };
   }, []);
   return createPortal(

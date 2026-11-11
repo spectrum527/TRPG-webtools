@@ -60,6 +60,9 @@ import {
   encounterView,
   rollEncounterInitiative,
   setEncounterAutoDamage,
+  setEncounterLifeChecks,
+  replaceInjuredCombatant,
+  clearEncounter,
   recordEncounterRest,
   markEncounterSpellSlot,
   canControlCompanion,
@@ -74,6 +77,19 @@ import {
   type Combatant,
   type DamageAdjustment,
 } from '../shared/encounter.ts';
+import {
+  HpConfirmationSchema,
+  applyDeathSave,
+  applyConstitution,
+  healInjury,
+  injuryLabels,
+  lifeFields,
+  manualHpChange,
+  markDead,
+  previewManualHp,
+  stabilize,
+  usesDeathSaves,
+} from '../shared/injury.ts';
 import { KeeperCardSchema, getKeeperCardErrors } from '../shared/keeper.ts';
 import {
   CharacterAdjustmentEditSchema,
@@ -84,6 +100,7 @@ import {
 import { getCharacterErrors, rollCheck, rollDice, type DieRandom } from '../shared/rules.ts';
 import type {
   Ack,
+  Edge,
   Character,
   CheckRequest,
   CheckResult,
@@ -268,7 +285,7 @@ const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('keeper-delete'), cardId: id }).strict(),
   z.object({ type: z.literal('character'), character: characterSchema }).strict(),
   z.object({ type: z.literal('ready'), ready: z.boolean() }).strict(),
-  ...(['start', 'pause', 'next-turn', 'leave'] as const).map((type) =>
+  ...(['start', 'pause', 'leave'] as const).map((type) =>
     z.object({ type: z.literal(type) }).strict(),
   ),
   z.object({ type: z.literal('message'), content: z.string().trim().min(1).max(2000) }).strict(),
@@ -296,12 +313,18 @@ const actionSchema = z.discriminatedUnion('type', [
     })
     .strict(),
   z.object({ type: z.literal('mode'), mode: modeSchema }).strict(),
+  z.strictObject({
+    type: z.literal('next-turn'),
+    expectedRevision: z.number().int().min(0).max(1000000000).optional(),
+    requestId: id.optional(),
+  }),
   z
     .object({
       type: z.literal('resource'),
       memberId: id,
       resource: z.enum(['hp', 'mp', 'san']),
       value: z.number().int().min(0).max(9999),
+      hpConfirmation: HpConfirmationSchema.optional(),
     })
     .strict(),
   z.object({ type: z.literal('item-add'), memberId: id, item: itemSchema }).strict(),
@@ -1079,6 +1102,8 @@ export function createAppServer(options: ServerOptions = {}) {
         return { selected, character };
       };
       const updateRuntimeCharacter = (selected: Member, next: Character) => {
+        const life = room.encounter.participants.find((c) => c.memberId === selected.id);
+        requireCondition(!life?.dead || next.hp === 0, '角色已死亡，请由主持人先确认复活');
         requireCondition(getCharacterErrors(next).length === 0, '更新后的角色资源或装备数值无效');
         const errors = runtimeErrors(next);
         requireCondition(!errors.length, errors[0] ?? '角色资源或装备无效');
@@ -1121,6 +1146,207 @@ export function createAppServer(options: ServerOptions = {}) {
         if (visibility === 'host') return c.name;
         return c.revealed ? c.publicName : '未公开参战者';
       };
+      const storeLife = (
+        next: Combatant,
+        state = replaceInjuredCombatant(room.encounter, next),
+      ) => {
+        if (next.dead || next.unconscious) next.concentration = '';
+        if (next.memberId) {
+          const selected = room.members.find((m) => m.id === next.memberId)!;
+          const character = selected.character!;
+          requireCondition(next.hp !== null && next.hp <= character.maxHp, '玩家 HP 无效');
+          const concentrationChanged =
+            character.dndMagic && next.concentration !== (character.dndMagic.concentration ?? '');
+          if (character.hp !== next.hp || concentrationChanged) {
+            character.hp = next.hp;
+            if (concentrationChanged) {
+              const { concentration: _old, ...magic } = character.dndMagic!;
+              character.dndMagic = next.concentration
+                ? { ...magic, concentration: next.concentration }
+                : magic;
+            }
+            character.updatedAt = new Date(now()).toISOString();
+            characterChanged(selected.id);
+          }
+        }
+        room.encounter = state;
+      };
+      const lifeCheck = (
+        c: Combatant,
+        kind: 'death' | 'constitution',
+        visibility: Visibility,
+        options: {
+          modifier?: number;
+          edge?: Edge;
+          completedRound?: number;
+          identity?: { requestId: string; combatRequestHash: string };
+        } = {},
+      ) => {
+        const name = combatantName(c, visibility);
+        if (kind === 'death') {
+          requireCondition(
+            usesDeathSaves(c) && c.hp === 0 && !c.dead && !c.stable && c.deathFailures < 3,
+            '该角色当前不需要死亡豁免',
+          );
+          const turnKey = room.encounter.activeId ? room.encounter.round : undefined;
+          requireCondition(
+            !turnKey || c.injuryChecks?.lastDeathRound !== turnKey,
+            '本回合已记录死亡豁免',
+          );
+          const rolled = rollDice(options.edge && options.edge !== 'normal' ? '2d20' : '1d20', rng);
+          const dice = rolled.groups[0].rolls;
+          const die =
+            options.edge === 'advantage'
+              ? Math.max(...dice)
+              : options.edge === 'disadvantage'
+                ? Math.min(...dice)
+                : dice[0];
+          const next = applyDeathSave(c, die, options.modifier ?? 0);
+          next.injuryChecks = {
+            ...next.injuryChecks,
+            ...(turnKey ? { lastDeathRound: turnKey } : {}),
+          };
+          storeLife(next);
+          const total = die + (options.modifier ?? 0);
+          addEvent(
+            entry,
+            'system',
+            member,
+            `${name}死亡豁免：d20 ${dice.join(' / ')} 取 ${die}，加值 ${options.modifier ?? 0}；${injuryLabels(next).join('、') || '恢复意识'}。成功 ${next.deathSuccesses} 次，失败 ${next.deathFailures} 次，HP ${next.hp}。`,
+            {
+              ...options.identity,
+              check: {
+                label: '死亡豁免',
+                rolls: dice,
+                selected: die,
+                modifier: options.modifier ?? 0,
+                total,
+                target: 10,
+                success: die === 20 || (die !== 1 && total >= 10),
+                outcome:
+                  die === 20
+                    ? '自然 20：恢复 1 HP'
+                    : die === 1
+                      ? '自然 1：两次失败'
+                      : total >= 10
+                        ? '成功'
+                        : '失败',
+              },
+              visibility,
+              secretLabel: '死亡豁免',
+            },
+          );
+        } else {
+          requireCondition(
+            c.rule === 'coc' && !c.dead && (c.dying || c.injuryChecks?.conPending),
+            '该角色当前没有待处理的伤势体质检定',
+          );
+          const character = room.members.find((m) => m.id === c.memberId)?.character;
+          const con = character
+            ? effectiveCharacter(character).attributes.con
+            : c.source?.attributes.con;
+          requireCondition(con !== null && con !== undefined, '该角色缺少体质，请补充后检定');
+          const check = rollCheck(
+            'coc',
+            null,
+            {
+              kind: 'ability',
+              key: 'con',
+              target: con,
+              dc: 0,
+              modifier: 0,
+              edge: options.edge ?? 'normal',
+            },
+            rng,
+          );
+          const next = applyConstitution(
+            c,
+            check.success,
+            options.completedRound ?? room.encounter.round,
+          );
+          storeLife(next);
+          addEvent(
+            entry,
+            'system',
+            member,
+            `${name}${c.dying ? '濒死' : '重伤'}体质检定：${check.total} / ${con}，${check.outcome}；${injuryLabels(next).join('、') || '保持清醒'}。`,
+            { ...options.identity, check, visibility, secretLabel: '伤势体质检定' },
+          );
+        }
+      };
+      const autoConstitution = (c: Combatant, completedRound?: number) => {
+        const character = room.members.find((m) => m.id === c.memberId)?.character;
+        if ((character?.attributes.con ?? c.source?.attributes.con) == null) {
+          addEvent(entry, 'system', member, `${c.name}缺少体质，伤势检定需由主持人处理。`, {
+            visibility: 'host',
+          });
+          return;
+        }
+        lifeCheck(c, 'constitution', c.memberId ? 'public' : 'host', { completedRound });
+      };
+      const advanceLifeChecks = (beforeRound: number, beforeId: string | null) => {
+        if (!room.encounter.autoLifeChecks) return;
+        if (room.rule === 'coc' && room.encounter.round > beforeRound && beforeRound > 0) {
+          for (const c of [...room.encounter.participants])
+            if (!c.dead && c.dying && (c.injuryChecks?.cocDueRound ?? beforeRound) <= beforeRound)
+              autoConstitution(c, beforeRound);
+        }
+        if (
+          room.rule === 'dnd' &&
+          (room.encounter.activeId !== beforeId || room.encounter.round !== beforeRound)
+        ) {
+          const c = room.encounter.participants.find((p) => p.id === room.encounter.activeId);
+          if (
+            c &&
+            usesDeathSaves(c) &&
+            c.hp === 0 &&
+            !c.dead &&
+            !c.stable &&
+            c.injuryChecks?.lastDeathRound !== room.encounter.round
+          )
+            lifeCheck(c, 'death', c.memberId ? 'public' : 'host');
+        }
+      };
+      const manualHealth = (input: RoomAction) => {
+        const change = manualHpChange(room, input);
+        if (!change) return null;
+        const preview = previewManualHp(room, change);
+        const confirmation = 'hpConfirmation' in input ? input.hpConfirmation : undefined;
+        if (confirmation) {
+          encounterRevision(confirmation.expectedRevision);
+          requireCondition(
+            confirmation.expectedHp === change.target.hp,
+            '角色 HP 已变化，请重新确认',
+          );
+          if (confirmation.outcome === 'dead') {
+            host();
+            requireCondition(change.value === 0, '只有 HP 为 0 时才能确认死亡');
+          }
+        }
+        requireCondition(
+          !preview.requiresConfirmation || !!confirmation,
+          '此 HP 修改会触发昏迷、濒死或死亡，请先确认',
+        );
+        let next: Combatant = { ...change.target, hp: change.value };
+        if (change.value > (change.target.hp ?? change.value))
+          next = healInjury(change.target, change.value);
+        else if (room.encounter.autoDamage && room.phase === 'active')
+          next = confirmation?.outcome === 'dead' ? markDead(next) : preview.combatant;
+        return { ...change, next, confirmed: !!confirmation };
+      };
+      const finishManualHealth = (next: Combatant, confirmed: boolean) => {
+        storeLife(next);
+        if (confirmed)
+          addEvent(
+            entry,
+            'system',
+            member,
+            `${next.name}已确认 HP 调整为 ${next.hp}${room.encounter.autoDamage ? `，${injuryLabels(next).join('、') || '无新增伤势'}` : '；自动扣血关闭，伤势由主持人记录'}。`,
+            { visibility: next.memberId ? 'public' : 'host' },
+          );
+        if (room.encounter.autoLifeChecks && next.injuryChecks?.conPending && !next.dead)
+          autoConstitution(next);
+      };
       const unavailableDamage = (c: Combatant, armorOverride?: number) => {
         if (c.hp === null) return '目标 HP 未填写';
         if (c.rule === 'coc' && effectiveCocArmor(c, armorOverride) === null) return '目标护甲未知';
@@ -1130,17 +1356,20 @@ export function createAppServer(options: ServerOptions = {}) {
         c: Combatant,
         expression: string,
         visibility: Visibility,
-        options: { adjustment?: DamageAdjustment; armorOverride?: number },
+        options: { adjustment?: DamageAdjustment; armorOverride?: number; critical?: boolean },
       ) => {
         const roll = rollDice(expression, rng);
-        const result = applyEncounterDamage(room.encounter, c, roll.total, options);
-        if (c.memberId && result.combatant.hp !== result.beforeHp) {
-          const character = target(c.memberId);
-          character.hp = result.combatant.hp;
-          character.updatedAt = new Date(now()).toISOString();
-          characterChanged(c.memberId);
-        }
-        room.encounter = result.state;
+        const result = applyEncounterDamage(room.encounter, c, roll.total, {
+          ...options,
+          edition: room.dndEdition,
+        });
+        storeLife(result.combatant, result.state);
+        if (
+          room.encounter.autoLifeChecks &&
+          result.combatant.injuryChecks?.conPending &&
+          !result.combatant.dead
+        )
+          autoConstitution(result.combatant);
         const summary = `${combatantName(c, visibility)}的伤害骰 ${roll.expression} = ${roll.total}。`;
         if (!c.memberId && visibility === 'public')
           return { roll, summary: `${summary}已结算伤害。` };
@@ -1509,6 +1738,17 @@ export function createAppServer(options: ServerOptions = {}) {
           );
           const errors = runtimeErrors(action.character);
           requireCondition(!errors.length, errors[0] ?? '角色法术或装备配置无效');
+          if (member.character?.id !== action.character.id)
+            room.encounter.participants = room.encounter.participants.filter(
+              (c) => c.memberId !== member.id,
+            );
+          else {
+            const old = room.encounter.participants.find((c) => c.memberId === member.id);
+            requireCondition(
+              !old?.dead || action.character.hp === 0,
+              '角色已死亡，请由主持人先确认复活',
+            );
+          }
           member.character = structuredClone(action.character);
           characterChanged(member.id);
           break;
@@ -1608,6 +1848,13 @@ export function createAppServer(options: ServerOptions = {}) {
               action.resource === 'hp' ? 'maxHp' : action.resource === 'mp' ? 'maxMp' : 'maxSan'
             ];
           requireCondition(action.value <= max, '资源不能超过角色卡上限');
+          if (action.resource === 'hp') {
+            const change = manualHealth(action);
+            if (change) {
+              finishManualHealth(change.next, change.confirmed);
+              break;
+            }
+          }
           character[action.resource] = action.value;
           character.updatedAt = new Date(now()).toISOString();
           characterChanged(action.memberId);
@@ -1661,37 +1908,54 @@ export function createAppServer(options: ServerOptions = {}) {
             '战斗状态已更新，请刷新后再保存',
           );
           const selected = combatant(action.combatantId);
+          const health = manualHealth(action);
           const next = updateCombatant(
             room.encounter,
             action.combatantId,
             action.patch,
             room.dndEdition,
           );
+          let record = next.participants.find((c) => c.id === selected.id)!;
+          if (health) record = { ...record, ...lifeFields(health.next) };
+          if (record.rule === 'coc' && action.patch.unconscious !== undefined)
+            record.injuryChecks = {
+              ...record.injuryChecks,
+              conPending: false,
+              ...(record.dying ? { cocDueRound: room.encounter.round + 1 } : {}),
+            };
           if (
-            selected.memberId &&
-            (action.patch.hp !== undefined || action.patch.concentration !== undefined)
-          ) {
-            const character = target(selected.memberId);
-            if (action.patch.hp !== undefined) {
-              requireCondition(
-                action.patch.hp !== null && action.patch.hp <= character.maxHp,
-                '玩家 HP 不能留空或超过角色卡上限',
-              );
-              character.hp = action.patch.hp;
-            }
-            const syncConcentration =
-              character.dndMagic && action.patch.concentration !== undefined;
-            if (syncConcentration) {
-              const { concentration: _previous, ...magic } = character.dndMagic!;
-              const concentration = action.patch.concentration!.trim();
-              character.dndMagic = concentration ? { ...magic, concentration } : magic;
-            }
-            if (action.patch.hp !== undefined || syncConcentration) {
-              character.updatedAt = new Date(now()).toISOString();
-              characterChanged(selected.memberId);
-            }
-          }
-          room.encounter = next;
+            record.rule === 'dnd' &&
+            room.encounter.activeId &&
+            (action.patch.deathSuccesses !== undefined ||
+              action.patch.deathFailures !== undefined ||
+              action.patch.stable !== undefined)
+          )
+            record.injuryChecks = {
+              ...record.injuryChecks,
+              lastDeathRound: room.encounter.round,
+            };
+          if (record.dead) record = markDead(record);
+          else if (record.rule === 'dnd' && record.deathFailures >= 3) record = markDead(record);
+          else if (record.rule === 'dnd' && record.hp === 0 && record.deathSuccesses >= 3)
+            record = stabilize(record);
+          else if (record.rule === 'coc' && record.dying && !record.injuryChecks?.cocDueRound)
+            record = {
+              ...record,
+              unconscious: true,
+              injuryChecks: { cocDueRound: room.encounter.round + 1 },
+            };
+          next.participants = next.participants.map((c) => (c.id === record.id ? record : c));
+          storeLife(record, next);
+          if (health?.confirmed)
+            addEvent(
+              entry,
+              'system',
+              member,
+              `${record.name}已确认 HP 调整为 ${record.hp}，${injuryLabels(record).join('、') || '伤势手动记录'}。`,
+              { visibility: record.memberId ? 'public' : 'host' },
+            );
+          if (room.encounter.autoLifeChecks && record.injuryChecks?.conPending && !record.dead)
+            autoConstitution(record);
           break;
         }
         case 'encounter-remove':
@@ -1700,19 +1964,110 @@ export function createAppServer(options: ServerOptions = {}) {
           break;
         case 'encounter-clear':
           host();
-          room.encounter = {
-            ...emptyEncounter(),
-            revision: room.encounter.revision + 1,
-            ...(room.encounter.autoDamage === undefined
-              ? {}
-              : { autoDamage: room.encounter.autoDamage }),
-          };
+          room.encounter = clearEncounter(room.encounter, room.members);
           break;
         case 'encounter-settings':
           host();
           encounterRevision(action.expectedRevision);
           room.encounter = setEncounterAutoDamage(room.encounter, action.autoDamage);
+          if (action.autoLifeChecks !== undefined)
+            room.encounter = setEncounterLifeChecks(room.encounter, action.autoLifeChecks);
           break;
+        case 'encounter-life-check': {
+          requireCondition(room.phase === 'active', '请先开启故事');
+          const c = combatant(action.combatantId);
+          requireCondition(
+            member.role === 'host' || c.memberId === member.id || canControlCompanion(c, member.id),
+            '只能为自己或获授权的伙伴进行伤势检定',
+          );
+          requireCondition(
+            member.role === 'host' || action.visibility === 'public',
+            '玩家不能投暗骰',
+          );
+          const { replayed, ...identity } = encounterCommand(action);
+          if (replayed) return null;
+          lifeCheck(c, action.kind, action.visibility, {
+            modifier: action.modifier,
+            edge: action.edge,
+            identity,
+          });
+          break;
+        }
+        case 'encounter-life-care': {
+          host();
+          const { replayed, ...identity } = encounterCommand(action);
+          if (replayed) return null;
+          const c = combatant(action.combatantId);
+          let next = c;
+          let rolled;
+          const names = {
+            stabilize: '确认医药检定成功并稳定伤势',
+            'first-aid': '确认急救成功',
+            medicine: '确认医学治疗成功',
+            revive: '确认复活',
+          };
+          if (action.kind === 'revive') {
+            requireCondition(
+              c.dead && c.maxHp !== null && c.maxHp > 0,
+              '请先确认角色已死亡且生命上限大于 0',
+            );
+            next = {
+              ...c,
+              dead: false,
+              hp: 1,
+              unconscious: false,
+              dying: false,
+              stable: false,
+              deathSuccesses: 0,
+              deathFailures: 0,
+              injuryChecks: {},
+            };
+          } else {
+            requireCondition(
+              !c.dead && c.hp !== null && c.maxHp !== null,
+              '目标已死亡或 HP 未填写',
+            );
+            if (action.kind === 'stabilize') {
+              requireCondition(c.rule === 'dnd', '此操作仅用于 D&D；CoC 请使用急救');
+              next = stabilize(c);
+            } else {
+              requireCondition(c.rule === 'coc', '急救与医学治疗仅用于 CoC');
+              if (action.kind === 'first-aid') {
+                requireCondition(!c.injuryChecks?.firstAidUsed, '本次伤势已经完成急救');
+                next = c.dying
+                  ? stabilize(c)
+                  : { ...healInjury(c, Math.min(c.maxHp, c.hp + 1)), unconscious: false };
+                next.injuryChecks = { ...next.injuryChecks, firstAidUsed: true };
+              } else {
+                requireCondition(
+                  !c.dying && !c.injuryChecks?.medicineUsed,
+                  '濒死者须先接受急救；本次伤势不可重复医学治疗',
+                );
+                rolled = rollDice('1d3', rng);
+                next = healInjury(c, Math.min(c.maxHp, c.hp + rolled.total));
+                next.injuryChecks = {
+                  ...next.injuryChecks,
+                  firstAidStabilized: false,
+                  medicineUsed: true,
+                };
+              }
+            }
+          }
+          storeLife(next);
+          addEvent(
+            entry,
+            'system',
+            member,
+            `${c.name}${names[action.kind]}：HP ${c.hp} → ${next.hp}；${injuryLabels(next).join('、') || '无伤势标记'}。`,
+            {
+              ...identity,
+              visibility: c.memberId ? 'public' : 'host',
+              ...(rolled ? { roll: rolled } : {}),
+              secretLabel: '伤势处理',
+            },
+          );
+          break;
+        }
         case 'encounter-companion': {
           host();
           encounterRevision(action.expectedRevision);
@@ -1747,12 +2102,8 @@ export function createAppServer(options: ServerOptions = {}) {
             c.maxHp !== null && action.hp <= c.maxHp,
             '伙伴 HP 不能超过已填写的上限',
           );
-          room.encounter = updateCombatant(
-            room.encounter,
-            c.id,
-            { hp: action.hp },
-            room.dndEdition,
-          );
+          const health = manualHealth(action)!;
+          finishManualHealth(health.next, health.confirmed);
           addEvent(entry, 'system', member, `${c.publicName}已更新伙伴 HP。`, {
             ...identity,
             visibility: c.revealed ? 'public' : 'host',
@@ -1910,7 +2261,7 @@ export function createAppServer(options: ServerOptions = {}) {
                     ? criticalDamageExpression(damage.expression)
                     : damage.expression,
                   action.visibility,
-                  damage,
+                  { ...damage, critical: check.selected === 20 },
                 )
               : null;
           const canSeeAc = action.visibility === 'host' || defender.memberId !== null;
@@ -2034,10 +2385,11 @@ export function createAppServer(options: ServerOptions = {}) {
           );
           break;
         }
-        case 'initiative':
+        case 'initiative': {
           host();
           requireCondition(room.phase === 'active', '请先开启故事');
           if (action.expectedRevision !== undefined) encounterRevision(action.expectedRevision);
+          const before = room.encounter;
           room.encounter = orderEncounter(
             syncEncounterPlayers(room.encounter, room.members),
             room.rule,
@@ -2045,12 +2397,46 @@ export function createAppServer(options: ServerOptions = {}) {
             { dndEdition: room.dndEdition, fillMissing: action.fillMissing },
           );
           addEvent(entry, 'system', member, '更新了先攻顺序');
+          if (room.rule === 'coc' && before.round > 1)
+            room.encounter.participants = room.encounter.participants.map((c) =>
+              c.injuryChecks?.cocDueRound === undefined
+                ? c
+                : {
+                    ...c,
+                    injuryChecks: {
+                      ...c.injuryChecks,
+                      cocDueRound: Math.max(1, c.injuryChecks.cocDueRound - before.round + 1),
+                    },
+                  },
+            );
+          advanceLifeChecks(before.round, before.activeId);
           break;
-        case 'next-turn':
+        }
+        case 'next-turn': {
           host();
           requireCondition(room.phase === 'active', '请先开启故事并生成先攻顺序');
+          const identity =
+            action.requestId && action.expectedRevision !== undefined
+              ? encounterCommand({
+                  requestId: action.requestId,
+                  expectedRevision: action.expectedRevision,
+                })
+              : undefined;
+          if (identity?.replayed) return null;
+          requireCondition(
+            !room.encounter.autoLifeChecks || !!identity,
+            '自动伤势检定已开启，请刷新页面后推进回合',
+          );
+          const before = room.encounter;
           room.encounter = nextEncounterTurn(room.encounter, room.dndEdition);
+          advanceLifeChecks(before.round, before.activeId);
+          if (identity)
+            addEvent(entry, 'system', member, '推进了行动顺序。', {
+              requestId: identity.requestId,
+              combatRequestHash: identity.combatRequestHash,
+            });
           break;
+        }
         case 'kick': {
           host();
           lobby();

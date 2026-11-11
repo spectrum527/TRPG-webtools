@@ -1707,3 +1707,438 @@ describe('D&D runtime resources and host preparation', () => {
     ).toHaveLength(100);
   });
 });
+
+describe('injury automation and confirmed HP edits', () => {
+  it('requires owner confirmation for companion zero HP and safely retries the same change', async () => {
+    const { host, player, h, p, url } = await pair('dnd');
+    const peer = await client(url);
+    const other = await joinRoom(peer, h.room.code);
+    await startParty(host, [
+      { socket: player, session: p.session, card: character() },
+      { socket: peer, session: other.session, card: character() },
+    ]);
+    const card = { ...createDndStatBlock('npc-bridge-guard'), hp: 7, name: '私密伙伴档案' };
+    await action(host, { type: 'dnd-save', cards: [card] });
+    await action(host, { type: 'encounter-add', cardId: card.id, count: 1 });
+    let room = await snapshot(host, h.session);
+    const c = room.encounter.participants.find((entry) => entry.memberId === null)!;
+    await action(host, {
+      type: 'encounter-companion',
+      combatantId: c.id,
+      ownerMemberId: p.session.memberId,
+      expectedRevision: room.encounter.revision,
+    });
+    room = await snapshot(host, h.session);
+    await action(host, {
+      type: 'encounter-update',
+      combatantId: c.id,
+      patch: { revealed: true, publicName: '蓝鸟' },
+      expectedRevision: room.encounter.revision,
+    });
+    room = await snapshot(host, h.session);
+    await action(host, {
+      type: 'encounter-settings',
+      autoDamage: true,
+      expectedRevision: room.encounter.revision,
+    });
+    room = await snapshot(host, h.session);
+    const edit = {
+      type: 'encounter-companion-hp',
+      combatantId: c.id,
+      hp: 0,
+      expectedRevision: room.encounter.revision,
+      requestId: 'companion-critical-hp',
+    } as const;
+    expect(await rejected(player, edit)).toContain('请先确认');
+    const confirmed = {
+      ...edit,
+      hpConfirmation: {
+        expectedHp: 7,
+        expectedRevision: room.encounter.revision,
+        outcome: 'rules',
+      },
+    } satisfies RoomAction;
+    expect(await rejected(peer, confirmed)).toContain('公开伙伴');
+    expect(
+      await rejected(player, {
+        ...confirmed,
+        hpConfirmation: { ...confirmed.hpConfirmation, outcome: 'dead' },
+      }),
+    ).toContain('主持人');
+    await action(player, confirmed);
+    await action(player, confirmed);
+    const owner = await snapshot(player, p.session);
+    expect(owner.encounter.participants.find((entry) => entry.id === c.id)).toMatchObject({
+      name: '蓝鸟',
+      hp: 0,
+      dying: true,
+      unconscious: true,
+      deathFailures: 0,
+    });
+    expect(JSON.stringify(owner)).not.toContain('私密伙伴档案');
+    expect(owner.log.filter((event) => event.requestId === edit.requestId)).toHaveLength(1);
+    await action(player, {
+      ...edit,
+      hp: 1,
+      expectedRevision: owner.encounter.revision,
+      requestId: 'companion-healed',
+    });
+    const healed = await snapshot(player, p.session);
+    expect(healed.encounter.participants.find((entry) => entry.id === c.id)).toMatchObject({
+      hp: 1,
+      dying: false,
+      unconscious: false,
+    });
+  });
+
+  it('guards manual zero HP, respects disabled automation, rejects stale confirmation and preserves death across clear/archive', async () => {
+    const { host, player, h, p, url } = await pair('dnd', {}, '2024');
+    await startParty(host, [
+      { socket: player, session: p.session, card: character('dnd', '2024') },
+    ]);
+    let room = await snapshot(host, h.session);
+    const hp = room.members.find((m) => m.id === p.session.memberId)!.character!.hp;
+    const edit = {
+      type: 'resource',
+      memberId: p.session.memberId,
+      resource: 'hp',
+      value: 0,
+    } as const;
+    expect(await rejected(player, edit)).toContain('请先确认');
+    expect((await snapshot(host, h.session)).encounter.participants[0].hp).toBe(hp);
+    await action(player, {
+      ...edit,
+      hpConfirmation: {
+        expectedHp: hp,
+        expectedRevision: room.encounter.revision,
+        outcome: 'rules',
+      },
+    });
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({ hp: 0, dying: false });
+    expect(room.encounter.participants[0].dead).not.toBe(true);
+    await action(player, { ...edit, value: hp });
+    room = await snapshot(host, h.session);
+    const stale = {
+      expectedHp: hp,
+      expectedRevision: room.encounter.revision,
+      outcome: 'rules' as const,
+    };
+    await action(host, {
+      type: 'encounter-settings',
+      autoDamage: true,
+      expectedRevision: room.encounter.revision,
+    });
+    expect(await rejected(player, { ...edit, hpConfirmation: stale })).toContain('战斗状态已更新');
+    room = await snapshot(host, h.session);
+    expect(
+      await rejected(player, {
+        ...edit,
+        hpConfirmation: { ...stale, expectedRevision: room.encounter.revision, outcome: 'dead' },
+      }),
+    ).toContain('主持人');
+    await action(player, {
+      ...edit,
+      hpConfirmation: { ...stale, expectedRevision: room.encounter.revision },
+    });
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({ hp: 0, dying: true, unconscious: true });
+    await action(host, {
+      ...edit,
+      hpConfirmation: { expectedHp: 0, expectedRevision: room.encounter.revision, outcome: 'dead' },
+    });
+    expect(await rejected(player, { ...edit, value: 1 })).toContain('先确认复活');
+    await action(host, { type: 'encounter-clear' });
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({ hp: 0, dead: true });
+    expect(room.encounter.autoDamage).toBe(true);
+    const restored = await restoreDndRoom(url, h.session, '2024');
+    expect(restored.room.encounter.participants[0]).toMatchObject({ hp: 0, dead: true });
+    const revive: RoomAction = {
+      type: 'encounter-life-care',
+      combatantId: p.session.memberId,
+      kind: 'revive',
+      conditionsConfirmed: true,
+      expectedRevision: room.encounter.revision,
+      requestId: 'revive-once',
+    };
+    expect(await rejected(player, revive)).toContain('主持人');
+    await action(host, revive);
+    await action(host, revive);
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({
+      hp: 1,
+      dead: false,
+      dying: false,
+      unconscious: false,
+    });
+    expect(room.log.filter((e) => e.requestId === 'revive-once')).toHaveLength(1);
+  });
+
+  it.each(['2014', '2024'] as const)(
+    'automates one D&D %s death save per turn and deduplicates turn retries',
+    async (edition) => {
+      const rng = vi.fn(() => 10);
+      const { host, player, h, p } = await pair('dnd', { rng }, edition);
+      await startParty(host, [
+        { socket: player, session: p.session, card: character('dnd', edition) },
+      ]);
+      let room = await snapshot(host, h.session);
+      await action(host, {
+        type: 'encounter-settings',
+        autoDamage: true,
+        autoLifeChecks: true,
+        expectedRevision: room.encounter.revision,
+      });
+      room = await snapshot(host, h.session);
+      await action(host, {
+        type: 'encounter-update',
+        combatantId: p.session.memberId,
+        expectedRevision: room.encounter.revision,
+        patch: { initiativeOverride: 10 },
+      });
+      room = await snapshot(host, h.session);
+      await action(player, {
+        type: 'resource',
+        memberId: p.session.memberId,
+        resource: 'hp',
+        value: 0,
+        hpConfirmation: {
+          expectedHp: room.encounter.participants[0].hp,
+          expectedRevision: room.encounter.revision,
+          outcome: 'rules',
+        },
+      });
+      await action(host, { type: 'initiative' });
+      room = await snapshot(host, h.session);
+      expect(room.encounter.participants[0]).toMatchObject({
+        deathSuccesses: 1,
+        injuryChecks: { lastDeathRound: 1 },
+      });
+      expect(
+        await rejected(host, {
+          type: 'encounter-life-check',
+          combatantId: p.session.memberId,
+          kind: 'death',
+          modifier: 0,
+          edge: 'normal',
+          visibility: 'public',
+          expectedRevision: room.encounter.revision,
+          requestId: 'duplicate-manual-death',
+        }),
+      ).toContain('本回合已记录');
+      const next: RoomAction = {
+        type: 'next-turn',
+        expectedRevision: room.encounter.revision,
+        requestId: 'next-once',
+      };
+      await action(host, next);
+      await action(host, next);
+      room = await snapshot(host, h.session);
+      expect(room.encounter).toMatchObject({ round: 2 });
+      expect(room.encounter.participants[0].deathSuccesses).toBe(2);
+      await action(host, {
+        type: 'next-turn',
+        expectedRevision: room.encounter.revision,
+        requestId: 'third-turn',
+      });
+      room = await snapshot(host, h.session);
+      expect(room.encounter.participants[0]).toMatchObject({
+        stable: true,
+        dying: false,
+        unconscious: true,
+        deathSuccesses: 0,
+        deathFailures: 0,
+      });
+      const calls = rng.mock.calls.length;
+      await action(host, {
+        type: 'next-turn',
+        expectedRevision: room.encounter.revision,
+        requestId: 'stable-turn',
+      });
+      expect(rng.mock.calls).toHaveLength(calls);
+    },
+  );
+
+  it('runs CoC major-wound CON checks immediately and dying checks only at the end of the following round', async () => {
+    const rng = vi.fn((sides: number) => sides);
+    const { host, player, h, p } = await pair('coc', { rng });
+    await startParty(host, [{ socket: player, session: p.session, card: character('coc') }]);
+    let room = await snapshot(host, h.session);
+    await action(host, {
+      type: 'encounter-settings',
+      autoDamage: true,
+      autoLifeChecks: true,
+      expectedRevision: room.encounter.revision,
+    });
+    await action(host, { type: 'initiative' });
+    const harm = async (id: string) => {
+      room = await snapshot(host, h.session);
+      await action(host, {
+        type: 'encounter-damage',
+        targetId: p.session.memberId,
+        expression: '5',
+        visibility: 'public',
+        expectedRevision: room.encounter.revision,
+        requestId: id,
+      });
+    };
+    await harm('major');
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({
+      hp: 5,
+      majorWound: true,
+      unconscious: true,
+      injuryChecks: { conPending: false },
+    });
+    await harm('dying');
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({
+      hp: 0,
+      dying: true,
+      injuryChecks: { cocDueRound: 2 },
+    });
+    const calls = rng.mock.calls.length;
+    await action(host, {
+      type: 'next-turn',
+      expectedRevision: room.encounter.revision,
+      requestId: 'end-one',
+    });
+    room = await snapshot(host, h.session);
+    expect(rng.mock.calls).toHaveLength(calls);
+    await action(host, {
+      type: 'next-turn',
+      expectedRevision: room.encounter.revision,
+      requestId: 'end-two',
+    });
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({ dead: true, dying: false });
+    expect(
+      room.log.some((e) => e.content.includes('濒死体质检定') && e.content.includes('死亡')),
+    ).toBe(true);
+  });
+
+  it('allows confirmed CoC stabilization and medicine once per injury, and keeps automatic checks off by default', async () => {
+    const { host, player, h, p } = await pair('coc', { rng: (sides) => sides });
+    await startParty(host, [{ socket: player, session: p.session, card: character('coc') }]);
+    let room = await snapshot(host, h.session);
+    await action(host, {
+      type: 'encounter-settings',
+      autoDamage: true,
+      expectedRevision: room.encounter.revision,
+    });
+    for (const id of ['major-off', 'zero-off']) {
+      room = await snapshot(host, h.session);
+      await action(host, {
+        type: 'encounter-damage',
+        targetId: p.session.memberId,
+        expression: '5',
+        visibility: 'public',
+        expectedRevision: room.encounter.revision,
+        requestId: id,
+      });
+    }
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({ dying: true, majorWound: true });
+    expect(room.log.some((e) => e.check && e.content.includes('体质检定'))).toBe(false);
+    const care = async (kind: 'first-aid' | 'medicine', requestId: string) => {
+      room = await snapshot(host, h.session);
+      return action(host, {
+        type: 'encounter-life-care',
+        combatantId: p.session.memberId,
+        kind,
+        conditionsConfirmed: true,
+        expectedRevision: room.encounter.revision,
+        requestId,
+      });
+    };
+    expect(
+      await rejected(host, {
+        type: 'encounter-life-care',
+        combatantId: p.session.memberId,
+        kind: 'medicine',
+        conditionsConfirmed: true,
+        expectedRevision: room.encounter.revision,
+        requestId: 'medicine-before-aid',
+      }),
+    ).toContain('先接受急救');
+    await care('first-aid', 'aid');
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({
+      hp: 0,
+      stable: true,
+      dying: false,
+      unconscious: true,
+    });
+    await care('medicine', 'medicine');
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants[0]).toMatchObject({
+      hp: 3,
+      majorWound: true,
+      dying: false,
+      unconscious: false,
+      injuryChecks: { firstAidUsed: true, medicineUsed: true },
+    });
+    expect(
+      await rejected(host, {
+        type: 'encounter-life-care',
+        combatantId: p.session.memberId,
+        kind: 'first-aid',
+        conditionsConfirmed: true,
+        expectedRevision: room.encounter.revision,
+        requestId: 'aid-again',
+      }),
+    ).toContain('已经完成急救');
+  });
+
+  it('rolls back automatic injury checks when persistence fails and keeps hidden NPC results private', async () => {
+    const { host, player, h, p, dataDir } = await pair('coc', { rng: (sides) => sides });
+    await startParty(host, [{ socket: player, session: p.session, card: character('coc') }]);
+    const npc = {
+      ...createKeeperCard('npc-bystander'),
+      name: '秘密伤者',
+      hp: 10,
+      maxHp: 10,
+      armor: 0,
+    };
+    await action(host, { type: 'keeper-save', cards: [npc] });
+    await action(host, { type: 'encounter-add', cardId: npc.id, count: 1 });
+    let room = await snapshot(host, h.session);
+    await action(host, {
+      type: 'encounter-settings',
+      autoDamage: true,
+      autoLifeChecks: true,
+      expectedRevision: room.encounter.revision,
+    });
+    const before = await snapshot(host, h.session);
+    const targetId = before.encounter.participants.find((c) => c.kind !== 'player')!.id;
+    const harm: RoomAction = {
+      type: 'encounter-damage',
+      targetId,
+      expression: '5',
+      visibility: 'host',
+      expectedRevision: before.encounter.revision,
+      requestId: 'rollback-life',
+    };
+    const blocked = join(dataDir, `rooms.json.${process.pid}.tmp`);
+    mkdirSync(blocked);
+    try {
+      expect(await rejected(host, harm)).toContain('存档保存失败');
+    } finally {
+      rmSync(blocked, { recursive: true });
+    }
+    expect(await snapshot(host, h.session)).toEqual(before);
+    await action(host, harm);
+    await action(host, harm);
+    room = await snapshot(host, h.session);
+    expect(room.encounter.participants.find((c) => c.id === targetId)).toMatchObject({
+      hp: 5,
+      majorWound: true,
+      unconscious: true,
+    });
+    expect(room.log.filter((e) => e.requestId === 'rollback-life')).toHaveLength(1);
+    const visible = await snapshot(player, p.session);
+    expect(JSON.stringify(visible)).not.toContain('秘密伤者');
+    expect(visible.log.filter((e) => e.secret).length).toBeGreaterThanOrEqual(2);
+  });
+});

@@ -5,6 +5,7 @@ import { KeeperCardSchema, type KeeperCard } from './keeper';
 import { rollDice, type DieRandom } from './rules';
 import { effectiveCharacter } from './adjustments';
 import type { CheckResult, Edge, Member, RuleId } from './types';
+import { damageInjury, healInjury, HpConfirmationSchema, InjuryChecksSchema } from './injury';
 
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,80}$/);
 const score = z.number().int().min(0).max(100000).nullable();
@@ -97,6 +98,10 @@ export const CombatantSchema = z
     stable: z.boolean(),
     majorWound: z.boolean(),
     dying: z.boolean(),
+    dead: z.boolean().optional(),
+    unconscious: z.boolean().optional(),
+    deathSaveMode: z.enum(['character', 'instant']).optional(),
+    injuryChecks: InjuryChecksSchema.optional(),
     firearmReady: z.boolean(),
     notes: z.string().max(4000),
     abilities: z.array(resourceSchema).max(201),
@@ -133,6 +138,7 @@ export const EncounterSchema = z
     round: z.number().int().min(0).max(100000),
     revision,
     autoDamage: z.boolean().optional(),
+    autoLifeChecks: z.boolean().optional(),
     loadedWaves: z
       .array(z.strictObject({ planId: id, waveId: id }))
       .max(1000)
@@ -182,6 +188,9 @@ export const CombatantPatchSchema = z
     stable: z.boolean().optional(),
     majorWound: z.boolean().optional(),
     dying: z.boolean().optional(),
+    dead: z.boolean().optional(),
+    unconscious: z.boolean().optional(),
+    deathSaveMode: z.enum(['character', 'instant']).optional(),
     firearmReady: z.boolean().optional(),
     notes: z.string().max(4000).optional(),
     abilities: z.array(resourceSchema).max(201).optional(),
@@ -204,6 +213,7 @@ export const EncounterActionSchemas = [
       combatantId: id,
       patch: CombatantPatchSchema,
       expectedRevision: revision,
+      hpConfirmation: HpConfirmationSchema.optional(),
     })
     .strict(),
   z.object({ type: z.literal('encounter-remove'), combatantId: id }).strict(),
@@ -218,6 +228,7 @@ export const EncounterActionSchemas = [
     type: z.literal('encounter-companion-hp'),
     combatantId: id,
     hp: armor,
+    hpConfirmation: HpConfirmationSchema.optional(),
     ...command,
   }),
   z
@@ -231,9 +242,26 @@ export const EncounterActionSchemas = [
     .object({
       type: z.literal('encounter-settings'),
       autoDamage: z.boolean(),
+      autoLifeChecks: z.boolean().optional(),
       expectedRevision: revision,
     })
     .strict(),
+  z.strictObject({
+    type: z.literal('encounter-life-check'),
+    combatantId: id,
+    kind: z.enum(['death', 'constitution']),
+    modifier: z.number().int().min(-100).max(100).default(0),
+    edge: edge.default('normal'),
+    visibility,
+    ...command,
+  }),
+  z.strictObject({
+    type: z.literal('encounter-life-care'),
+    combatantId: id,
+    kind: z.enum(['stabilize', 'first-aid', 'medicine', 'revive']),
+    conditionsConfirmed: z.literal(true),
+    ...command,
+  }),
   z
     .object({
       type: z.literal('encounter-initiative-roll'),
@@ -521,11 +549,8 @@ export function syncEncounterPlayers(state: EncounterState, members: Member[]): 
         ? (card.dndMagic.concentration ?? '')
         : (previous?.concentration ?? ''),
     };
-    if (previous?.hp === 0 && card.hp > 0 && card.rule === 'dnd') {
-      player.deathSuccesses = 0;
-      player.deathFailures = 0;
-      player.stable = false;
-    }
+    if (previous?.hp !== null && previous && card.hp > previous.hp)
+      Object.assign(player, healInjury({ ...player, hp: previous.hp }, card.hp));
     if (index >= 0) next[index] = player;
     else next.push(player);
   }
@@ -679,6 +704,8 @@ export function updateCombatant(
     next.deathSuccesses = 0;
     next.deathFailures = 0;
     if (next.hp !== null && next.hp > 0) next.stable = false;
+    next.dying = false;
+    if (next.hp === 0 && next.stable) next.unconscious = true;
   }
   return updated(
     state,
@@ -689,6 +716,54 @@ export function updateCombatant(
 export function setEncounterAutoDamage(state: EncounterState, autoDamage: boolean): EncounterState {
   if ((state.autoDamage ?? false) === autoDamage) return state;
   return updated({ ...state, autoDamage }, state.participants);
+}
+
+export function setEncounterLifeChecks(
+  state: EncounterState,
+  autoLifeChecks: boolean,
+): EncounterState {
+  if ((state.autoLifeChecks ?? false) === autoLifeChecks) return state;
+  return updated({ ...state, autoLifeChecks }, state.participants);
+}
+
+export function replaceInjuredCombatant(state: EncounterState, c: Combatant): EncounterState {
+  return updated(
+    state,
+    state.participants.map((current) => (current.id === c.id ? c : current)),
+  );
+}
+
+export function clearEncounter(state: EncounterState, members: Member[]): EncounterState {
+  const next = syncEncounterPlayers(
+    {
+      ...emptyEncounter(),
+      autoDamage: state.autoDamage,
+      autoLifeChecks: state.autoLifeChecks,
+    },
+    members,
+  );
+  next.participants = next.participants.map((c) => {
+    const old = state.participants.find((p) => p.id === c.id);
+    if (!old) return c;
+    return {
+      ...c,
+      majorWound: old.majorWound,
+      dying: old.dying,
+      stable: old.stable,
+      deathSuccesses: old.deathSuccesses,
+      deathFailures: old.deathFailures,
+      dead: old.dead,
+      unconscious: old.unconscious,
+      injuryChecks: {
+        conPending: old.injuryChecks?.conPending,
+        firstAidStabilized: old.injuryChecks?.firstAidStabilized,
+        firstAidUsed: old.injuryChecks?.firstAidUsed,
+        medicineUsed: old.injuryChecks?.medicineUsed,
+        ...(old.dying && old.rule === 'coc' ? { cocDueRound: 1 } : {}),
+      },
+    };
+  });
+  return { ...next, revision: state.revision + 1 };
 }
 
 export function recordEncounterRest(
@@ -768,7 +843,12 @@ export function applyEncounterDamage(
   state: EncounterState,
   target: Combatant,
   rolled: number,
-  options: { adjustment?: DamageAdjustment; armorOverride?: number },
+  options: {
+    adjustment?: DamageAdjustment;
+    armorOverride?: number;
+    critical?: boolean;
+    edition?: DndEdition;
+  },
 ) {
   if (target.hp === null) throw new Error('目标 HP 未填写，请先补充或手动处理');
   const raw = Math.max(0, rolled);
@@ -785,43 +865,26 @@ export function applyEncounterDamage(
   const tempAbsorbed = target.rule === 'dnd' ? Math.min(target.tempHp, effective) : 0;
   const beforeHp = target.hp;
   const hp = Math.max(0, beforeHp - (effective - tempAbsorbed));
-  const combatant = { ...target, hp, tempHp: target.tempHp - tempAbsorbed };
-  const notes: string[] = [];
-  if (effective > 0 && target.rule === 'coc') {
-    const max = target.maxHp;
-    if (max !== null && max > 0) {
-      const major = effective >= Math.ceil(max / 2);
-      const instantDeath = effective >= max;
-      combatant.majorWound ||= major;
-      if (instantDeath) {
-        combatant.dying = false;
-        notes.push('单次伤害达到 HP 上限，提示当场死亡，由 KP 确认。');
-      } else if (hp === 0) {
-        combatant.dying = combatant.majorWound;
-        notes.push(
-          combatant.dying ? '昏迷且濒死。下一轮结束时由 KP 处理 CON 检定。' : 'HP 为 0，提示昏迷。',
-        );
-      } else if (major) {
-        notes.push('本次造成重伤，由 KP 处理 CON 检定，失败则昏迷。');
-      }
-    } else {
-      notes.push('HP 上限未知，由 KP 判定重伤或濒死。');
-      if (hp === 0) notes.push('HP 为 0，提示昏迷。');
-    }
-  }
-  if (target.rule === 'dnd' && hp === 0 && effective > tempAbsorbed)
-    notes.push('HP 为 0，请由主持人按规则处理昏迷、死亡或死亡豁免。');
-  const participants = state.participants.map((p) => (p.id === target.id ? combatant : p));
+  const combatant = { ...target, tempHp: target.tempHp - tempAbsorbed };
+  const injury = damageInjury(
+    combatant,
+    hp,
+    effective,
+    effective - tempAbsorbed,
+    state.round,
+    options,
+  );
+  const participants = state.participants.map((p) => (p.id === target.id ? injury.combatant : p));
   return {
     state: updated(state, participants),
-    combatant,
+    combatant: injury.combatant,
     beforeHp,
     raw,
     effective,
     armor,
     adjustment,
     tempAbsorbed,
-    notes,
+    notes: injury.notes,
   };
 }
 
@@ -864,6 +927,14 @@ export function encounterView(
               initiativeOverride: c.initiativeOverride,
               ...(c.initiativeRoll ? { initiativeRoll: c.initiativeRoll } : {}),
               ...(c.surprised !== undefined ? { surprised: c.surprised } : {}),
+              dead: c.dead,
+              unconscious: c.unconscious,
+              dying: c.dying,
+              stable: c.stable,
+              deathSaveMode: c.deathSaveMode,
+              deathSuccesses: c.deathSuccesses,
+              deathFailures: c.deathFailures,
+              injuryChecks: c.injuryChecks,
             }
           : {}),
         hp: controlled ? c.hp : null,

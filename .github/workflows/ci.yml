@@ -90,6 +90,8 @@ jobs:
         run: python tests/e2e_dnd_editions.py --url http://127.0.0.1:3001
       - name: Initiative and automatic combat damage
         run: python tests/e2e_combat_automation.py --url http://127.0.0.1:3001
+      - name: Injury automation and HP confirmation
+        run: python tests/e2e_injuries.py --url http://127.0.0.1:3001
       - name: Edition-aware character spells and equipment
         run: python tests/e2e_character_preparation.py --url http://127.0.0.1:3001
       - name: Session resources, encounter plans and companions
