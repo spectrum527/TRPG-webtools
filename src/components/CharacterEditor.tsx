@@ -287,10 +287,9 @@ export function CharacterEditor({
         ] as [Section, string][])
       : []),
   ];
-  const sectionClassName = `editor-section page-enter${dnd ? ' dnd-editor-section' : ''}`;
-  const headingClassName = dnd
-    ? 'prep-section-heading editor-tab-heading'
-    : 'editor-section-heading';
+  const sectionClassName = 'editor-section editor-tab-section page-enter';
+  const headingClassName = 'prep-section-heading editor-tab-heading';
+  const headingEdition = dnd ? edition : 'COC 7';
   return (
     <Modal
       title={initial ? `角色卡 · ${initial.name}` : '新建角色卡'}
@@ -402,7 +401,7 @@ export function CharacterEditor({
             <div className={sectionClassName}>
               <div className={headingClassName}>
                 <div>
-                  {dnd && <span className="mini-label">CHARACTER DETAILS · {edition}</span>}
+                  <span className="mini-label">CHARACTER DETAILS · {headingEdition}</span>
                   <h3>角色资料</h3>
                   <p>姓名与职业为必填项，其余资料可慢慢补全。</p>
                 </div>
@@ -535,7 +534,7 @@ export function CharacterEditor({
             <div className={sectionClassName}>
               <div className={headingClassName}>
                 <div>
-                  {dnd && <span className="mini-label">ATTRIBUTES & STATUS · {edition}</span>}
+                  <span className="mini-label">ATTRIBUTES & STATUS · {headingEdition}</span>
                   <h3>属性与状态</h3>
                   <p>
                     {dnd
@@ -825,7 +824,7 @@ export function CharacterEditor({
             <div className={sectionClassName}>
               <div className={headingClassName}>
                 <div>
-                  {dnd && <span className="mini-label">STORY & INVENTORY · {edition}</span>}
+                  <span className="mini-label">STORY & INVENTORY · {headingEdition}</span>
                   <h3>故事与行囊</h3>
                   <p>给角色一点小习惯、一个执念，或一段未说出口的过去。</p>
                 </div>
