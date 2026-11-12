@@ -199,10 +199,15 @@ with sync_playwright() as p:
         config=json.loads(cfg_path.read_text())
         assert config['creationPolicy']['allowInterestOnOccupation'] is False
         assert config['scene']['title']=='紧闭的仓库'
-        assert set(config)=={'documentType','schemaVersion','rule','name','mode','creationPolicy','scene'}
+        assert set(config)=={'documentType','schemaVersion','rule','name','mode','creationPolicy','scene','cocRules'}
+        defaults={'allowLuckSpending':False,'allowPushedRolls':False,'autoSanity':True,'autoDevelopment':True}
+        assert config['cocRules']==defaults
+        config['cocRules']={'allowLuckSpending':True,'allowPushedRolls':True,'autoSanity':False,'autoDevelopment':False}
         config['name']='雾港 · 配置复用'; modified=out/'modified-config.json'; modified.write_text(json.dumps(config,ensure_ascii=False))
         host.get_by_label('房间配置文件').set_input_files(str(modified))
         expect(host.locator('.configuration-incoming')).to_contain_text('雾港 · 配置复用')
+        for setting in ['幸运消耗：开启','孤注一掷：开启','疯狂判定：手动','成长标记：手动']:
+            expect(host.locator('.configuration-incoming')).to_contain_text(setting)
         screenshot(host,'06-config-preview-light.png')
         for width in [390,320]:
             host.set_viewport_size({'width':width,'height':900}); fit(host,f'{width}px config fits')
@@ -212,7 +217,11 @@ with sync_playwright() as p:
         expect(host.locator('.room-title h1')).to_have_text('雾港 · 配置复用')
         expect(player.locator('.my-review-status')).to_contain_text('等待审核')
         expect(host.get_by_role('button',name='开启故事',exact=True)).to_be_disabled()
-        check('Configuration JSON/Markdown export, preview and application reset stale approvals')
+        tools(host,'房间配置')
+        applied=json.loads(download(host,'导出配置 JSON','room-config-applied.json').read_text())
+        assert applied['cocRules']==config['cocRules']
+        close(host)
+        check('Configuration JSON/Markdown round-trip preserves CoC options and resets stale approvals')
         # Fresh-room creation from config file.
         nav(other,'入席'); other.locator('.rule-card.coc .rule-choose').click()
         other.get_by_label('你的称呼').fill('新房间 KP')
@@ -221,7 +230,10 @@ with sync_playwright() as p:
         other.get_by_role('button',name='创建房间，成为主持人',exact=True).click()
         expect(other.locator('.current-scene')).to_contain_text('紧闭的仓库')
         assert other.locator('.room-code b').inner_text()!=code
-        tools(other,'房间配置'); expect(other.locator('.configuration-summary')).to_contain_text('专点专用'); close(other)
+        tools(other,'房间配置'); expect(other.locator('.configuration-summary')).to_contain_text('专点专用')
+        restored=json.loads(download(other,'导出配置 JSON','room-config-restored.json').read_text())
+        assert restored['cocRules']==defaults
+        close(other)
         check('A new room imports Markdown configuration with a new room code and the same policy/scene')
         approve(host)
         player.get_by_role('button',name='我准备好了',exact=True).click(); host.get_by_role('button',name='我准备好了',exact=True).click()
