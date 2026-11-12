@@ -3,6 +3,7 @@
 Run against the running app with Python Playwright and Chrome/Chromium.
 """
 import argparse
+from coc_browser_helpers import choose_occupation
 import json
 import re
 from pathlib import Path
@@ -69,7 +70,10 @@ def join(page, rule, code, name):
 def prepare(page, rule, name):
     page.get_by_role('button',name='创建角色',exact=True).click()
     page.get_by_label('角色姓名').fill(name)
-    page.get_by_role('dialog').locator('select').first.select_option('游侠' if rule=='dnd' else '记者')
+    if rule == 'dnd':
+        page.get_by_role('dialog').locator('select').first.select_option('游侠')
+    else:
+        choose_occupation(page, '记者')
     if rule=='dnd':
         page.get_by_label('种族',exact=True).fill('半精灵')
         page.get_by_role('button',name='属性与状态',exact=True).click()
