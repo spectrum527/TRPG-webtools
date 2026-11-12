@@ -1,0 +1,3980 @@
+[
+  {
+    "number": 2,
+    "name": "会计师",
+    "credit": [30, 70],
+    "bonus": [],
+    "groups": [["accounting"], ["law"], ["libraryUse"], ["listen"], ["persuade"], ["spotHidden"]],
+    "free": 2,
+    "skillsText": "会计，法律，图书馆，聆听，说服，侦查，任意其他两项个人或时代特长。"
+  },
+  {
+    "number": 3,
+    "name": "杂技演员",
+    "credit": [9, 20],
+    "bonus": ["dex"],
+    "groups": [["climb"], ["dodge"], ["jump"], ["throw"], ["spotHidden"], ["swim"]],
+    "free": 2,
+    "skillsText": "攀爬，闪避，跳跃，投掷，侦查，游泳，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 4,
+    "name": "演员-戏剧演员",
+    "credit": [9, 40],
+    "bonus": ["app"],
+    "groups": [
+      ["artActing"],
+      ["disguise"],
+      ["anyFighting"],
+      ["history"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "技艺（表演），乔装，格斗，历史，两项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 5,
+    "name": "演员-电影演员",
+    "credit": [20, 90],
+    "bonus": ["app"],
+    "groups": [
+      ["artActing"],
+      ["disguise"],
+      ["driveAuto"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（表演），乔装，汽车驾驶，两项社交技能（魅惑、话术、恐吓、说服），心理学，任意两项其他个人或时代特长（如骑乘或格斗）。"
+  },
+  {
+    "number": 6,
+    "name": "事务所侦探、保安",
+    "credit": [20, 45],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["fightingBrawl"],
+      ["anyFirearms"],
+      ["law"],
+      ["libraryUse"],
+      ["psychology"],
+      ["stealth"],
+      ["track"]
+    ],
+    "free": 0,
+    "skillsText": "一项社交技能（魅惑、话术、恐吓、说服），格斗（斗殴），射击，法律，图书馆，心理学，潜行，追踪。"
+  },
+  {
+    "number": 7,
+    "name": "精神病医生（古典）",
+    "credit": [10, 60],
+    "bonus": [],
+    "groups": [
+      ["law"],
+      ["listen"],
+      ["medicine"],
+      ["otherLanguage"],
+      ["psychoanalysis"],
+      ["psychology"],
+      ["scienceBiology"],
+      ["scienceChemistry"]
+    ],
+    "free": 0,
+    "skillsText": "法律，聆听，医学，外语，精神分析，心理学，科学（生物学，化学）。"
+  },
+  {
+    "number": 8,
+    "name": "动物训练师",
+    "credit": [10, 40],
+    "bonus": ["app", "pow"],
+    "groups": [
+      ["jump"],
+      ["listen"],
+      ["naturalWorld"],
+      ["psychology"],
+      ["scienceZoology"],
+      ["stealth"],
+      ["track"]
+    ],
+    "free": 1,
+    "skillsText": "跳跃，聆听，自然，心理学，科学（动物学），潜行，追踪，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 9,
+    "name": "文物学家（原作向）",
+    "credit": [30, 70],
+    "bonus": [],
+    "groups": [
+      ["appraise"],
+      ["artCraft"],
+      ["history"],
+      ["libraryUse"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "估价，技艺（任一），历史，图书馆，外语，一项社交技能（魅惑、话术、恐吓、说服），侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 10,
+    "name": "古董商",
+    "credit": [30, 50],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["driveAuto"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["history"],
+      ["libraryUse"],
+      ["navigate"]
+    ],
+    "free": 0,
+    "skillsText": "会计，估价，汽车驾驶，两项社交技能（魅惑、话术、恐吓、说服），历史，图书馆，导航。"
+  },
+  {
+    "number": 11,
+    "name": "考古学家（原作向）",
+    "credit": [10, 40],
+    "bonus": [],
+    "groups": [
+      ["appraise"],
+      ["archaeology"],
+      ["history"],
+      ["otherLanguage"],
+      ["libraryUse"],
+      ["spotHidden"],
+      ["mechanicalRepair"],
+      ["navigate", "science"]
+    ],
+    "free": 0,
+    "skillsText": "估价，考古，历史，外语，图书馆，侦查，机械维修，导航或科学（任一：如化学、物理、地理等）。"
+  },
+  {
+    "number": 12,
+    "name": "建筑师",
+    "credit": [30, 70],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["artTechnicalDrawing"],
+      ["law"],
+      ["ownLanguage"],
+      ["computerUse", "libraryUse"],
+      ["persuade"],
+      ["psychology"],
+      ["scienceMath"]
+    ],
+    "free": 0,
+    "skillsText": "会计，技艺（技术制图），法律，母语，计算机或图书馆，说服，心理学，科学（数学）。"
+  },
+  {
+    "number": 13,
+    "name": "艺术家",
+    "credit": [9, 50],
+    "bonus": ["dex", "pow"],
+    "groups": [
+      ["artCraft"],
+      ["history", "naturalWorld"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["otherLanguage"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（任一），历史或自然，一项社交技能（魅惑、话术、恐吓、说服），外语，心理学，侦查，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 14,
+    "name": "精神病院看护",
+    "credit": [8, 20],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["dodge"],
+      ["fightingBrawl"],
+      ["firstAid"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"],
+      ["stealth"]
+    ],
+    "free": 0,
+    "skillsText": "闪避，格斗（斗殴），急救，两项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，潜行。"
+  },
+  {
+    "number": 15,
+    "name": "运动员",
+    "credit": [9, 70],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["jump"],
+      ["fightingBrawl"],
+      ["ride"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["swim"],
+      ["throw"]
+    ],
+    "free": 1,
+    "skillsText": "攀爬，跳跃，格斗（斗殴），骑乘，一项社交技能（魅惑、话术、恐吓、说服），游泳，投掷，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 16,
+    "name": "作家（原作向）",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["artLiterature"],
+      ["history"],
+      ["libraryUse"],
+      ["naturalWorld", "occult"],
+      ["otherLanguage"],
+      ["ownLanguage"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "技艺（文学），历史，图书馆，自然或神秘学，外语，母语，心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 17,
+    "name": "酒保",
+    "credit": [8, 25],
+    "bonus": ["app"],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["fightingBrawl"],
+      ["listen"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），格斗（斗殴），聆听，心理学，侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 18,
+    "name": "猎人",
+    "credit": [20, 50],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["anyFirearms"],
+      ["listen", "spotHidden"],
+      ["naturalWorld"],
+      ["navigate"],
+      ["otherLanguage", "survival"],
+      ["scienceBiology", "scienceBotany"],
+      ["stealth"],
+      ["track"]
+    ],
+    "free": 0,
+    "skillsText": "射击，聆听或侦查，自然，导航，外语或生存（任一），科学（生物学或植物学），潜行，追踪。"
+  },
+  {
+    "number": 19,
+    "name": "书商",
+    "credit": [20, 40],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["driveAuto"],
+      ["history"],
+      ["libraryUse"],
+      ["ownLanguage"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 0,
+    "skillsText": "会计，估价，汽车驾驶，历史，图书馆，母语，外语，一项社交技能（魅惑、话术、恐吓、说服）。"
+  },
+  {
+    "number": 20,
+    "name": "赏金猎人",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["driveAuto"],
+      ["electronics", "electricalRepair"],
+      ["anyFighting", "anyFirearms"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["law"],
+      ["psychology"],
+      ["track"],
+      ["stealth"]
+    ],
+    "free": 0,
+    "skillsText": "汽车驾驶，电子学或电气维修，格斗或射击，一项社交技能（魅惑、话术、恐吓、说服），法律，心理学，追踪，潜行。"
+  },
+  {
+    "number": 21,
+    "name": "拳击手、摔跤手",
+    "credit": [9, 60],
+    "bonus": ["str"],
+    "groups": [
+      ["dodge"],
+      ["fightingBrawl"],
+      ["intimidate"],
+      ["jump"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "闪避，格斗（斗殴），恐吓，跳跃，心理学，侦查，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 22,
+    "name": "管家、男仆、女仆",
+    "credit": [9, 40],
+    "bonus": [],
+    "groups": [
+      ["accounting", "appraise"],
+      ["artCraft"],
+      ["firstAid"],
+      ["listen"],
+      ["otherLanguage"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计或估价，技艺（任一：如烹饪、裁缝、理发），急救，聆听，外语，心理学，侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 23,
+    "name": "神职人员",
+    "credit": [9, 60],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["history"],
+      ["libraryUse"],
+      ["listen"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，历史，图书馆，聆听，外语，一项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他技能。"
+  },
+  {
+    "number": 24,
+    "name": "程序员、电子工程师（现代）",
+    "credit": [10, 70],
+    "bonus": [],
+    "groups": [
+      ["computerUse"],
+      ["electricalRepair"],
+      ["electronics"],
+      ["libraryUse"],
+      ["scienceMath"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "计算机，电气维修，电子学、图书馆，科学（数学），侦查，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 25,
+    "name": "黑客/骇客（现代）",
+    "credit": [10, 70],
+    "bonus": [],
+    "groups": [
+      ["computerUse"],
+      ["electricalRepair"],
+      ["electronics"],
+      ["libraryUse"],
+      ["spotHidden"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 2,
+    "skillsText": "计算机，电气维修，电子学，图书馆，侦查，一项社交技能（魅惑、话术、恐吓、说服），任意两项其他技能。"
+  },
+  {
+    "number": 26,
+    "name": "牛仔",
+    "credit": [9, 20],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["dodge"],
+      ["anyFighting", "anyFirearms"],
+      ["firstAid", "naturalWorld"],
+      ["jump"],
+      ["ride"],
+      ["survival"],
+      ["throw"],
+      ["track"]
+    ],
+    "free": 0,
+    "skillsText": "闪避，格斗或射击，急救或自然，跳跃，骑乘，生存（任一），投掷，追踪。"
+  },
+  {
+    "number": 27,
+    "name": "工匠",
+    "credit": [10, 40],
+    "bonus": ["dex"],
+    "groups": [
+      ["accounting"],
+      ["artCraft"],
+      ["artCraft"],
+      ["mechanicalRepair"],
+      ["naturalWorld"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "会计，技艺（任二），机械维修，自然，侦查，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 28,
+    "name": "罪犯-刺客",
+    "credit": [30, 60],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["disguise"],
+      ["electricalRepair"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["locksmith"],
+      ["mechanicalRepair"],
+      ["stealth"],
+      ["psychology"]
+    ],
+    "free": 0,
+    "skillsText": "乔装，电气维修，格斗，射击，锁匠，机械维修，潜行，心理学。"
+  },
+  {
+    "number": 29,
+    "name": "罪犯-银行劫匪",
+    "credit": [5, 75],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["driveAuto"],
+      ["electricalRepair", "mechanicalRepair"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["intimidate"],
+      ["locksmith"],
+      ["operateHeavyMachinery"]
+    ],
+    "free": 1,
+    "skillsText": "汽车驾驶，电气维修或机械维修，格斗，射击，恐吓，锁匠，操作重型机械，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 30,
+    "name": "罪犯-打手、暴徒",
+    "credit": [5, 30],
+    "bonus": ["str"],
+    "groups": [
+      ["driveAuto"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["stealth"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "汽车驾驶，格斗，射击，两项社交技能（魅惑、话术、恐吓、说服），心理学，潜行，侦查。"
+  },
+  {
+    "number": 31,
+    "name": "罪犯-窃贼",
+    "credit": [5, 40],
+    "bonus": ["dex"],
+    "groups": [
+      ["appraise"],
+      ["climb"],
+      ["electricalRepair", "mechanicalRepair"],
+      ["listen"],
+      ["locksmith"],
+      ["sleightOfHand"],
+      ["stealth"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "估价，攀爬，电气维修或机械维修，聆听，锁匠，妙手，潜行，侦查。"
+  },
+  {
+    "number": 32,
+    "name": "罪犯-欺诈师",
+    "credit": [10, 65],
+    "bonus": ["app"],
+    "groups": [
+      ["appraise"],
+      ["artActing"],
+      ["law", "otherLanguage"],
+      ["listen"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["sleightOfHand"]
+    ],
+    "free": 0,
+    "skillsText": "估价，技艺（表演），法律或外语，聆听，两项社交技能（魅惑、话术、恐吓、说服），心理学，妙手。"
+  },
+  {
+    "number": 33,
+    "name": "罪犯-独行罪犯",
+    "credit": [5, 65],
+    "bonus": ["dex", "app"],
+    "groups": [
+      ["artActing", "disguise"],
+      ["appraise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["anyFighting", "anyFirearms"],
+      ["locksmith", "mechanicalRepair"],
+      ["stealth"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "技艺（表演）或乔装，估价，一项社交技能（魅惑、话术、恐吓、说服），格斗或射击，锁匠或机械维修，潜行，心理学，侦查。"
+  },
+  {
+    "number": 34,
+    "name": "罪犯-女飞贼（古典）",
+    "credit": [10, 80],
+    "bonus": ["app"],
+    "groups": [
+      ["artCraft"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["fightingBrawl", "firearmsHandgun"],
+      ["driveAuto"],
+      ["listen"],
+      ["stealth"]
+    ],
+    "free": 1,
+    "skillsText": "技艺（任意），两项社交技能（魅惑、话术、恐吓、说服），格斗（斗殴）或射击（手枪），汽车驾驶，聆听，潜行，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 35,
+    "name": "罪犯-赃物贩子",
+    "credit": [20, 40],
+    "bonus": ["app"],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["artForging"],
+      ["history"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["libraryUse"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，估价，技艺（伪造），历史，一项社交技能（魅惑、话术、恐吓、说服），图书馆，侦查，任意一项其他技能。"
+  },
+  {
+    "number": 36,
+    "name": "罪犯-赝造者",
+    "credit": [20, 60],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["artForging"],
+      ["history"],
+      ["libraryUse"],
+      ["spotHidden"],
+      ["sleightOfHand"]
+    ],
+    "free": 1,
+    "skillsText": "会计，估价，技艺（伪造），历史，图书馆，侦查，妙手，任意一项其他个人或时代特长（如计算机）。"
+  },
+  {
+    "number": 37,
+    "name": "罪犯-走私者",
+    "credit": [20, 60],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["anyFirearms"],
+      ["listen"],
+      ["navigate"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["driveAuto", "pilot", "pilotBoat"],
+      ["psychology"],
+      ["sleightOfHand"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "射击，聆听，导航，一项社交技能（魅惑、话术、恐吓、说服），汽车驾驶或驾驶（飞行器或船），心理学，妙手，侦查。"
+  },
+  {
+    "number": 38,
+    "name": "罪犯-混混",
+    "credit": [3, 10],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["jump"],
+      ["sleightOfHand"],
+      ["stealth"],
+      ["throw"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬，一项社交技能（魅惑、话术、恐吓、说服），格斗，射击，跳跃，妙手，潜行，投掷。"
+  },
+  {
+    "number": 39,
+    "name": "教团首领",
+    "credit": [30, 60],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["occult"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），神秘学，心理学，侦查，任意其他两项其他个人特长。"
+  },
+  {
+    "number": 40,
+    "name": "除魅师（现代）",
+    "credit": [20, 50],
+    "bonus": [],
+    "groups": [
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["driveAuto"],
+      ["fightingBrawl", "anyFirearms"],
+      ["history"],
+      ["occult"],
+      ["psychology"],
+      ["stealth"]
+    ],
+    "free": 0,
+    "skillsText": "两项社交技能（魅惑、话术、恐吓、说服），汽车驾驶，格斗（斗殴）或射击，历史，神秘学，心理学，潜行。※经KP允许 可用催眠替换其中一项。",
+    "notes": "催眠替换须经主持人同意，可通过自定义职业调整。"
+  },
+  {
+    "number": 41,
+    "name": "设计师",
+    "credit": [20, 60],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["artPhotography"],
+      ["artCraft"],
+      ["computerUse", "libraryUse"],
+      ["mechanicalRepair"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，技艺（摄影），技艺（任一），计算机或图书馆，机械维修，心理学，侦查，任意一项其他个人特长。"
+  },
+  {
+    "number": 42,
+    "name": "业余艺术爱好者（原作向）",
+    "credit": [50, 99],
+    "bonus": ["app"],
+    "groups": [
+      ["artCraft"],
+      ["anyFirearms"],
+      ["otherLanguage"],
+      ["ride"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 3,
+    "skillsText": "技艺（任一），射击，外语，骑乘，一项社交技能（魅惑、话术、恐吓、说服），任意三项其他个人或时代特长。"
+  },
+  {
+    "number": 43,
+    "name": "潜水员",
+    "credit": [9, 30],
+    "bonus": ["dex"],
+    "groups": [
+      ["diving"],
+      ["firstAid"],
+      ["mechanicalRepair"],
+      ["pilotBoat"],
+      ["scienceBiology"],
+      ["spotHidden"],
+      ["swim"]
+    ],
+    "free": 1,
+    "skillsText": "潜水，急救，机械维修，驾驶（船），科学（生物），侦查，游泳，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 44,
+    "name": "医生（原作向）",
+    "credit": [30, 80],
+    "bonus": [],
+    "groups": [
+      ["firstAid"],
+      ["medicine"],
+      ["languageLatin"],
+      ["psychology"],
+      ["scienceBiology"],
+      ["sciencePharmacy"]
+    ],
+    "free": 2,
+    "skillsText": "急救、医学、外语（拉丁文）、心理学、科学（生物学，制药），任两种其他学术或个人特长。"
+  },
+  {
+    "number": 45,
+    "name": "流浪者",
+    "credit": [0, 5],
+    "bonus": ["app", "dex", "str"],
+    "groups": [
+      ["climb"],
+      ["jump"],
+      ["listen"],
+      ["navigate"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["stealth"]
+    ],
+    "free": 2,
+    "skillsText": "攀爬，跳跃，聆听，导航，一项社交技能（魅惑、话术、恐吓、说服），潜行，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 46,
+    "name": "司机-私人司机",
+    "credit": [10, 40],
+    "bonus": ["dex"],
+    "groups": [
+      ["driveAuto"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["mechanicalRepair"],
+      ["navigate"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "汽车驾驶，两项社交技能（魅惑、话术、恐吓、说服），聆听，机械维修，导航，侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 47,
+    "name": "司机-司机",
+    "credit": [9, 20],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["accounting"],
+      ["driveAuto"],
+      ["listen"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["mechanicalRepair"],
+      ["navigate"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，汽车驾驶，聆听，一项社交技能（魅惑、话术、恐吓、说服），机械维修，导航，心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 48,
+    "name": "司机-出租车司机",
+    "credit": [9, 30],
+    "bonus": ["dex"],
+    "groups": [
+      ["accounting"],
+      ["driveAuto"],
+      ["electricalRepair"],
+      ["fastTalk"],
+      ["mechanicalRepair"],
+      ["navigate"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，汽车驾驶，电气维修，话术，机械维修，导航，侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 49,
+    "name": "编辑",
+    "credit": [10, 30],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["history"],
+      ["ownLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，历史，母语，两项社交技能（魅惑、话术、恐吓、说服），心理学，侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 50,
+    "name": "政府官员",
+    "credit": [50, 90],
+    "bonus": ["app"],
+    "groups": [
+      ["charm"],
+      ["history"],
+      ["intimidate"],
+      ["fastTalk"],
+      ["listen"],
+      ["ownLanguage"],
+      ["persuade"],
+      ["psychology"]
+    ],
+    "free": 0,
+    "skillsText": "魅惑，历史，恐吓，话术，聆听，母语，说服，心理学。"
+  },
+  {
+    "number": 51,
+    "name": "工程师",
+    "credit": [30, 60],
+    "bonus": [],
+    "groups": [
+      ["artTechnicalDrawing"],
+      ["electricalRepair"],
+      ["libraryUse"],
+      ["mechanicalRepair"],
+      ["operateHeavyMachinery"],
+      ["scienceEngineering"],
+      ["sciencePhysics"]
+    ],
+    "free": 1,
+    "skillsText": "技艺（技术制图），电气维修，图书馆，机械维修，操作重型机械，科学（工程学，物理），任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 52,
+    "name": "艺人",
+    "credit": [9, 70],
+    "bonus": ["app"],
+    "groups": [
+      ["artActing", "artSinging", "artDancing", "artComedy"],
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（表演类，如表演、演唱、喜剧等），乔装，两项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 53,
+    "name": "探险家（古典）",
+    "credit": [55, 80],
+    "bonus": ["app", "dex", "str"],
+    "groups": [
+      ["climb", "swim"],
+      ["anyFirearms"],
+      ["history"],
+      ["jump"],
+      ["naturalWorld"],
+      ["navigate"],
+      ["otherLanguage"],
+      ["survival"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬或游泳，射击，历史，跳跃，自然，导航，外语，生存。"
+  },
+  {
+    "number": 54,
+    "name": "农民",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["artFarming"],
+      ["driveAuto", "driveCarriage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["mechanicalRepair"],
+      ["naturalWorld"],
+      ["operateHeavyMachinery"],
+      ["track"]
+    ],
+    "free": 1,
+    "skillsText": "技艺（耕作），汽车驾驶（或运货马车），一项社交技能（魅惑、话术、恐吓、说服），机械维修，自然，操作重型机械，追踪，任意一项其他个人或时代特长",
+    "notes": "来源未单列部分扩展技能的基础值；界面标为待主持人确认，可在技能基础值中修改。"
+  },
+  {
+    "number": 55,
+    "name": "联邦探员",
+    "credit": [20, 40],
+    "bonus": [],
+    "groups": [
+      ["driveAuto"],
+      ["fightingBrawl"],
+      ["anyFirearms"],
+      ["law"],
+      ["persuade"],
+      ["stealth"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "汽车驾驶，格斗（斗殴），射击，法律，说服，潜行，侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 56,
+    "name": "消防员",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["dodge"],
+      ["driveAuto"],
+      ["firstAid"],
+      ["jump"],
+      ["mechanicalRepair"],
+      ["operateHeavyMachinery"],
+      ["throw"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬，闪避，汽车驾驶，急救，跳跃，机械维修，操作重型机械，投掷。"
+  },
+  {
+    "number": 57,
+    "name": "驻外记者",
+    "credit": [10, 40],
+    "bonus": [],
+    "groups": [
+      ["history"],
+      ["otherLanguage"],
+      ["ownLanguage"],
+      ["listen"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "历史，外语，母语，聆听，两项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 58,
+    "name": "法医",
+    "credit": [40, 60],
+    "bonus": [],
+    "groups": [
+      ["languageLatin"],
+      ["libraryUse"],
+      ["medicine"],
+      ["persuade"],
+      ["scienceBiology"],
+      ["scienceForensics"],
+      ["sciencePharmacy"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "外语（拉丁文），图书馆，医学，说服，科学（生物学，鉴证，制药），侦查。"
+  },
+  {
+    "number": 59,
+    "name": "赌徒",
+    "credit": [8, 50],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["accounting"],
+      ["artActing"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"],
+      ["sleightOfHand"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "会计，技艺（表演），两项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，妙手，侦查。"
+  },
+  {
+    "number": 60,
+    "name": "黑帮-黑帮老大",
+    "credit": [60, 95],
+    "bonus": ["app"],
+    "groups": [
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["law"],
+      ["listen"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "格斗，射击，法律，聆听，两项社交技能（魅惑、话术、恐吓、说服），心理学，侦查。"
+  },
+  {
+    "number": 61,
+    "name": "黑帮-马仔",
+    "credit": [9, 20],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["driveAuto"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "汽车驾驶，格斗，射击，两项社交技能（魅惑、话术、恐吓、说服），心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 62,
+    "name": "绅士、淑女",
+    "credit": [40, 90],
+    "bonus": ["app"],
+    "groups": [
+      ["artCraft"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["firearmsRifle"],
+      ["history"],
+      ["otherLanguage"],
+      ["navigate"],
+      ["ride"]
+    ],
+    "free": 0,
+    "skillsText": "技艺（任一），两项社交技能（魅惑、话术、恐吓、说服），射击（步枪/霰弹枪），历史，外语（任一），导航，骑乘。"
+  },
+  {
+    "number": 63,
+    "name": "游民",
+    "credit": [0, 5],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["artCraft"],
+      ["climb"],
+      ["jump"],
+      ["listen"],
+      ["locksmith", "sleightOfHand"],
+      ["navigate"],
+      ["stealth"]
+    ],
+    "free": 1,
+    "skillsText": "技艺（任一），攀爬，跳跃，聆听，锁匠或妙手，导航，潜行，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 64,
+    "name": "勤杂护工",
+    "credit": [6, 15],
+    "bonus": ["str"],
+    "groups": [
+      ["electricalRepair"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["fightingBrawl"],
+      ["firstAid"],
+      ["listen"],
+      ["mechanicalRepair"],
+      ["psychology"],
+      ["stealth"]
+    ],
+    "free": 0,
+    "skillsText": "电气维修，一项社交技能（魅惑、话术、恐吓、说服），格斗（斗殴），急救，聆听，机械维修，心理学，潜行。"
+  },
+  {
+    "number": 65,
+    "name": "记者(原作向)-调查记者",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["artCraft", "artPhotography"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["history"],
+      ["libraryUse"],
+      ["ownLanguage"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（艺术或摄影），一项社交技能（魅惑、话术、恐吓、说服），历史，图书馆，母语，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 66,
+    "name": "记者(原作向)-通讯记者",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["artActing"],
+      ["history"],
+      ["listen"],
+      ["ownLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["stealth"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "技艺（表演），历史，聆听，母语，一项社交技能（魅惑、话术、恐吓、说服），心理学，潜行，侦查。"
+  },
+  {
+    "number": 67,
+    "name": "法官",
+    "credit": [50, 80],
+    "bonus": [],
+    "groups": [
+      ["history"],
+      ["intimidate"],
+      ["law"],
+      ["libraryUse"],
+      ["listen"],
+      ["ownLanguage"],
+      ["persuade"],
+      ["psychology"]
+    ],
+    "free": 0,
+    "skillsText": "历史，恐吓，法律，图书馆，聆听，母语，说服，心理学。"
+  },
+  {
+    "number": 68,
+    "name": "实验室助理",
+    "credit": [10, 30],
+    "bonus": [],
+    "groups": [
+      ["computerUse", "libraryUse"],
+      ["electricalRepair"],
+      ["otherLanguage"],
+      ["scienceChemistry"],
+      ["science"],
+      ["science"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "计算机或图书馆，电气维修，外语，科学（化学和任意两项），侦查，任意一项其他个人特长。"
+  },
+  {
+    "number": 69,
+    "name": "工人-非熟练工人",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["driveAuto"],
+      ["electricalRepair"],
+      ["anyFighting"],
+      ["firstAid"],
+      ["mechanicalRepair"],
+      ["operateHeavyMachinery"],
+      ["throw"]
+    ],
+    "free": 1,
+    "skillsText": "汽车驾驶，电气维修，格斗，急救，机械维修，操作重型机械，投掷，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 70,
+    "name": "工人-伐木工",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["dodge"],
+      ["fightingChainsaw"],
+      ["firstAid"],
+      ["jump"],
+      ["mechanicalRepair"],
+      ["naturalWorld", "scienceBiology", "scienceBotany"],
+      ["throw"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬，闪避，格斗（链锯），急救，跳跃，机械维修，自然或科学（生物学或植物学），投掷。"
+  },
+  {
+    "number": 71,
+    "name": "工人-矿工",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["scienceGeology"],
+      ["jump"],
+      ["mechanicalRepair"],
+      ["operateHeavyMachinery"],
+      ["stealth"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "攀爬，科学（地质），跳跃，机械维修，操作重型机械，潜行，侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 72,
+    "name": "律师",
+    "credit": [30, 80],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["law"],
+      ["libraryUse"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "会计，法律，图书馆，两项社交技能（魅惑、话术、恐吓、说服），心理学，两项其他技能。"
+  },
+  {
+    "number": 73,
+    "name": "图书馆管理员（原作向）",
+    "credit": [9, 35],
+    "bonus": [],
+    "groups": [["accounting"], ["libraryUse"], ["otherLanguage"], ["ownLanguage"]],
+    "free": 4,
+    "skillsText": "会计，图书馆，外语，母语，任意四项其他个人特长或专业书籍主题。"
+  },
+  {
+    "number": 74,
+    "name": "技师",
+    "credit": [9, 40],
+    "bonus": [],
+    "groups": [
+      ["artWoodworking", "artWelding", "artPlumbing"],
+      ["climb"],
+      ["driveAuto"],
+      ["electricalRepair"],
+      ["mechanicalRepair"],
+      ["operateHeavyMachinery"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（木工、焊接、管道工等），攀爬，汽车驾驶，电气维修，机械维修，操作重型机械，任意两项其他个人或时代或技术特长。"
+  },
+  {
+    "number": 75,
+    "name": "军官",
+    "credit": [20, 70],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["accounting"],
+      ["anyFirearms"],
+      ["navigate"],
+      ["firstAid"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，射击，导航，急救，两项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 76,
+    "name": "传教士",
+    "credit": [0, 30],
+    "bonus": ["app"],
+    "groups": [
+      ["artCraft"],
+      ["firstAid"],
+      ["mechanicalRepair"],
+      ["medicine"],
+      ["naturalWorld"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（任一），急救，机械维修，医学，自然，一项社交技能（魅惑、话术、恐吓、说服），任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 77,
+    "name": "登山家",
+    "credit": [30, 60],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["firstAid"],
+      ["jump"],
+      ["listen"],
+      ["navigate"],
+      ["otherLanguage"],
+      ["survivalMountain"],
+      ["track"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬，急救，跳跃，聆听，导航，外语，生存（阿尔卑斯或类似），追踪。"
+  },
+  {
+    "number": 78,
+    "name": "博物馆管理员",
+    "credit": [10, 30],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["archaeology"],
+      ["history"],
+      ["libraryUse"],
+      ["occult"],
+      ["otherLanguage"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "会计，估价，考古，历史，图书馆，神秘学，外语，侦查。"
+  },
+  {
+    "number": 79,
+    "name": "音乐家",
+    "credit": [9, 30],
+    "bonus": ["pow", "dex"],
+    "groups": [
+      ["artInstrument"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 4,
+    "skillsText": "技艺（乐器），一项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，四项其他技能。"
+  },
+  {
+    "number": 80,
+    "name": "护士",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["firstAid"],
+      ["listen"],
+      ["medicine"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["scienceBiology"],
+      ["scienceChemistry"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "急救，聆听，医学，一项社交技能（魅惑、话术、恐吓、说服），心理学，科学（生物学，化学），侦查。"
+  },
+  {
+    "number": 81,
+    "name": "神秘学家",
+    "credit": [9, 65],
+    "bonus": [],
+    "groups": [
+      ["anthropology"],
+      ["history"],
+      ["libraryUse"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["occult"],
+      ["otherLanguage"],
+      ["scienceAstronomy"]
+    ],
+    "free": 1,
+    "skillsText": "人类学，历史，图书馆，一项社交技能（魅惑、话术、恐吓、说服），神秘学，外语，科学（天文），任意一项其他个人或时代特长 ※经KP允许 可以包含克苏鲁神话",
+    "notes": "克苏鲁神话不纳入普通制卡投入；需由主持人批准后在房间内调整。"
+  },
+  {
+    "number": 82,
+    "name": "旅行家",
+    "credit": [5, 20],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["anyFirearms"],
+      ["firstAid"],
+      ["listen"],
+      ["naturalWorld"],
+      ["navigate"],
+      ["spotHidden"],
+      ["survival"],
+      ["track"]
+    ],
+    "free": 0,
+    "skillsText": "射击，急救，聆听，自然，导航，侦查，生存（任一），追踪。"
+  },
+  {
+    "number": 83,
+    "name": "超心理学家",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["anthropology"],
+      ["artPhotography"],
+      ["history"],
+      ["libraryUse"],
+      ["occult"],
+      ["otherLanguage"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "人类学，技艺（摄影），历史，图书馆，神秘学，外语，心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 84,
+    "name": "药剂师",
+    "credit": [35, 75],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["firstAid"],
+      ["languageLatin"],
+      ["libraryUse"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["sciencePharmacy"],
+      ["scienceChemistry"]
+    ],
+    "free": 0,
+    "skillsText": "会计，急救，外语（拉丁文），图书馆，一项社交技能（魅惑、话术、恐吓、说服），心理学，科学（制药，化学）。"
+  },
+  {
+    "number": 85,
+    "name": "摄影师-摄影师",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["artPhotography"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["scienceChemistry"],
+      ["stealth"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（摄影），一项社交技能（魅惑、话术、恐吓、说服），心理学，科学（化学），潜行，侦查，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 86,
+    "name": "摄影师-摄影记者",
+    "credit": [10, 30],
+    "bonus": [],
+    "groups": [
+      ["artPhotography"],
+      ["climb"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["otherLanguage"],
+      ["psychology"],
+      ["scienceChemistry"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（摄影），攀爬，一项社交技能（魅惑、话术、恐吓、说服），外语，心理学，科学（化学），任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 87,
+    "name": "飞行员-飞行员",
+    "credit": [20, 70],
+    "bonus": ["dex"],
+    "groups": [
+      ["electricalRepair"],
+      ["mechanicalRepair"],
+      ["navigate"],
+      ["operateHeavyMachinery"],
+      ["pilot"],
+      ["scienceAstronomy"]
+    ],
+    "free": 2,
+    "skillsText": "电气维修，机械维修，导航，操作重型机械，驾驶（飞行器），科学（天文），任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 88,
+    "name": "飞行员-特技飞行员（古典）",
+    "credit": [30, 60],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["electricalRepair"],
+      ["listen"],
+      ["mechanicalRepair"],
+      ["navigate"],
+      ["pilot"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，电气维修，聆听，机械维修，导航，驾驶（飞行器），侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 89,
+    "name": "警方(原作向)-警探",
+    "credit": [20, 50],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["artActing", "disguise"],
+      ["anyFirearms"],
+      ["law"],
+      ["listen"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "技艺（表演）或乔装，射击，法律，聆听，一项社交技能（魅惑、话术、恐吓、说服），心理学，侦查，一项其他技能。"
+  },
+  {
+    "number": 90,
+    "name": "警方(原作向)-巡警",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["fightingBrawl"],
+      ["anyFirearms"],
+      ["firstAid"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["law"],
+      ["psychology"],
+      ["spotHidden"],
+      ["driveAuto", "ride"]
+    ],
+    "free": 0,
+    "skillsText": "格斗（斗殴），射击，急救，一项社交技能（魅惑、话术、恐吓、说服），法律，心理学，侦查和下面的一种个人特长：汽车驾驶或骑乘。"
+  },
+  {
+    "number": 91,
+    "name": "私家侦探",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["artPhotography"],
+      ["disguise"],
+      ["law"],
+      ["libraryUse"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "技艺（摄影），乔装，法律，图书馆，一项社交技能（魅惑、话术、恐吓、说服），心理学，侦查，一项其他个人或时代特长（如计算机、锁匠、格斗、射击）。"
+  },
+  {
+    "number": 92,
+    "name": "教授（原作向）",
+    "credit": [20, 70],
+    "bonus": [],
+    "groups": [["libraryUse"], ["otherLanguage"], ["ownLanguage"], ["psychology"]],
+    "free": 4,
+    "skillsText": "图书馆，外语，母语，心理学，任意四项其他学术、时代或个人特长。"
+  },
+  {
+    "number": 93,
+    "name": "淘金客",
+    "credit": [0, 10],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["firstAid"],
+      ["history"],
+      ["mechanicalRepair"],
+      ["navigate"],
+      ["scienceGeology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "攀爬、急救、历史、机械维修、导航、科学（地质），侦查，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 94,
+    "name": "性工作者",
+    "credit": [5, 50],
+    "bonus": ["app"],
+    "groups": [
+      ["artCraft"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["dodge"],
+      ["psychology"],
+      ["sleightOfHand"],
+      ["stealth"]
+    ],
+    "free": 1,
+    "skillsText": "技艺（任一），两项社交技能（魅惑、话术、恐吓、说服），闪避，心理学，妙手，潜行，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 95,
+    "name": "精神病学家",
+    "credit": [30, 80],
+    "bonus": [],
+    "groups": [
+      ["otherLanguage"],
+      ["listen"],
+      ["medicine"],
+      ["persuade"],
+      ["psychoanalysis"],
+      ["psychology"],
+      ["scienceBiology"],
+      ["scienceChemistry"]
+    ],
+    "free": 0,
+    "skillsText": "外语，聆听，医学，说服，精神分析，心理学，科学（生物学，化学）。"
+  },
+  {
+    "number": 96,
+    "name": "心理学家、精神分析学家",
+    "credit": [10, 40],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["libraryUse"],
+      ["listen"],
+      ["persuade"],
+      ["psychoanalysis"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "会计，图书馆，聆听，说服，精神分析，心理学，任意两项其他学术、个人或时代特长。"
+  },
+  {
+    "number": 97,
+    "name": "研究员",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["history"],
+      ["libraryUse"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["otherLanguage"],
+      ["spotHidden"],
+      ["academic"],
+      ["academic"],
+      ["academic"]
+    ],
+    "free": 0,
+    "skillsText": "历史，图书馆，一项社交技能（魅惑、话术、恐吓、说服），外语，侦查，任意三项其他学术领域。"
+  },
+  {
+    "number": 98,
+    "name": "海员-军舰海员",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["electricalRepair", "mechanicalRepair"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["firstAid"],
+      ["navigate"],
+      ["pilotBoat"],
+      ["survivalSea"],
+      ["swim"]
+    ],
+    "free": 0,
+    "skillsText": "电工或机械维修，格斗，射击，急救，导航，驾驶（船），生存（海上），游泳。"
+  },
+  {
+    "number": 99,
+    "name": "海员-民船海员",
+    "credit": [20, 40],
+    "bonus": [],
+    "groups": [
+      ["firstAid"],
+      ["mechanicalRepair"],
+      ["naturalWorld"],
+      ["navigate"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["pilotBoat"],
+      ["spotHidden"],
+      ["swim"]
+    ],
+    "free": 0,
+    "skillsText": "急救，机械维修，自然，导航，一项社交技能（魅惑、话术、恐吓、说服），驾驶（船），侦查，游泳。"
+  },
+  {
+    "number": 100,
+    "name": "推销员",
+    "credit": [9, 40],
+    "bonus": ["app"],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["driveAuto"],
+      ["listen"],
+      ["psychology"],
+      ["stealth", "sleightOfHand"]
+    ],
+    "free": 1,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），汽车驾驶，聆听，心理学，潜行或妙手，一项其他技能。"
+  },
+  {
+    "number": 101,
+    "name": "科学家",
+    "credit": [9, 50],
+    "bonus": [],
+    "groups": [
+      ["science"],
+      ["science"],
+      ["science"],
+      ["computerUse", "libraryUse"],
+      ["otherLanguage"],
+      ["ownLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "任意三项科学专业领域，计算机或图书馆，外语，母语，一项社交技能（魅惑、话术、恐吓、说服），侦查。"
+  },
+  {
+    "number": 102,
+    "name": "秘书",
+    "credit": [9, 30],
+    "bonus": ["dex", "app"],
+    "groups": [
+      ["accounting"],
+      ["artTyping", "artShorthand"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["ownLanguage"],
+      ["libraryUse", "computerUse"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，技艺（打字或速记），两项社交技能（魅惑、话术、恐吓、说服），母语，图书馆或计算机，心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 103,
+    "name": "店老板",
+    "credit": [20, 40],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["electricalRepair"],
+      ["listen"],
+      ["mechanicalRepair"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），电气维修，聆听，机械维修，心理学，侦查。"
+  },
+  {
+    "number": 104,
+    "name": "士兵、海军陆战队士兵",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb", "swim"],
+      ["dodge"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["stealth"],
+      ["survival"],
+      ["firstAid", "mechanicalRepair", "otherLanguage"],
+      ["firstAid", "mechanicalRepair", "otherLanguage"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬或游泳，闪避，格斗，射击，潜行，生存，下面任选两项：急救、机械维修、外语。"
+  },
+  {
+    "number": 105,
+    "name": "间谍",
+    "credit": [20, 60],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["artActing", "disguise"],
+      ["anyFirearms"],
+      ["listen"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["sleightOfHand"],
+      ["stealth"]
+    ],
+    "free": 0,
+    "skillsText": "技艺（表演）或乔装，射击，聆听，外语，一项社交技能（魅惑、话术、恐吓、说服），心理学，妙手，潜行。"
+  },
+  {
+    "number": 106,
+    "name": "学生、实习生",
+    "credit": [5, 10],
+    "bonus": [],
+    "groups": [
+      ["ownLanguage", "otherLanguage"],
+      ["libraryUse"],
+      ["listen"],
+      ["academic"],
+      ["academic"],
+      ["academic"]
+    ],
+    "free": 2,
+    "skillsText": "语言（母语或外语），图书馆，聆听，三个学习的专业，任意两项其他个人或时代特长。",
+    "notes": "五个自选位置中，前三项应与学习专业相关，交由主持人审核。"
+  },
+  {
+    "number": 107,
+    "name": "替身演员",
+    "credit": [10, 50],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["dodge"],
+      ["electricalRepair", "mechanicalRepair"],
+      ["anyFighting"],
+      ["firstAid"],
+      ["jump"],
+      ["swim"],
+      ["diving", "driveAuto", "anyPilot", "ride"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬，闪避，电气维修或机械维修，格斗，急救，跳跃，游泳，下面任选一项：潜水、汽车驾驶、驾驶（任一），骑乘。"
+  },
+  {
+    "number": 108,
+    "name": "部落成员",
+    "credit": [0, 15],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["anyFighting", "throw"],
+      ["listen"],
+      ["naturalWorld"],
+      ["occult"],
+      ["spotHidden"],
+      ["swim"],
+      ["survival"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬，格斗或投掷，聆听，自然，神秘学，侦查，游泳，生存（任一）。"
+  },
+  {
+    "number": 109,
+    "name": "殡葬师",
+    "credit": [20, 40],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["driveAuto"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["history"],
+      ["occult"],
+      ["psychology"],
+      ["scienceBiology"],
+      ["scienceChemistry"]
+    ],
+    "free": 0,
+    "skillsText": "会计，汽车驾驶，一项社交技能（魅惑、话术、恐吓、说服），历史，神秘学，心理学，科学（生物学，化学）。"
+  },
+  {
+    "number": 110,
+    "name": "工会活动家",
+    "credit": [5, 50],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["fightingBrawl"],
+      ["law"],
+      ["listen"],
+      ["operateHeavyMachinery"],
+      ["psychology"]
+    ],
+    "free": 0,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），格斗（斗殴），法律，聆听，操作重型机械，心理学。"
+  },
+  {
+    "number": 111,
+    "name": "服务生",
+    "credit": [9, 20],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["accounting"],
+      ["artCraft"],
+      ["dodge"],
+      ["listen"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，技艺（任一），闪避，聆听，两项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 112,
+    "name": "白领工人-职员、主管",
+    "credit": [9, 20],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["ownLanguage", "otherLanguage"],
+      ["law"],
+      ["libraryUse", "computerUse"],
+      ["listen"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 2,
+    "skillsText": "会计，语言，法律，图书馆或计算机，聆听，一项社交技能（魅惑、话术、恐吓、说服），任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 113,
+    "name": "白领工人-中高层管理人员",
+    "credit": [20, 80],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["otherLanguage"],
+      ["law"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "会计，外语，法律，两项社交技能（魅惑、话术、恐吓、说服），心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 114,
+    "name": "狂热者",
+    "credit": [0, 30],
+    "bonus": ["app", "pow"],
+    "groups": [
+      ["history"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["stealth"]
+    ],
+    "free": 3,
+    "skillsText": "历史，两项社交技能（魅惑、话术、恐吓、说服），心理学，潜行，任意三项其他个人或时代特长。"
+  },
+  {
+    "number": 115,
+    "name": "饲养员",
+    "credit": [9, 40],
+    "bonus": [],
+    "groups": [
+      ["animalHandling"],
+      ["accounting"],
+      ["dodge"],
+      ["firstAid"],
+      ["naturalWorld"],
+      ["medicine"],
+      ["sciencePharmacy"],
+      ["scienceZoology"]
+    ],
+    "free": 0,
+    "skillsText": "驯兽，会计，闪避，急救，自然，医学，科学（制药，动物学）。"
+  },
+  {
+    "number": 116,
+    "name": "大使",
+    "credit": [50, 90],
+    "bonus": ["app"],
+    "groups": [
+      ["charm", "otherLanguage"],
+      ["history", "otherLanguage"],
+      ["intimidate"],
+      ["fastTalk"],
+      ["listen"],
+      ["ownLanguage"],
+      ["persuade"],
+      ["psychology"]
+    ],
+    "free": 0,
+    "skillsText": "魅惑，历史，恐吓，话术，聆听，母语，说服，心理学。(用一到两种外语取代前面两种技能)",
+    "notes": "前两项允许分别以一种外语替换；选两种外语时请启用技能专长。"
+  },
+  {
+    "number": 117,
+    "name": "运动员（游泳/潜水）",
+    "credit": [9, 20],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["jump"],
+      ["fightingBrawl"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["swim"],
+      ["throw"]
+    ],
+    "free": 1,
+    "skillsText": "攀爬，跳跃，格斗（斗殴），外语，一项社交技能（魅惑、话术、恐吓、说服），游泳，投掷，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 118,
+    "name": "运动员（高尔夫）",
+    "credit": [50, 70],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["jump"],
+      ["fightingBrawl"],
+      ["ride"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["swim"],
+      ["throw"]
+    ],
+    "free": 1,
+    "skillsText": "攀爬，跳跃，格斗（斗殴），骑术，一项社交技能（魅惑、话术、恐吓、说服），游泳，投掷，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 119,
+    "name": "运动员（网球）",
+    "credit": [30, 70],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["jump"],
+      ["fightingBrawl"],
+      ["dodge"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["spotHidden"],
+      ["throw"]
+    ],
+    "free": 1,
+    "skillsText": "跳跃，格斗（斗殴），闪避，一项社交技能（魅惑、话术、恐吓、说服），心理学，侦察，投掷，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 120,
+    "name": "运动员（田径）",
+    "credit": [9, 20],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb"],
+      ["jump"],
+      ["fightingBrawl"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["dodge"],
+      ["throw"]
+    ],
+    "free": 1,
+    "skillsText": "攀爬，跳跃，格斗（斗殴），外语，一项社交技能（魅惑、话术、恐吓、说服），闪避，投掷，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 121,
+    "name": "发言人",
+    "credit": [50, 80],
+    "bonus": [],
+    "groups": [
+      ["disguise"],
+      ["dodge"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["otherLanguage"]
+    ],
+    "free": 1,
+    "skillsText": "乔装，闪避，三项社交技能（魅惑、话术、恐吓、说服），心理学，外语，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 122,
+    "name": "保释担保人",
+    "credit": [50, 80],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["law"],
+      ["libraryUse"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），法律，图书馆，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 123,
+    "name": "神职人员(天主教牧师)",
+    "credit": [20, 70],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["ownLanguage"],
+      ["languageLatin"],
+      ["libraryUse"],
+      ["occult"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，母语，外语(拉丁文)，图书馆，神秘学，一项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他技能。"
+  },
+  {
+    "number": 124,
+    "name": "神职人员(新教牧师)",
+    "credit": [9, 60],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["history"],
+      ["libraryUse"],
+      ["listen"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，历史，图书馆，聆听，外语，一项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他技能。"
+  },
+  {
+    "number": 125,
+    "name": "神职人员(犹太教拉比)",
+    "credit": [9, 60],
+    "bonus": [],
+    "groups": [
+      ["ownLanguage"],
+      ["languageHebrew"],
+      ["history"],
+      ["libraryUse"],
+      ["occult"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "母语，外语（希伯来语），历史，图书馆，神秘学，一项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他技能。"
+  },
+  {
+    "number": 126,
+    "name": "专栏作家",
+    "credit": [30, 70],
+    "bonus": [],
+    "groups": [
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["history", "libraryUse"],
+      ["ownLanguage"],
+      ["otherLanguage"],
+      ["psychology"],
+      ["stealth"]
+    ],
+    "free": 0,
+    "skillsText": "乔装，一项社交技能（魅惑、话术、恐吓、说服），历史或图书馆，母语，外语，心理学，潜行。",
+    "notes": "此模板有 7 个职业技能位置。"
+  },
+  {
+    "number": 127,
+    "name": "社会主义者/激进主义者",
+    "credit": [0, 30],
+    "bonus": ["app", "pow"],
+    "groups": [
+      ["fightingBrawl"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["firearmsHandgun"],
+      ["otherLanguage"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "格斗（斗殴），两项社交技能（魅惑、话术、恐吓、说服），射击（手枪），外语，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 128,
+    "name": "撰稿人",
+    "credit": [20, 60],
+    "bonus": [],
+    "groups": [
+      ["ownLanguage"],
+      ["artLiterature"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["history"],
+      ["libraryUse"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 0,
+    "skillsText": "母语，艺术（文学），两项社交技能（魅惑、话术、恐吓、说服），历史，图书馆，聆听，心理学。"
+  },
+  {
+    "number": 129,
+    "name": "罪犯（赌博庄家）",
+    "credit": [50, 80],
+    "bonus": ["dex", "app"],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["spotHidden"],
+      ["sleightOfHand"]
+    ],
+    "free": 1,
+    "skillsText": "会计,两项社交技能（魅惑、话术、恐吓、说服）,心理学，侦察，妙手，任意一项其他个人或时代特长。",
+    "notes": "此模板有 7 个职业技能位置。"
+  },
+  {
+    "number": 130,
+    "name": "罪犯（放高利贷者）",
+    "credit": [50, 80],
+    "bonus": ["dex", "app"],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "会计，估价，两项社交技能（魅惑、话术、恐吓、说服）,心理学，侦察，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 131,
+    "name": "罪犯（扒手）",
+    "credit": [9, 30],
+    "bonus": ["dex"],
+    "groups": [
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["stealth"],
+      ["listen"],
+      ["psychology"],
+      ["spotHidden"],
+      ["sleightOfHand"]
+    ],
+    "free": 1,
+    "skillsText": "乔装，一项社交技能（魅惑、话术、恐吓、说服）,潜行，聆听，心理学，侦察，妙手，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 132,
+    "name": "罪犯（地下钱庄）",
+    "credit": [30, 70],
+    "bonus": [],
+    "groups": [["accounting"], ["law"], ["libraryUse"], ["listen"], ["persuade"], ["spotHidden"]],
+    "free": 2,
+    "skillsText": "会计，法律，图书馆，聆听，说服，侦察，任意其他两项个人或时代特长。"
+  },
+  {
+    "number": 133,
+    "name": "罪犯（黑律师）",
+    "credit": [30, 80],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["law"],
+      ["libraryUse"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "会计，法律，图书馆，两项社交技能（魅惑、话术、恐吓、说服），心理学，两项其他技能。"
+  },
+  {
+    "number": 134,
+    "name": "牙医",
+    "credit": [30, 70],
+    "bonus": [],
+    "groups": [
+      ["firstAid"],
+      ["medicine"],
+      ["languageLatin"],
+      ["psychology"],
+      ["scienceBiology"],
+      ["sciencePharmacy"]
+    ],
+    "free": 2,
+    "skillsText": "急救、医学、外语（拉丁文）、心理学、科学（生物学，制药），任两种其他学术或个人特长。"
+  },
+  {
+    "number": 135,
+    "name": "外科医生/内科医生",
+    "credit": [50, 80],
+    "bonus": [],
+    "groups": [
+      ["firstAid"],
+      ["medicine"],
+      ["languageLatin"],
+      ["psychology"],
+      ["scienceBiology"],
+      ["sciencePharmacy"]
+    ],
+    "free": 2,
+    "skillsText": "急救、医学、外语（拉丁文）、心理学、科学（生物学，制药），任两种其他学术或个人特长。"
+  },
+  {
+    "number": 136,
+    "name": "整形医生",
+    "credit": [30, 80],
+    "bonus": [],
+    "groups": [
+      ["firstAid"],
+      ["medicine"],
+      ["languageLatin"],
+      ["psychology"],
+      ["scienceBiology"],
+      ["sciencePharmacy"]
+    ],
+    "free": 2,
+    "skillsText": "急救、医学、外语（拉丁文）、心理学、科学（生物学，制药），任两种其他学术或个人特长。"
+  },
+  {
+    "number": 137,
+    "name": "司机-公交司机",
+    "credit": [30, 50],
+    "bonus": ["dex"],
+    "groups": [
+      ["accounting"],
+      ["driveAuto"],
+      ["electricalRepair"],
+      ["mechanicalRepair"],
+      ["navigate"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，汽车驾驶，电气维修，机械维修，领航，一项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 138,
+    "name": "实地调研员",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["climb", "jump"],
+      ["firstAid"],
+      ["libraryUse"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["academic"],
+      ["academic"]
+    ],
+    "free": 0,
+    "skillsText": "会计，攀爬或跳跃，急救，图书馆，外语，一项社交技能（魅惑、话术、恐吓、说服），两项研究领域相关技能。"
+  },
+  {
+    "number": 139,
+    "name": "电影摄制人员",
+    "credit": [9, 30],
+    "bonus": ["pow", "dex"],
+    "groups": [
+      ["artCraft"],
+      ["climb"],
+      ["driveAuto"],
+      ["electricalRepair"],
+      ["mechanicalRepair"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 2,
+    "skillsText": "艺术/工艺(任一,如摄影)，攀爬，汽车驾驶，电气维修，机械维修，一项社交技能（魅惑、话术、恐吓、说服），任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 140,
+    "name": "司法科学家",
+    "credit": [30, 50],
+    "bonus": [],
+    "groups": [
+      ["artPhotography"],
+      ["medicine"],
+      ["law"],
+      ["scienceChemistry"],
+      ["scienceForensics"],
+      ["sciencePharmacy"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（摄影），医学，法律，科学（化学，司法科学，药学），侦察，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 141,
+    "name": "运动经理",
+    "credit": [20, 70],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["accounting"],
+      ["fightingBrawl"],
+      ["dodge"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["firstAid"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，格斗（斗殴），闪避，两项社交技能（魅惑、话术、恐吓、说服），急救，心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 142,
+    "name": "商船队船员",
+    "credit": [20, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["anthropology"],
+      ["climb"],
+      ["electricalRepair", "mechanicalRepair"],
+      ["jump"],
+      ["operateHeavyMachinery"],
+      ["otherLanguage"],
+      ["survivalSea"]
+    ],
+    "free": 1,
+    "skillsText": "人类学，攀爬，电气维修或机械维修，跳跃，操作重型机械，外语，生存（海上），任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 143,
+    "name": "古典音乐家",
+    "credit": [9, 30],
+    "bonus": ["pow", "dex"],
+    "groups": [
+      ["accounting"],
+      ["artInstrument"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 3,
+    "skillsText": "会计，技艺（乐器），一项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，三项其他技能。"
+  },
+  {
+    "number": 144,
+    "name": "赛车手/ 赛艇手",
+    "credit": [30, 70],
+    "bonus": ["dex"],
+    "groups": [
+      ["driveAuto"],
+      ["electricalRepair"],
+      ["mechanicalRepair"],
+      ["pilotBoat"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "汽车驾驶，电气维修，机械维修，驾驶（船），心理学，侦察，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 145,
+    "name": "电台播音员",
+    "credit": [50, 80],
+    "bonus": [],
+    "groups": [
+      ["artActing"],
+      ["ownLanguage"],
+      ["charm"],
+      ["fastTalk"],
+      ["persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "艺术（表演），母语，魅惑，话术，说服，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 146,
+    "name": "推销员（圣经推销员）",
+    "credit": [9, 40],
+    "bonus": ["app"],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["driveAuto"],
+      ["listen"],
+      ["psychology"],
+      ["stealth", "sleightOfHand"]
+    ],
+    "free": 1,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），汽车驾驶，聆听，心理学，潜行或妙手，一项其他技能。"
+  },
+  {
+    "number": 147,
+    "name": "推销员（旅行推销员）",
+    "credit": [9, 30],
+    "bonus": ["app"],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["driveAuto"],
+      ["navigate"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），汽车驾驶，领航，聆听，心理学，一项其他技能。"
+  },
+  {
+    "number": 148,
+    "name": "小企业家",
+    "credit": [50, 70],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 4,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），心理学，四项经营业务相关技能。"
+  },
+  {
+    "number": 149,
+    "name": "舞台工作人员",
+    "credit": [9, 20],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["artCraft"],
+      ["ownLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["disguise"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "艺术/ 工艺（任一），母语，两项社交技能（魅惑、话术、恐吓、说服），乔装，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 150,
+    "name": "证券经纪人",
+    "credit": [60, 90],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["ownLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "会计，估价，母语，两项社交技能（魅惑、话术、恐吓、说服），心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 151,
+    "name": "勘测员",
+    "credit": [20, 60],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["artPhotography"],
+      ["libraryUse"],
+      ["naturalWorld"],
+      ["navigate"],
+      ["survival"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，艺术（摄影），图书馆，博物学，领航，生存（任一），侦察，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 152,
+    "name": "电话接线员",
+    "credit": [20, 50],
+    "bonus": [],
+    "groups": [
+      ["ownLanguage"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "母语，外语，两项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 153,
+    "name": "星探",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["law"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），法律，心理学，侦察，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 154,
+    "name": "医疗技术员",
+    "credit": [30, 60],
+    "bonus": [],
+    "groups": [
+      ["artPhotography"],
+      ["electricalRepair"],
+      ["libraryUse"],
+      ["mechanicalRepair"],
+      ["medicine"],
+      ["scienceBiology"],
+      ["scienceChemistry"],
+      ["sciencePharmacy"]
+    ],
+    "free": 0,
+    "skillsText": "艺术（摄影），电气维修，图书馆，机械维修，医学，科学（生物，化学，药学）。"
+  },
+  {
+    "number": 155,
+    "name": "队医",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["firstAid"],
+      ["medicine"],
+      ["sciencePharmacy"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "两项社交技能（魅惑、话术、恐吓、说服），急救，医学，科学（药学），心理学，侦察，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 156,
+    "name": "寻宝猎人",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["appraise"],
+      ["climb"],
+      ["driveAuto", "pilot", "pilotBoat"],
+      ["electricalRepair", "mechanicalRepair"],
+      ["history"],
+      ["jump"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "估价，攀爬，汽车驾驶或驾驶（飞行器或船），电气维修或机械维修，历史，跳跃，一项社交技能（魅惑、话术、恐吓、说服），侦察。"
+  },
+  {
+    "number": 157,
+    "name": "西部治安官",
+    "credit": [20, 50],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["driveAuto"],
+      ["anyFirearms"],
+      ["fightingBrawl"],
+      ["fightingWhip"],
+      ["law"],
+      ["persuade", "psychology"],
+      ["ride"],
+      ["track"]
+    ],
+    "free": 0,
+    "skillsText": "汽车驾驶，射击（任一），格斗（斗殴，鞭），法律，说服或心理学，骑术，追踪。"
+  },
+  {
+    "number": 158,
+    "name": "暴走族",
+    "credit": [5, 10],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["fightingBrawl"],
+      ["driveAuto"],
+      ["mechanicalRepair"],
+      ["fastTalk"],
+      ["intimidate"]
+    ],
+    "free": 3,
+    "skillsText": "格斗（斗殴），汽车驾驶，机械维修，话术，恐吓，任意三项其他个人或时代特长。"
+  },
+  {
+    "number": 159,
+    "name": "神职人员(和尚,尼姑)",
+    "credit": [5, 60],
+    "bonus": [],
+    "groups": [
+      ["artCalligraphy"],
+      ["history", "libraryUse"],
+      ["languageChinese", "languageSanskrit"],
+      ["loreBuddhism"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["listen"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（书法），历史或图书馆，外语（汉语或梵语），学问（佛教），一项社交技能（魅惑、话术、恐吓、说服），心理学，聆听，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 160,
+    "name": "神职人员(神官,巫女)",
+    "credit": [20, 60],
+    "bonus": [],
+    "groups": [
+      ["artCalligraphy"],
+      ["artCraft"],
+      ["libraryUse"],
+      ["occult"],
+      ["loreShinto"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（书法，另任一），图书馆，神秘学，学问（神道教），一项社交技能（魅惑、话术、恐吓、说服），心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 161,
+    "name": "风水师",
+    "credit": [20, 50],
+    "bonus": [],
+    "groups": [
+      ["artCraft"],
+      ["libraryUse"],
+      ["occult"],
+      ["loreTaoism"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["scienceAstronomy"],
+      ["scienceGeology"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（任一），图书馆，神秘学，学问（道教），一项社交技能（魅惑、话术、恐吓、说服），科学（天文，地质），任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 162,
+    "name": "家传降妖人",
+    "credit": [9, 20],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["fightingBrawl"],
+      ["naturalWorld"],
+      ["occult"],
+      ["loreBuddhism", "loreShinto"],
+      ["psychology"],
+      ["stealth"]
+    ],
+    "free": 2,
+    "skillsText": "格斗（斗殴），博物学，神秘学，学问（佛教或神道教），心理学，潜行，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 163,
+    "name": "高中生(教育60以下)",
+    "credit": [5, 10],
+    "bonus": [],
+    "groups": [
+      ["climb"],
+      ["stealth"],
+      ["jump"],
+      ["libraryUse"],
+      ["anyFighting"],
+      ["ownLanguage"],
+      ["science", "history"],
+      ["otherLanguage"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬、潜行、跳跃、图书馆、格斗（任一）、母语、科学（任一）或历史、外语（英语或其他）。",
+    "notes": "教育不高于 60。",
+    "requirements": [
+      {
+        "attribute": "edu",
+        "max": 60
+      }
+    ]
+  },
+  {
+    "number": 164,
+    "name": "市子（盲人）",
+    "credit": [5, 30],
+    "bonus": [],
+    "groups": [
+      ["artActing"],
+      ["listen"],
+      ["loreShinto"],
+      ["occult"],
+      ["history"],
+      ["fastTalk", "persuade"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（表演），聆听，学问（神道教），神秘学，历史，话术或说服，心理学，任意一项特长。※经KP同意，可以用「灵媒」技能代替一项自选技能。",
+    "notes": "灵媒属于需主持人同意的替换技能，可通过自定义职业添加。"
+  },
+  {
+    "number": 165,
+    "name": "言灵师/阴阳师",
+    "credit": [9, 20],
+    "bonus": [],
+    "groups": [
+      ["artCalligraphy"],
+      ["artCraft"],
+      ["history", "libraryUse"],
+      ["ownLanguage"],
+      ["loreOnmyodo"],
+      ["scienceAstronomy"],
+      ["occult"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（书法，另任一），历史或图书馆，母语，学问（阴阳道），科学（天文），神秘学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 166,
+    "name": "炼丹师",
+    "credit": [30, 50],
+    "bonus": [],
+    "groups": [
+      ["libraryUse"],
+      ["medicine"],
+      ["occult"],
+      ["scienceChemistry"],
+      ["naturalWorld"],
+      ["loreTaoism"],
+      ["languageChinese"],
+      ["firstAid", "psychoanalysis"]
+    ],
+    "free": 0,
+    "skillsText": "图书馆，医学，神秘学，科学（化学），博物学，学问（道教），外语（汉语），急救或精神分析。"
+  },
+  {
+    "number": 167,
+    "name": "外语教师",
+    "credit": [30, 60],
+    "bonus": [],
+    "groups": [
+      ["history"],
+      ["listen"],
+      ["ownLanguage"],
+      ["psychology"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 2,
+    "skillsText": "历史，聆听，母语，心理学，两项社交技能（魅惑、话术、恐吓、说服），任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 168,
+    "name": "非法移民",
+    "credit": [0, 5],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["disguise"],
+      ["fastTalk"],
+      ["listen"],
+      ["spotHidden"],
+      ["stealth"],
+      ["sleightOfHand"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "乔装，话术，聆听，侦察，潜行，妙手，心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 169,
+    "name": "相扑力士(SIZ>80,STR>70)",
+    "credit": [9, 60],
+    "bonus": ["str"],
+    "groups": [
+      ["dodge"],
+      ["fightingBrawl"],
+      ["intimidate"],
+      ["jump"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "闪避，格斗（斗殴），恐吓，跳跃，心理学，侦察，任意两项其他个人或时代特长。(体型+2D6,你的体型可以超过99)",
+    "notes": "要求 SIZ > 80、STR > 70；体型加值 2D6 由主持人裁定并手动调整，不自动重复追加。",
+    "requirements": [
+      {
+        "attribute": "siz",
+        "min": 81
+      },
+      {
+        "attribute": "str",
+        "min": 71
+      }
+    ]
+  },
+  {
+    "number": 170,
+    "name": "渔民",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["mechanicalRepair"],
+      ["operateHeavyMachinery"],
+      ["swim"],
+      ["pilotBoat"],
+      ["scienceAstronomy"],
+      ["navigate"],
+      ["naturalWorld"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "机械维修，操作重型机械，游泳，驾驶（船），科学（天文），领航，博物学，侦察。"
+  },
+  {
+    "number": 171,
+    "name": "心理治疗师",
+    "credit": [30, 50],
+    "bonus": [],
+    "groups": [
+      ["artCraft"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["law"],
+      ["otherLanguage"],
+      ["psychology"],
+      ["psychoanalysis"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（任一），两项社交技能（魅惑、话术、恐吓、说服），法律，外语，心理学，精神分析，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 172,
+    "name": "女学生",
+    "credit": [5, 10],
+    "bonus": [],
+    "groups": [
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["driveCycle"],
+      ["firstAid"],
+      ["listen"],
+      ["artCraft"],
+      ["libraryUse"],
+      ["fightingSpear", "firearmsBow"],
+      ["otherLanguage"]
+    ],
+    "free": 0,
+    "skillsText": "一项社交技能（魅惑、话术、恐吓、说服），自行车驾驶，急救，聆听，艺术/ 工艺（任一），图书馆，格斗（矛）或射击（弓），外语（任一）。",
+    "notes": "来源未单列部分扩展技能的基础值；界面标为待主持人确认，可在技能基础值中修改。"
+  },
+  {
+    "number": 173,
+    "name": "寄居学生",
+    "credit": [5, 10],
+    "bonus": [],
+    "groups": [
+      ["firstAid"],
+      ["accounting"],
+      ["artWoodworking"],
+      ["persuade"],
+      ["libraryUse"],
+      ["otherLanguage"]
+    ],
+    "free": 2,
+    "skillsText": "急救，会计，手艺（木匠），说服，图书馆，外语（任一），任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 174,
+    "name": "动物辅助治疗师",
+    "credit": [30, 50],
+    "bonus": ["app", "pow"],
+    "groups": [
+      ["listen"],
+      ["psychology"],
+      ["psychoanalysis"],
+      ["scienceZoology"],
+      ["jump"],
+      ["track"],
+      ["naturalWorld"]
+    ],
+    "free": 1,
+    "skillsText": "聆听，心理学，精神分析，科学（动物学），跳跃，追踪，博物学，任意一项其他个人或时代特长。\n跳跃，追踪，博物学，任意一项其他个人或时代特长。",
+    "notes": "原表技能说明末尾重复了一段；本模板仅计入一次。"
+  },
+  {
+    "number": 175,
+    "name": "急诊医生/救援队员",
+    "credit": [10, 50],
+    "bonus": [],
+    "groups": [
+      ["medicine"],
+      ["firstAid"],
+      ["scienceChemistry"],
+      ["locksmith"],
+      ["mechanicalRepair"],
+      ["electricalRepair"],
+      ["climb"],
+      ["jump"]
+    ],
+    "free": 0,
+    "skillsText": "医学，急救，科学（化学），锁匠，机械维修，电气维修，攀爬，跳跃。"
+  },
+  {
+    "number": 176,
+    "name": "密医",
+    "credit": [10, 70],
+    "bonus": [],
+    "groups": [
+      ["medicine"],
+      ["firstAid"],
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["law"],
+      ["sciencePharmacy"],
+      ["otherLanguage"]
+    ],
+    "free": 1,
+    "skillsText": "医学，急救，会计，一项社交技能（魅惑、话术、恐吓、说服），法律，科学（药学），外语，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 177,
+    "name": "科学搜查研究员",
+    "credit": [30, 50],
+    "bonus": [],
+    "groups": [
+      ["artPhotography"],
+      ["medicine"],
+      ["law"],
+      ["scienceChemistry"],
+      ["scienceForensics"],
+      ["sciencePharmacy"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（摄影），医学，法律，科学（化学，司法科学，药学），侦察，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 178,
+    "name": "山岳救援队员",
+    "credit": [10, 50],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["firstAid"],
+      ["listen"],
+      ["jump"],
+      ["track"],
+      ["climb"],
+      ["navigate"],
+      ["survivalMountain"],
+      ["otherLanguage"]
+    ],
+    "free": 0,
+    "skillsText": "急救，聆听，跳跃，追踪，攀爬，领航，生存（山地），外语。"
+  },
+  {
+    "number": 179,
+    "name": "舞者",
+    "credit": [9, 70],
+    "bonus": ["app"],
+    "groups": [
+      ["artActing", "artSinging", "artDancing", "artComedy"],
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（表演类，如表演、演唱、喜剧等），乔装，两项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 180,
+    "name": "服装设计师",
+    "credit": [20, 60],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["artPhotography"],
+      ["artCraft"],
+      ["computerUse", "libraryUse"],
+      ["disguise"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，技艺（摄影），技艺（任一），计算机或图书馆，乔装，心理学，侦察，任意一项其他个人特长。※可以通过成功的「侦察」检定，从对方的服饰判定其地位和收入等。"
+  },
+  {
+    "number": 181,
+    "name": "海上自卫队员",
+    "credit": [9, 30],
+    "bonus": [],
+    "groups": [
+      ["electricalRepair", "mechanicalRepair"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["firstAid"],
+      ["navigate"],
+      ["pilotBoat"],
+      ["survivalSea"],
+      ["swim"]
+    ],
+    "free": 0,
+    "skillsText": "电气维修或机械维修，格斗，射击，急救，领航，驾驶（船），生存（海上），游泳。"
+  },
+  {
+    "number": 182,
+    "name": "海警",
+    "credit": [20, 40],
+    "bonus": [],
+    "groups": [
+      ["firstAid"],
+      ["mechanicalRepair"],
+      ["naturalWorld"],
+      ["navigate"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["pilotBoat"],
+      ["spotHidden"],
+      ["swim"]
+    ],
+    "free": 0,
+    "skillsText": "急救，机械维修，博物学，领航，一项社交技能（魅惑、话术、恐吓、说服），驾驶（船），侦察，游泳。"
+  },
+  {
+    "number": 183,
+    "name": "陆上自卫队员",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb", "swim"],
+      ["dodge"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["stealth"],
+      ["survival"],
+      ["firstAid", "mechanicalRepair", "otherLanguage"],
+      ["firstAid", "mechanicalRepair", "otherLanguage"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬或游泳，闪避，格斗，射击，潜行，生存，下面任选两项：急救、机械维修、外语。"
+  },
+  {
+    "number": 184,
+    "name": "私人军事公司成员",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb", "swim"],
+      ["dodge"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["stealth"],
+      ["survival"],
+      ["firstAid", "mechanicalRepair", "otherLanguage"],
+      ["firstAid", "mechanicalRepair", "otherLanguage"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬或游泳，闪避，格斗，射击，潜行，生存，下面任选两项：急救、机械维修、外语。"
+  },
+  {
+    "number": 185,
+    "name": "冒险家教授",
+    "credit": [55, 80],
+    "bonus": ["app", "dex", "str"],
+    "groups": [
+      ["climb", "swim"],
+      ["anyFirearms"],
+      ["history"],
+      ["jump"],
+      ["naturalWorld"],
+      ["navigate"],
+      ["otherLanguage"],
+      ["survival"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬或游泳，射击，历史，跳跃，博物学，领航，外语，生存。"
+  },
+  {
+    "number": 186,
+    "name": "评论家",
+    "credit": [30, 70],
+    "bonus": [],
+    "groups": [
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["history", "libraryUse"],
+      ["ownLanguage"],
+      ["otherLanguage"],
+      ["psychology"],
+      ["stealth"]
+    ],
+    "free": 0,
+    "skillsText": "乔装，一项社交技能（魅惑、话术、恐吓、说服），历史或图书馆，母语，外语，心理学，潜行。",
+    "notes": "此模板有 7 个职业技能位置。"
+  },
+  {
+    "number": 187,
+    "name": "偶像",
+    "credit": [9, 70],
+    "bonus": ["app"],
+    "groups": [
+      ["artActing"],
+      ["artSinging"],
+      ["artDancing"],
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（表演,歌唱,舞蹈），乔装，两项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，任意两项其他个人或时代特长。",
+    "notes": "此模板有 10 个职业技能位置。括号内的三项表演专长分别分配。"
+  },
+  {
+    "number": 188,
+    "name": "歌手",
+    "credit": [9, 70],
+    "bonus": ["app"],
+    "groups": [
+      ["artSinging"],
+      ["artDancing"],
+      ["artInstrument"],
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（歌唱,舞蹈,乐器），乔装，两项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，任意两项其他个人或时代特长。",
+    "notes": "此模板有 10 个职业技能位置。括号内的三项表演专长分别分配。"
+  },
+  {
+    "number": 189,
+    "name": "搞笑艺人",
+    "credit": [9, 70],
+    "bonus": ["app"],
+    "groups": [
+      ["artActing"],
+      ["artAcrobatics"],
+      ["artComedy"],
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（表演,杂技,喜剧），乔装，两项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，任意两项其他个人或时代特长。",
+    "notes": "此模板有 10 个职业技能位置。括号内的三项表演专长分别分配。"
+  },
+  {
+    "number": 190,
+    "name": "运动员艺人",
+    "credit": [9, 20],
+    "bonus": ["dex"],
+    "groups": [["climb"], ["dodge"], ["jump"], ["throw"], ["spotHidden"], ["swim"]],
+    "free": 2,
+    "skillsText": "攀爬，闪避，跳跃，投掷，侦察，游泳，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 191,
+    "name": "播音员",
+    "credit": [50, 80],
+    "bonus": [],
+    "groups": [
+      ["artActing"],
+      ["ownLanguage"],
+      ["charm"],
+      ["fastTalk"],
+      ["persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "艺术（表演），母语，魅惑，话术，说服，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 192,
+    "name": "主持人",
+    "credit": [50, 80],
+    "bonus": [],
+    "groups": [
+      ["artActing"],
+      ["ownLanguage"],
+      ["charm"],
+      ["fastTalk"],
+      ["persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "艺术（表演），母语，魅惑，话术，说服，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 193,
+    "name": "电视解说员",
+    "credit": [50, 80],
+    "bonus": [],
+    "groups": [
+      ["artActing"],
+      ["ownLanguage"],
+      ["charm"],
+      ["fastTalk"],
+      ["persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "艺术（表演），母语，魅惑，话术，说服，心理学，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 194,
+    "name": "网络明星",
+    "credit": [9, 70],
+    "bonus": ["app"],
+    "groups": [
+      ["artActing"],
+      ["artSinging"],
+      ["artComedy"],
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["psychology"],
+      ["computerUse"],
+      ["electricalRepair"]
+    ],
+    "free": 0,
+    "skillsText": "技艺（表演，歌唱，喜剧），乔装，两项社交技能（魅惑、话术、恐吓、说服），聆听，心理学，计算机，电气维修。",
+    "notes": "此模板有 10 个职业技能位置。括号内的三项表演专长分别分配。"
+  },
+  {
+    "number": 195,
+    "name": "经纪人",
+    "credit": [30, 70],
+    "bonus": [],
+    "groups": [
+      ["driveAuto"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["stealth"],
+      ["listen"],
+      ["law"]
+    ],
+    "free": 2,
+    "skillsText": "汽车驾驶、两项社交技能（魅惑、话术、恐吓、说服），潜行，聆听，法律，任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 196,
+    "name": "捉鬼人",
+    "credit": [9, 30],
+    "bonus": ["dex"],
+    "groups": [
+      ["occult"],
+      ["sciencePhysics"],
+      ["scienceChemistry"],
+      ["scienceBiology"],
+      ["mechanicalRepair"],
+      ["artPhotography"],
+      ["electricalRepair"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 0,
+    "skillsText": "神秘学，科学（物理，化学，生物），机械维修，艺术（摄影），电气维修，一项社交技能（魅惑、话术、恐吓、说服）。"
+  },
+  {
+    "number": 197,
+    "name": "占卜师、灵媒师",
+    "credit": [9, 30],
+    "bonus": ["edu", "app"],
+    "groups": [
+      ["artActing"],
+      ["history"],
+      ["libraryUse"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["occult"],
+      ["psychology"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（表演），历史，图书馆，两项社交技能（魅惑、话术、恐吓、说服），神秘学，心理学，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 198,
+    "name": "机械师",
+    "credit": [9, 40],
+    "bonus": [],
+    "groups": [
+      ["artWoodworking", "artWelding", "artPlumbing"],
+      ["climb"],
+      ["driveAuto"],
+      ["electricalRepair"],
+      ["mechanicalRepair"],
+      ["operateHeavyMachinery"]
+    ],
+    "free": 2,
+    "skillsText": "技艺（木工、焊接、管道工等），攀爬，汽车驾驶，电气维修，机械维修，操作重型机械，任意两项其他个人或时代或技术特长。"
+  },
+  {
+    "number": 199,
+    "name": "厨师",
+    "credit": [9, 30],
+    "bonus": ["dex"],
+    "groups": [
+      ["artCooking"],
+      ["scienceBiology"],
+      ["scienceChemistry"],
+      ["fightingBrawl"],
+      ["naturalWorld"],
+      ["spotHidden"],
+      ["otherLanguage"]
+    ],
+    "free": 1,
+    "skillsText": "手艺（烹饪），科学（生物，化学），格斗（斗殴），博物学，侦察，外语，任意一项其他个人或时代特长。"
+  },
+  {
+    "number": 200,
+    "name": "网络犯罪者",
+    "credit": [10, 70],
+    "bonus": [],
+    "groups": [
+      ["computerUse"],
+      ["electricalRepair"],
+      ["electronics"],
+      ["libraryUse"],
+      ["spotHidden"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 2,
+    "skillsText": "计算机，电气维修，电子学，图书馆，侦察，一项社交技能（魅惑、话术、恐吓、说服），任意两项其他技能。"
+  },
+  {
+    "number": 201,
+    "name": "佣兵",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["climb", "swim"],
+      ["dodge"],
+      ["anyFighting"],
+      ["anyFirearms"],
+      ["stealth"],
+      ["survival"],
+      ["firstAid", "mechanicalRepair", "otherLanguage"],
+      ["firstAid", "mechanicalRepair", "otherLanguage"]
+    ],
+    "free": 0,
+    "skillsText": "攀爬或游泳，闪避，格斗，射击，潜行，生存，下面任选两项：急救、机械维修、外语。"
+  },
+  {
+    "number": 202,
+    "name": "自宅警备员",
+    "credit": [1, 10],
+    "bonus": [],
+    "groups": [["computerUse"], ["listen"], ["stealth"], ["libraryUse"], ["ownLanguage"]],
+    "free": 3,
+    "skillsText": "计算机，聆听，潜行，图书馆，母语，任意三项符合尼特族形象的特长。"
+  },
+  {
+    "number": 203,
+    "name": "壮汉保镖",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["fightingBrawl"],
+      ["anyFirearms"],
+      ["firstAid"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["law"],
+      ["psychology"],
+      ["spotHidden"],
+      ["driveAuto", "ride"]
+    ],
+    "free": 0,
+    "skillsText": "格斗（斗殴），射击，急救，一项社交技能（魅惑、话术、恐吓、说服），法律，心理学，侦察和下面的一种个人特长：汽车驾驶或骑术。"
+  },
+  {
+    "number": 204,
+    "name": "游戏测试员",
+    "credit": [9, 20],
+    "bonus": [],
+    "groups": [
+      ["artGaming"],
+      ["computerUse"],
+      ["electricalRepair"],
+      ["electronics"],
+      ["listen"],
+      ["charm", "fastTalk", "intimidate", "persuade"]
+    ],
+    "free": 2,
+    "skillsText": "手艺（游戏），计算机，电气维修，电子学，聆听，一项社交技能（魅惑、话术、恐吓、说服），任意两项其他个人或时代特长。"
+  },
+  {
+    "number": 205,
+    "name": "交际花",
+    "credit": [9, 30],
+    "bonus": ["app"],
+    "groups": [
+      ["artCraft"],
+      ["appraise"],
+      ["stealth"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["firstAid"],
+      ["europeanLanguage"],
+      ["psychology"],
+      ["ride"],
+      ["disguise", "locksmith"]
+    ],
+    "free": 1,
+    "skillsText": "艺术（任意），估价，潜行，一项社交技能（魅惑、话术、恐吓、说服），急救，其他语言（欧洲），心理学，骑术，（乔装、钳工）中的一种，任意一项其他个人或时代特长",
+    "notes": "此模板有 10 个职业技能位置。 原表“钳工”按锁匠归并；如剧本另有定义可用自定义职业调整。"
+  },
+  {
+    "number": 206,
+    "name": "考古学家",
+    "credit": [30, 60],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["artCraft"],
+      ["appraise"],
+      ["history"],
+      ["libraryUse"],
+      ["europeanLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "会计，艺术（任意），估价，历史，图书馆，其他语言（欧洲），一项社交技能（魅惑、话术、恐吓、说服），心理学，侦查，任意两项其他个人或时代特长",
+    "notes": "此模板有 11 个职业技能位置。"
+  },
+  {
+    "number": 207,
+    "name": "贵族",
+    "credit": [70, 99],
+    "bonus": ["edu", "app"],
+    "groups": [
+      ["languageLatin"],
+      ["law"],
+      ["europeanLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["ride"],
+      ["firearmsRifle"]
+    ],
+    "free": 3,
+    "skillsText": "拉丁语，法律，其他语言（欧洲），一项社交技能（魅惑、话术、恐吓、说服），骑术，射击（霰弹枪），任意三项其他个人或时代特长",
+    "notes": "此模板有 9 个职业技能位置。"
+  },
+  {
+    "number": 208,
+    "name": "艺术家",
+    "credit": [10, 40],
+    "bonus": ["dex", "pow"],
+    "groups": [
+      ["artCraft"],
+      ["appraise"],
+      ["history"],
+      ["libraryUse"],
+      ["europeanLanguage"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "艺术及手艺（任意多种），估价，历史，图书馆，其他语言（欧洲），侦查，任意两项其他个人或时代特长",
+    "notes": "允许在多个艺术／手艺专长上投入职业点。",
+    "additionalSkills": ["artCraft"]
+  },
+  {
+    "number": 209,
+    "name": "作家",
+    "credit": [10, 40],
+    "bonus": [],
+    "groups": [
+      ["artLiterature"],
+      ["history"],
+      ["libraryUse"],
+      ["europeanLanguage"],
+      ["ownLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "艺术（写作），历史，图书馆，其他语言（欧洲），母语，一项社交技能（魅惑、话术、恐吓、说服），心理学，任意两项其他个人或时代特长",
+    "notes": "此模板有 9 个职业技能位置。"
+  },
+  {
+    "number": 210,
+    "name": "马车夫",
+    "credit": [3, 10],
+    "bonus": ["dex"],
+    "groups": [
+      ["dodge"],
+      ["driveCarriage"],
+      ["jump"],
+      ["listen"],
+      ["mechanicalRepair"],
+      ["naturalWorld"],
+      ["navigate"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["spotHidden"],
+      ["fightingWhip"]
+    ],
+    "free": 1,
+    "skillsText": "闪避，马车驾驶，跳跃，聆听，机械维修，博物学，导航，一项社交技能（魅惑、话术、恐吓、说服），侦查，格斗（鞭），任意一项其他个人或时代特长",
+    "notes": "此模板有 11 个职业技能位置。 来源未单列部分扩展技能的基础值；界面标为待主持人确认，可在技能基础值中修改。"
+  },
+  {
+    "number": 211,
+    "name": "牧师",
+    "credit": [20, 65],
+    "bonus": ["app", "pow"],
+    "groups": [
+      ["history"],
+      ["languageLatin"],
+      ["libraryUse"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "历史，拉丁语，图书馆，一项社交技能（魅惑、话术、恐吓、说服），心理学，任意两项其他个人或时代特长",
+    "notes": "此模板有 7 个职业技能位置。"
+  },
+  {
+    "number": 212,
+    "name": "咨询侦探",
+    "credit": [10, 60],
+    "bonus": [],
+    "groups": [
+      ["anthropology"],
+      ["appraise"],
+      ["scienceChemistry"],
+      ["firstAid"],
+      ["history"],
+      ["law"],
+      ["libraryUse"],
+      ["listen"],
+      ["psychology"],
+      ["otherLanguage"],
+      ["spotHidden"],
+      ["track"]
+    ],
+    "free": 2,
+    "skillsText": "人类学，估价，科学（化学），急救，历史，法律，图书馆，聆听，心理学，其他语言（任意），侦查，追踪，任意两项其他个人或时代特长",
+    "notes": "此模板有 14 个职业技能位置。"
+  },
+  {
+    "number": 213,
+    "name": "工匠",
+    "credit": [9, 35],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["artCraft"],
+      ["mechanicalRepair"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，估价，手艺（任意多种），机械维修，一项社交技能（魅惑、话术、恐吓、说服），侦查，任意一项其他个人或时代特长",
+    "notes": "此模板有 7 个职业技能位置。 允许在多个艺术／手艺专长上投入职业点。",
+    "additionalSkills": ["artCraft"]
+  },
+  {
+    "number": 214,
+    "name": "罪犯",
+    "credit": [9, 30],
+    "bonus": ["app", "dex", "str"],
+    "groups": [
+      ["appraise"],
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["stealth"],
+      ["locksmith"],
+      ["anyFighting"],
+      ["anyFighting"]
+    ],
+    "free": 1,
+    "skillsText": "估价，乔装，一项社交技能（魅惑、话术、恐吓、说服），潜行，锁匠，格斗（任意两项），任意一项其他个人或时代特长"
+  },
+  {
+    "number": 215,
+    "name": "业余艺术爱好者",
+    "credit": [10, 70],
+    "bonus": ["app"],
+    "groups": [],
+    "free": 6,
+    "skillsText": "任意六项个人或时代特长",
+    "notes": "此模板有 6 个职业技能位置。"
+  },
+  {
+    "number": 216,
+    "name": "艺人",
+    "credit": [10, 40],
+    "bonus": ["app", "pow"],
+    "groups": [
+      ["artCraft"],
+      ["disguise"],
+      ["dodge"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["listen"],
+      ["ownLanguage"],
+      ["psychology"]
+    ],
+    "free": 3,
+    "skillsText": "艺术（任意多种），乔装，闪避，两项社交技能（魅惑、话术、恐吓、说服），聆听，母语，心理学，任意三项其他个人或时代特长",
+    "notes": "此模板有 11 个职业技能位置。 允许在多个艺术／手艺专长上投入职业点。",
+    "additionalSkills": ["artCraft"]
+  },
+  {
+    "number": 217,
+    "name": "退役军官",
+    "credit": [40, 75],
+    "bonus": [],
+    "groups": [
+      ["stealth"],
+      ["firstAid"],
+      ["firearmsHandgun"],
+      ["firearmsRifle"],
+      ["navigate"],
+      ["otherLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["ride"],
+      ["fightingSword"],
+      ["spotHidden"],
+      ["climb", "swim"]
+    ],
+    "free": 0,
+    "skillsText": "潜行，急救，射击（手枪、来复枪）,导航，其他语言（任意）,一项社交技能（魅惑、话术、恐吓、说服）,心理学，骑术,格斗（剑），侦查，（攀爬、游泳）中的一种",
+    "notes": "此模板有 12 个职业技能位置。"
+  },
+  {
+    "number": 218,
+    "name": "探险家",
+    "credit": [45, 70],
+    "bonus": ["app", "dex", "str"],
+    "groups": [
+      ["anthropology"],
+      ["archaeology"],
+      ["appraise"],
+      ["scienceBiology"],
+      ["climb"],
+      ["firstAid"],
+      ["firearmsHandgun"],
+      ["firearmsRifle"],
+      ["fightingBrawl"],
+      ["naturalWorld"],
+      ["navigate"],
+      ["otherLanguage"],
+      ["pilotBoat"],
+      ["pilotBalloon"],
+      ["ride"],
+      ["stealth"],
+      ["spotHidden"],
+      ["swim"],
+      ["track"]
+    ],
+    "free": 0,
+    "skillsText": "人类学，考古学，估价，科学（生物学），攀爬，急救，射击（手枪、来复枪），格斗（斗殴），博物学，导航，其他语言（任意），驾驶（小艇，船，热气球），骑术，潜行，侦查，游泳，追踪",
+    "notes": "此模板有 19 个职业技能位置。原表的小艇与船归入船只驾驶，热气球驾驶单独分配。"
+  },
+  {
+    "number": 219,
+    "name": "私家侦探",
+    "credit": [9, 40],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["accounting"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["law"],
+      ["libraryUse"],
+      ["listen"],
+      ["locksmith"],
+      ["artPhotography"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，两项社交技能（魅惑、话术、恐吓、说服），法律，图书馆，聆听，锁匠，艺术及手艺（摄影），侦查，任意一项其他个人或时代特长",
+    "notes": "此模板有 10 个职业技能位置。"
+  },
+  {
+    "number": 220,
+    "name": "记者",
+    "credit": [9, 30],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["appraise"],
+      ["dodge"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["libraryUse"],
+      ["listen"],
+      ["europeanLanguage"],
+      ["ownLanguage"],
+      ["artPhotography"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "估价，闪避，两项社交技能（魅惑、话术、恐吓、说服），图书馆，聆听，其他语言（欧洲），母语，艺术及手艺（摄影），心理学，侦查。",
+    "notes": "此模板有 11 个职业技能位置。"
+  },
+  {
+    "number": 221,
+    "name": "劳工",
+    "credit": [0, 10],
+    "bonus": ["str"],
+    "groups": [
+      ["appraise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["dodge"],
+      ["firstAid"],
+      ["mechanicalRepair"],
+      ["operateHeavyMachinery"],
+      ["climb", "fightingBrawl", "artCraft", "driveCarriage", "pilotBoat"],
+      ["climb", "fightingBrawl", "artCraft", "driveCarriage", "pilotBoat"]
+    ],
+    "free": 1,
+    "skillsText": "估价，一项社交技能（魅惑、话术、恐吓、说服），闪避，急救，机械维修，重型机械操作，任意一项其他个人或时代特长，以及从以下任选两种：（攀爬，斗殴，手艺（任意），马车驾驶，驾驶：船）",
+    "notes": "此模板有 9 个职业技能位置。 来源未单列部分扩展技能的基础值；界面标为待主持人确认，可在技能基础值中修改。"
+  },
+  {
+    "number": 222,
+    "name": "律师",
+    "credit": [20, 80],
+    "bonus": [],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["history"],
+      ["languageLatin"],
+      ["law"],
+      ["libraryUse"],
+      ["listen"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "会计，估价，两项社交技能（魅惑、话术、恐吓、说服），历史，拉丁语，法律，图书馆，聆听，心理学，任意两项其他个人或时代特长",
+    "notes": "此模板有 12 个职业技能位置。"
+  },
+  {
+    "number": 223,
+    "name": "医生",
+    "credit": [30, 70],
+    "bonus": [],
+    "groups": [
+      ["scienceBiology"],
+      ["sciencePharmacy"],
+      ["firstAid"],
+      ["languageLatin"],
+      ["libraryUse"],
+      ["medicine"],
+      ["psychology"]
+    ],
+    "free": 2,
+    "skillsText": "科学（生物学、药剂学），急救，拉丁语，图书馆，医学，心理学，任意两项其他个人或时代特长",
+    "notes": "此模板有 9 个职业技能位置。"
+  },
+  {
+    "number": 224,
+    "name": "警察",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["fightingBrawl"],
+      ["dodge"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["firstAid"],
+      ["firearmsHandgun"],
+      ["law"],
+      ["listen"],
+      ["psychology"],
+      ["stealth"],
+      ["spotHidden"]
+    ],
+    "free": 0,
+    "skillsText": "格斗（斗殴），闪避，一项社交技能（魅惑、话术、恐吓、说服），急救，射击（手枪），法律，聆听，心理学，潜行，侦查",
+    "notes": "此模板有 10 个职业技能位置。"
+  },
+  {
+    "number": 225,
+    "name": "教授/学者",
+    "credit": [20, 50],
+    "bonus": [],
+    "groups": [
+      ["libraryUse"],
+      ["europeanLanguage"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["academic"],
+      ["academic"],
+      ["academic"],
+      ["academic"],
+      ["academic"],
+      ["academic"]
+    ],
+    "free": 0,
+    "skillsText": "图书馆，其他语言（欧洲），一项社交技能（魅惑、话术、恐吓、说服），心理学，至多六种额外的学问技巧作为个人专长",
+    "notes": "此模板有 10 个职业技能位置。 额外位置最多六项，须选择学问或学术相关技能，由主持人审核；可留空。",
+    "optionalSlots": [4, 5, 6, 7, 8, 9]
+  },
+  {
+    "number": 226,
+    "name": "科学家",
+    "credit": [10, 60],
+    "bonus": [],
+    "groups": [
+      ["artCraft"],
+      ["history"],
+      ["libraryUse"],
+      ["mechanicalRepair"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["spotHidden"],
+      ["academic"],
+      ["academic"],
+      ["academic"],
+      ["academic"],
+      ["academic"],
+      ["academic"]
+    ],
+    "free": 0,
+    "skillsText": "手艺（任意），历史，图书馆，机械维修，一项社交技能（魅惑、话术、恐吓、说服），侦查，至多六种其他学问技巧作为个人专长",
+    "notes": "此模板有 12 个职业技能位置。 额外位置最多六项，须选择学问或学术相关技能，由主持人审核；可留空。",
+    "optionalSlots": [6, 7, 8, 9, 10, 11]
+  },
+  {
+    "number": 227,
+    "name": "佣人",
+    "credit": [0, 10],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["artCraft"],
+      ["dodge"],
+      ["listen"],
+      ["stealth"],
+      [
+        "accounting",
+        "appraise",
+        "driveCarriage",
+        "etiquette",
+        "firstAid",
+        "europeanLanguage",
+        "persuade"
+      ],
+      [
+        "accounting",
+        "appraise",
+        "driveCarriage",
+        "etiquette",
+        "firstAid",
+        "europeanLanguage",
+        "persuade"
+      ],
+      [
+        "accounting",
+        "appraise",
+        "driveCarriage",
+        "etiquette",
+        "firstAid",
+        "europeanLanguage",
+        "persuade"
+      ]
+    ],
+    "free": 1,
+    "skillsText": "手艺（任意），闪避，聆听，潜行，任意一项其他个人或时代特长，以及从以下中最多选取三个：（会计，估价，马车驾驶，礼仪，急救，其他语言（欧洲），说服）",
+    "notes": "最后三项限定自选位置可留空。 来源未单列部分扩展技能的基础值；界面标为待主持人确认，可在技能基础值中修改。",
+    "optionalSlots": [4, 5, 6]
+  },
+  {
+    "number": 228,
+    "name": "店主",
+    "credit": [9, 30],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["accounting"],
+      ["appraise"],
+      ["artCraft"],
+      ["listen"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["psychology"],
+      ["spotHidden"]
+    ],
+    "free": 1,
+    "skillsText": "会计，估价，手艺（任意），聆听，一项社交技能（魅惑、话术、恐吓、说服），心理学，侦查，任意一项其他个人或时代特长"
+  },
+  {
+    "number": 229,
+    "name": "士兵",
+    "credit": [9, 30],
+    "bonus": ["str", "dex"],
+    "groups": [
+      ["dodge"],
+      ["firstAid"],
+      ["stealth"],
+      ["listen"],
+      ["mechanicalRepair"],
+      ["firearmsRifle"],
+      ["spotHidden"]
+    ],
+    "free": 2,
+    "skillsText": "闪避，急救，潜行，聆听，机械维修，射击（来复枪），潜行，侦查，任意两项其他个人或时代特长",
+    "notes": "此模板有 9 个职业技能位置。 原表重复列出“潜行”；本模板仅计入一次。"
+  },
+  {
+    "number": 230,
+    "name": "密探",
+    "credit": [30, 70],
+    "bonus": ["app", "dex"],
+    "groups": [
+      ["disguise"],
+      ["charm", "fastTalk", "intimidate", "persuade"],
+      ["stealth"],
+      ["history"],
+      ["libraryUse"],
+      ["listen"],
+      ["locksmith"],
+      ["navigate"],
+      ["europeanLanguage"],
+      ["psychology"],
+      ["spotHidden"],
+      ["anyFighting"]
+    ],
+    "free": 0,
+    "skillsText": "乔装，一项社交技能（魅惑、话术、恐吓、说服），潜行，历史，图书馆，聆听，锁匠，导航，其他语言（欧洲），心理学，侦查，格斗（任意）",
+    "notes": "此模板有 12 个职业技能位置。"
+  }
+]

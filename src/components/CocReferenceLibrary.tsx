@@ -1,11 +1,8 @@
 import { useRef, useState } from 'react';
 import { Download, Upload, Copy, Trash2 } from 'lucide-react';
 import { COC_WEAPON_CATALOG, COC_ARMOR_CATALOG } from '../../shared/coc-equipment';
-import {
-  COC_OCCUPATION_RULES,
-  COC_OCCUPATION_BRANCHES,
-  COC_SKILL_CATALOG,
-} from '../../shared/coc-career';
+import { CocOccupationBrowser } from './CocOccupationPicker';
+import { COC_SKILL_CATALOG } from '../../shared/coc-career';
 import { COC_BOUTS, emptyCocSession } from '../../shared/coc-session';
 import { createCharacter } from '../../shared/rules';
 import { editCocPreparation } from '../../shared/coc-preparation';
@@ -266,48 +263,7 @@ export function CocReferenceLibrary({
       {section === 'careers' && (
         <div className="coc-section">
           <CocSectionHeading title="职业与技能参考" eyebrow="CAREERS & SKILLS" />
-          <label className="field">
-            搜索职业
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="职业名称"
-            />
-          </label>
-          <div className="coc-record-list">
-            {COC_OCCUPATION_RULES.filter((o) => o.name.includes(query)).map((o) => (
-              <article className="coc-record" key={o.name}>
-                <h4>{o.name}</h4>
-                <p className="coc-data-line">
-                  信用 {o.credit.join('–')} ·{' '}
-                  {o.bonus.length
-                    ? `EDU × 2 + ${o.bonus.join(' / ').toUpperCase()} × 2`
-                    : 'EDU × 4'}
-                </p>
-                <p className="coc-description">
-                  {o.groups
-                    .map((group) =>
-                      group
-                        .map((key) => COC_SKILL_CATALOG.find((s) => s.key === key)?.label ?? key)
-                        .join(' / '),
-                    )
-                    .join('；')}
-                  {o.free ? `；自选 ${o.free} 项` : ''}
-                </p>
-                {COC_OCCUPATION_BRANCHES.some((b) => b.occupation === o.name) && (
-                  <p className="field-help">
-                    可选分支：
-                    {COC_OCCUPATION_BRANCHES.filter((b) => b.occupation === o.name)
-                      .map((b) => b.name)
-                      .join('、')}
-                  </p>
-                )}
-              </article>
-            ))}
-          </div>
-          <p className="field-help">
-            分支为可选职业变体，在制卡器中启用。技能专长另有独立开关；自定义职业和技能需经主持人审核。
-          </p>
+          <CocOccupationBrowser />
         </div>
       )}
       {section === 'sanity' && (

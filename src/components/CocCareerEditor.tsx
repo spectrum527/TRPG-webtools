@@ -10,6 +10,8 @@ import {
   DEFAULT_COC_CAREER,
   cocCustomSkillKey,
   cocOccupationBranches,
+  cocOccupationProfile,
+  cocOccupationSkillPool,
   cocSkillDefinitions,
   exportCocOccupationTemplate,
   parseCocOccupationTemplate,
@@ -21,6 +23,9 @@ import {
 import { updateCocCareer } from '../../shared/creation';
 import type { Character } from '../../shared/types';
 import { downloadFile } from '../storage';
+import { AutoValueField } from './AutoValueField';
+import { editValueControl } from '../../shared/value-control';
+import { cocOccupationSource } from '../../shared/coc-occupations';
 
 type CustomOccupation = NonNullable<CocCareer['customOccupation']>;
 type OccupationDraft = {
@@ -96,7 +101,15 @@ export function CocCareerEditor({
 
   const career = card.cocCareer ?? DEFAULT_COC_CAREER;
   const custom = career.customOccupation;
-  const branches = cocOccupationBranches(card.occupation);
+  const branches = cocOccupationBranches(card.occupation, career.occupationId);
+  const profile = cocOccupationProfile(card);
+  const skillPool = cocOccupationSkillPool(card);
+  const pendingBases = cocSkillDefinitions(card).filter(
+    (skill) =>
+      skill.unlistedBase &&
+      (skillPool.includes(skill.key) ||
+        (card.creation?.rule === 'coc' && (card.creation.personal[skill.key] ?? 0) > 0)),
+  );
   const previewSkills = new Map(
     [...career.customSkills, ...(occupation?.importedSkills ?? [])].map((entry) => [
       entry.key,
@@ -157,7 +170,7 @@ export function CocCareerEditor({
   };
 
   const useCustomOccupation = () => {
-    if (custom) apply({ ...career, branchId: undefined }, custom.name);
+    if (custom) apply({ ...career, occupationId: undefined, branchId: undefined }, custom.name);
   };
   const saveOccupation = () => {
     if (!occupation || disabled) return;
@@ -187,6 +200,7 @@ export function CocCareerEditor({
           {
             ...career,
             branchId: undefined,
+            occupationId: undefined,
             customOccupation: nextOccupation,
             customSkills,
           },
@@ -286,17 +300,55 @@ export function CocCareerEditor({
               <option value="">通用职业 · {card.occupation}</option>
               {branches.map((branch) => (
                 <option key={branch.id} value={branch.id}>
-                  {branch.name} · {COC_CAREER_SOURCE_LABELS[branch.source]}
+                  {branch.name} ·{' '}
+                  {branch.reference
+                    ? cocOccupationSource(branch)
+                    : COC_CAREER_SOURCE_LABELS[branch.source]}
                 </option>
               ))}
             </select>
           </label>
         ) : (
           <p className="subtle-note">
-            {card.occupation ? '当前职业没有预设分支。' : '选择调查员职业后可查看分支。'}
+            {career.occupationId
+              ? '目录已分别列出职业变体，可在职业选择中搜索。'
+              : card.occupation
+                ? '当前职业没有预设分支。'
+                : '选择调查员职业后可查看分支。'}
           </p>
         ))}
 
+      {profile?.notes && <p className="subtle-note">{profile.notes}</p>}
+      {pendingBases.length > 0 && (
+        <div className="coc-subsection">
+          <h4>扩展技能基础值</h4>
+          <p className="field-help">
+            原表未提供以下基础值，暂显示 0。请解锁并切换为手动填写，由主持人审核。
+          </p>
+          <div className="coc-inline-fields">
+            {pendingBases.map((skill) => (
+              <AutoValueField
+                key={skill.key}
+                label={skill.label}
+                automatic={0}
+                control={career.skillBases?.[skill.key]}
+                min={0}
+                max={99}
+                disabled={disabled}
+                onEdit={(edit) => {
+                  apply({
+                    ...career,
+                    skillBases: {
+                      ...career.skillBases,
+                      [skill.key]: editValueControl(career.skillBases?.[skill.key], edit, 0),
+                    },
+                  });
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       <details className="coc-record">
         <summary>
           <span>自定义职业{custom ? ` · ${custom.name}` : ''}</span>

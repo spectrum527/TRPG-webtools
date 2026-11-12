@@ -1,4 +1,5 @@
 """CoC attribute caps: real rolls, saved drafts, room restrictions and responsive UI."""
+from coc_browser_helpers import choose_occupation
 import argparse
 import json
 import re
@@ -127,7 +128,7 @@ with sync_playwright() as p:
         saved = values(page)
         page.get_by_role('button', name='角色资料', exact=True).click()
         page.get_by_label('角色姓名').fill('上限验收调查员')
-        page.get_by_label('调查员职业').select_option('教授')
+        choose_occupation(page, '教授')
         page.get_by_role('button', name='技能与熟练', exact=True).click()
         page.get_by_role('button', name='建议分配', exact=True).click()
         page.get_by_role('button', name='保存角色卡', exact=True).click()

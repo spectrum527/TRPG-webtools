@@ -1,4 +1,5 @@
 import { CocCareerEditor } from './CocCareerEditor';
+import { CocOccupationPicker } from './CocOccupationPicker';
 import { CocDerivedFields, CocAgeCorrection } from './CocInvestigator';
 import { CocEquipment } from './CocEquipment';
 import { CocWealth } from './CocWealth';
@@ -35,7 +36,6 @@ import {
   COC_ATTRIBUTES,
   DND_SKILLS,
   COC_SKILLS,
-  COC_OCCUPATIONS,
   abilityModifier,
   proficiencyBonus,
   getCharacterErrors,
@@ -193,16 +193,13 @@ export function CharacterEditor({
         }),
       ),
     );
-  const customOccupationName = !dnd ? card.cocCareer?.customOccupation?.name : undefined;
-  const occupations = dnd
-    ? classes
-    : [...COC_OCCUPATIONS, ...(customOccupationName ? [customOccupationName] : [])];
-  const changeOccupation = (occupation: string) => {
+  const occupations = classes;
+  const changeOccupation = (occupation: string, occupationId?: string) => {
     if (dnd) {
       patch({ occupation });
       return;
     }
-    const change = updateCocOccupation(card, occupation);
+    const change = updateCocOccupation(card, occupation, occupationId);
     const returned = [
       change.returnedOccupation ? `职业点 ${change.returnedOccupation} 点` : '',
       change.returnedPersonal ? `兴趣点 ${change.returnedPersonal} 点` : '',
@@ -457,30 +454,29 @@ export function CharacterEditor({
                     required
                   />
                 </label>
-                <label className="field">
-                  {dnd ? '职业' : '调查员职业'} <span className="required">*</span>
-                  <select
-                    value={card.occupation}
-                    onChange={(e) => changeOccupation(e.target.value)}
-                    required
-                  >
-                    <option value="">请选择职业</option>
-                    {!occupations.includes(card.occupation) && card.occupation && (
-                      <option value={card.occupation}>{card.occupation}（旧卡，需重选）</option>
-                    )}
-                    {occupations.map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                        {value === customOccupationName && '（自定义）'}
-                      </option>
-                    ))}
-                  </select>
-                  <small>
-                    {dnd
-                      ? '更换职业会重置技能分配。'
-                      : '更换职业时退回不适用的职业投入，保留可用分配。'}
-                  </small>
-                </label>
+                {dnd ? (
+                  <label className="field">
+                    职业 <span className="required">*</span>
+                    <select
+                      value={card.occupation}
+                      onChange={(e) => changeOccupation(e.target.value)}
+                      required
+                    >
+                      <option value="">请选择职业</option>
+                      {!occupations.includes(card.occupation) && card.occupation && (
+                        <option value={card.occupation}>{card.occupation}（旧卡，需重选）</option>
+                      )}
+                      {occupations.map((value) => (
+                        <option key={value} value={value}>
+                          {value}
+                        </option>
+                      ))}
+                    </select>
+                    <small>更换职业会重置技能分配。</small>
+                  </label>
+                ) : (
+                  <CocOccupationPicker card={card} onSelect={changeOccupation} />
+                )}
                 {occupationNotice && (
                   <p className="span-two prep-notice" role="status">
                     {occupationNotice}

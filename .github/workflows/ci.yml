@@ -102,6 +102,8 @@ jobs:
         run: python tests/e2e_coc_cap.py --url http://127.0.0.1:3001
       - name: CoC careers, specialties and reusable occupation templates
         run: python tests/e2e_coc_careers.py --url http://127.0.0.1:3001
+      - name: Complete CoC occupation catalog and source-specific allocations
+        run: python tests/e2e_coc_occupations.py --url http://127.0.0.1:3001
       - name: CoC investigator resources, optional rules and protected values
         run: python tests/e2e_coc_expansion.py --url http://127.0.0.1:3001
       - name: Atlases, image messages, dedicated skill pools and room configuration
