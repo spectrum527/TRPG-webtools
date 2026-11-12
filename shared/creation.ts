@@ -1,20 +1,32 @@
 import { z } from 'zod';
 import type { Character, RuleId } from './types';
+import { COC_ATTRIBUTES, DND_ATTRIBUTES, DND_SKILLS, DND_2024_BACKGROUNDS } from './catalog';
 import {
-  COC_ATTRIBUTES,
-  COC_SKILLS,
-  DND_ATTRIBUTES,
-  DND_SKILLS,
-  DND_2024_BACKGROUNDS,
-} from './catalog';
+  COC_SKILL_CATALOG,
+  CocCareerSchema,
+  CocCustomSkillKeySchema,
+  CocSkillKeySchema,
+  chooseCocOccupationSkills,
+  cocCareerErrors,
+  cocOccupationBranches,
+  cocOccupationProfile,
+  cocSkillBase,
+  cocSkillDefinitions,
+  occupationOptions,
+  type CocCareer,
+} from './coc-career';
+import { synchronizeCocInvestigator } from './coc-physical';
 import { getDndEdition } from './dnd-edition';
+
+export {
+  COC_OCCUPATION_RULES,
+  cocSkillBase,
+  occupationOptions,
+  type OccupationProfile,
+} from './coc-career';
 
 const keys = (value: string) => value.split(' ');
 const allDnd = DND_SKILLS.map((s) => s.key);
-const allCoc = COC_SKILLS.filter((s) => !['creditRating', 'cthulhuMythos'].includes(s.key)).map(
-  (s) => s.key,
-);
-const social = keys('charm fastTalk intimidate persuade');
 export const DND_CLASS_RULES = [
   {
     name: '野蛮人',
@@ -122,175 +134,7 @@ export function dndBackground(card: Character) {
     : undefined;
 }
 
-export interface OccupationProfile {
-  name: string;
-  credit: [number, number];
-  bonus: string[];
-  groups: string[][];
-  free: number;
-}
-export const COC_OCCUPATION_RULES: OccupationProfile[] = [
-  {
-    name: '古物学家',
-    credit: [30, 70],
-    bonus: [],
-    groups: [
-      ['appraise'],
-      ['artCraft'],
-      ['history'],
-      ['libraryUse'],
-      ['otherLanguage'],
-      social,
-      ['spotHidden'],
-    ],
-    free: 1,
-  },
-  {
-    name: '作家',
-    credit: [9, 30],
-    bonus: [],
-    groups: [
-      ['artLiterature'],
-      ['history'],
-      ['libraryUse'],
-      ['naturalWorld', 'occult'],
-      ['otherLanguage'],
-      ['ownLanguage'],
-      ['psychology'],
-    ],
-    free: 1,
-  },
-  {
-    name: '记者',
-    credit: [9, 30],
-    bonus: [],
-    groups: [
-      ['artCraft', 'artPhotography'],
-      ['history'],
-      ['libraryUse'],
-      ['ownLanguage'],
-      social,
-      ['psychology'],
-    ],
-    free: 2,
-  },
-  {
-    name: '私家侦探',
-    credit: [9, 30],
-    bonus: ['str', 'dex'],
-    groups: [
-      ['artPhotography'],
-      ['disguise'],
-      ['law'],
-      ['libraryUse'],
-      social,
-      ['psychology'],
-      ['spotHidden'],
-    ],
-    free: 1,
-  },
-  {
-    name: '医生',
-    credit: [30, 80],
-    bonus: [],
-    groups: [
-      ['firstAid'],
-      ['languageLatin'],
-      ['medicine'],
-      ['psychology'],
-      ['scienceBiology'],
-      ['sciencePharmacy'],
-    ],
-    free: 2,
-  },
-  {
-    name: '教授',
-    credit: [20, 70],
-    bonus: [],
-    groups: [['libraryUse'], ['otherLanguage'], ['ownLanguage'], ['psychology']],
-    free: 4,
-  },
-  {
-    name: '警探',
-    credit: [20, 50],
-    bonus: ['str', 'dex'],
-    groups: [
-      ['artActing', 'disguise'],
-      ['firearmsHandgun', 'firearmsRifle'],
-      ['law'],
-      ['listen'],
-      social,
-      ['psychology'],
-      ['spotHidden'],
-    ],
-    free: 1,
-  },
-  {
-    name: '艺术家',
-    credit: [9, 50],
-    bonus: ['dex', 'pow'],
-    groups: [
-      ['artCraft'],
-      ['history', 'naturalWorld'],
-      social,
-      ['otherLanguage'],
-      ['psychology'],
-      ['spotHidden'],
-    ],
-    free: 2,
-  },
-  {
-    name: '神职人员',
-    credit: [9, 60],
-    bonus: [],
-    groups: [
-      ['accounting'],
-      ['history'],
-      ['libraryUse'],
-      ['listen'],
-      ['otherLanguage'],
-      social,
-      ['psychology'],
-    ],
-    free: 1,
-  },
-  {
-    name: '军人',
-    credit: [9, 30],
-    bonus: ['str', 'dex'],
-    groups: [
-      ['climb', 'swim'],
-      ['dodge'],
-      ['fightingBrawl'],
-      ['firearmsHandgun', 'firearmsRifle'],
-      ['stealth'],
-      ['survival'],
-      ['firstAid', 'mechanicalRepair', 'otherLanguage'],
-      ['firstAid', 'mechanicalRepair', 'otherLanguage'],
-    ],
-    free: 0,
-  },
-  {
-    name: '考古学家',
-    credit: [10, 40],
-    bonus: [],
-    groups: [
-      ['appraise'],
-      ['archaeology'],
-      ['history'],
-      ['otherLanguage'],
-      ['libraryUse'],
-      ['spotHidden'],
-      ['mechanicalRepair'],
-      ['navigate', 'science'],
-    ],
-    free: 0,
-  },
-];
-const keySchema = z
-  .string()
-  .regex(/^[a-z][a-zA-Z0-9]{0,39}$/)
-  .refine((s) => !['constructor', 'prototype'].includes(s));
+const keySchema = CocSkillKeySchema;
 const choiceList = z.array(keySchema).max(30);
 const points = z
   .unknown()
@@ -308,7 +152,7 @@ export const CreationAllocationSchema = z.discriminatedUnion('rule', [
   z
     .object({
       rule: z.literal('coc'),
-      occupationSkills: z.array(keySchema).max(8),
+      occupationSkills: z.array(z.union([keySchema, z.literal('')])).max(8),
       occupationAttribute: z.string().max(10),
       occupational: points,
       personal: points,
@@ -331,10 +175,10 @@ export type CreationAllocation = z.infer<typeof CreationAllocationSchema>;
 export type CocAllocation = Extract<CreationAllocation, { rule: 'coc' }>;
 export type DndAllocation = Extract<CreationAllocation, { rule: 'dnd' }>;
 
-const fieldList = [
+const fieldList = new Set([
   ...COC_ATTRIBUTES.map((a) => `attributes.${a.key}`),
   ...DND_ATTRIBUTES.map((a) => `attributes.${a.key}`),
-  ...COC_SKILLS.map((a) => `skills.${a.key}`),
+  ...COC_SKILL_CATALOG.map((a) => `skills.${a.key}`),
   ...DND_SKILLS.map((a) => `skills.${a.key}`),
   'age',
   'level',
@@ -346,10 +190,15 @@ const fieldList = [
   'maxSan',
   'ac',
   'attributeTotal',
-];
+]);
+const customSkillField = (field: string) =>
+  field.startsWith('skills.') && CocCustomSkillKeySchema.safeParse(field.slice(7)).success;
 const RangeSchema = z
   .object({
-    field: z.string().refine((f) => fieldList.includes(f), '不支持的限制字段'),
+    field: z
+      .string()
+      .max(60)
+      .refine((f) => fieldList.has(f) || customSkillField(f), '不支持的限制字段'),
     min: z.number().int().min(-100).max(9999),
     max: z.number().int().min(-100).max(9999),
   })
@@ -374,7 +223,9 @@ export const CreationPolicySchema = z
     if (new Set(p.ranges.map((r) => r.field)).size !== p.ranges.length)
       ctx.addIssue({ code: 'custom', message: '每个数值字段只能设置一个范围' });
     const valid = new Set(policyFields(p.rule).map((f) => f.key));
-    if (p.ranges.some((r) => !valid.has(r.field)))
+    if (
+      p.ranges.some((r) => !valid.has(r.field) && !(p.rule === 'coc' && customSkillField(r.field)))
+    )
       ctx.addIssue({ code: 'custom', message: '包含其他规则的限制字段' });
   });
 export type CreationPolicy = z.infer<typeof CreationPolicySchema>;
@@ -393,13 +244,20 @@ export function defaultCreationPolicy(rule: RuleId): CreationPolicy {
     notes: '',
   };
 }
-export function policyFields(rule: RuleId) {
+export function policyFields(rule: RuleId, card?: Character) {
+  const skills =
+    rule === 'coc'
+      ? [
+          ...COC_SKILL_CATALOG,
+          ...cocSkillDefinitions(card).filter((skill) => skill.source === 'custom'),
+        ]
+      : DND_SKILLS;
   return [
     ...(rule === 'coc' ? COC_ATTRIBUTES : DND_ATTRIBUTES).map((a) => ({
       key: `attributes.${a.key}`,
       label: `${a.label}属性`,
     })),
-    ...(rule === 'coc' ? COC_SKILLS : DND_SKILLS).map((s) => ({
+    ...skills.map((s) => ({
       key: `skills.${s.key}`,
       label: `${s.label}${rule === 'coc' ? '技能' : '检定加值'}`,
     })),
@@ -420,9 +278,6 @@ export function policyFields(rule: RuleId) {
     { key: 'maxHp', label: 'HP 上限' },
   ];
 }
-export function occupationOptions(profile?: OccupationProfile) {
-  return profile ? [...profile.groups, ...Array.from({ length: profile.free }, () => allCoc)] : [];
-}
 export function defaultAllocation(rule: RuleId, occupation = ''): CreationAllocation {
   if (rule === 'dnd')
     return {
@@ -435,39 +290,148 @@ export function defaultAllocation(rule: RuleId, occupation = ''): CreationAlloca
       extraSaves: [],
       expertise: [],
     };
-  const p = COC_OCCUPATION_RULES.find((p) => p.name === occupation);
-  const chosen: string[] = [];
-  for (const group of occupationOptions(p))
-    chosen.push(group.find((s) => !chosen.includes(s)) ?? '');
+  return defaultCocAllocation({ rule, occupation });
+}
+export function defaultCocAllocation(
+  card: Pick<Character, 'rule' | 'occupation' | 'cocCareer'>,
+): CocAllocation {
+  const profile = cocOccupationProfile(card);
   return {
-    rule,
-    occupationSkills: chosen,
-    occupationAttribute: p?.bonus[0] ?? 'edu',
+    rule: 'coc',
+    occupationSkills: chooseCocOccupationSkills(occupationOptions(profile, card)),
+    occupationAttribute: profile?.bonus[0] ?? 'edu',
     occupational: {},
     personal: {},
   };
 }
-export function cocSkillBase(card: Character, key: string) {
-  return key === 'dodge'
-    ? Math.floor(card.attributes.dex / 2)
-    : key === 'ownLanguage'
-      ? card.attributes.edu
-      : (COC_SKILLS.find((s) => s.key === key)?.base ?? 0);
-}
+const pointsSpent = (points?: Record<string, number>) =>
+  Object.values(points ?? {}).reduce((sum, value) => sum + value, 0);
+
 export function cocBudget(card: Character) {
-  const profile = COC_OCCUPATION_RULES.find((p) => p.name === card.occupation);
+  const profile = cocOccupationProfile(card);
   const allocation = card.creation?.rule === 'coc' ? card.creation : null;
+  const bonus =
+    profile?.bonus.find((key) => key === allocation?.occupationAttribute) ?? profile?.bonus[0];
   const occupational = profile?.bonus.length
-    ? 2 * card.attributes.edu +
-      2 * (card.attributes[allocation?.occupationAttribute ?? profile.bonus[0]] ?? 0)
+    ? 2 * (card.attributes.edu + (card.attributes[bonus ?? 'edu'] ?? 0))
     : 4 * card.attributes.edu;
   return {
     occupational,
     personal: 2 * card.attributes.int,
-    spentOccupation: Object.values(allocation?.occupational ?? {}).reduce((a, b) => a + b, 0),
-    spentPersonal: Object.values(allocation?.personal ?? {}).reduce((a, b) => a + b, 0),
+    spentOccupation: pointsSpent(allocation?.occupational),
+    spentPersonal: pointsSpent(allocation?.personal),
   };
 }
+
+export interface CocCareerChange {
+  card: Character;
+  returnedOccupation: number;
+  returnedPersonal: number;
+  removedSkillKeys: string[];
+  removedAdjustments: number;
+}
+
+export function updateCocCareer(
+  card: Character,
+  career: CocCareer | undefined,
+  occupation = card.occupation,
+): CocCareerChange {
+  const result: CocCareerChange = {
+    card,
+    returnedOccupation: 0,
+    returnedPersonal: 0,
+    removedSkillKeys: [],
+    removedAdjustments: 0,
+  };
+  if (card.rule !== 'coc') return result;
+
+  const parsed = career === undefined ? undefined : CocCareerSchema.safeParse(career);
+  if (parsed && !parsed.success) throw new Error(parsed.error.issues[0]?.message);
+  const { cocCareer: _previous, ...fields } = card;
+  const next: Character = {
+    ...fields,
+    occupation,
+    ...(parsed?.data ? { cocCareer: parsed.data } : {}),
+  };
+  const branchId = next.cocCareer?.branchId;
+  if (branchId && !cocOccupationBranches(occupation).some((branch) => branch.id === branchId))
+    throw new Error('职业分支与当前职业不匹配');
+
+  const active = new Set(cocSkillDefinitions(next).map((skill) => skill.key));
+  const removed = new Set(
+    cocSkillDefinitions(card)
+      .filter((skill) => !active.has(skill.key))
+      .map((skill) => skill.key),
+  );
+  result.removedSkillKeys = [...removed];
+  if (removed.size && card.adjustments) {
+    const retain = (entry: { target: string; key: string }) => {
+      if (entry.target !== 'skill' || !removed.has(entry.key)) return true;
+      result.removedAdjustments += 1;
+      return false;
+    };
+    next.adjustments = {
+      permanent: card.adjustments.permanent.filter(retain),
+      temporary: card.adjustments.temporary
+        .map((effect) => ({ ...effect, changes: effect.changes.filter(retain) }))
+        .filter((effect) => effect.changes.length > 0),
+    };
+  }
+
+  const a = card.creation;
+  if (a?.rule !== 'coc') {
+    if (removed.size)
+      next.skills = Object.fromEntries(
+        Object.entries(card.skills).filter(([key]) => !removed.has(key)),
+      );
+    result.card = next;
+    return result;
+  }
+
+  const profile = cocOccupationProfile(next);
+  const occupationSkills = chooseCocOccupationSkills(
+    occupationOptions(profile, next),
+    a.occupationSkills,
+  );
+  const occupational = Object.fromEntries(
+    Object.entries(a.occupational).filter(
+      ([key]) => active.has(key) && (key === 'creditRating' || occupationSkills.includes(key)),
+    ),
+  );
+  const personal = Object.fromEntries(
+    Object.entries(a.personal).filter(([key]) => active.has(key)),
+  );
+  if (profile && profile.credit[1] < (cocOccupationProfile(card)?.credit[1] ?? 99)) {
+    const occupationCredit = occupational.creditRating ?? 0;
+    const personalCredit = personal.creditRating ?? 0;
+    const excess = Math.max(0, occupationCredit + personalCredit - profile.credit[1]);
+    if (excess) {
+      personal.creditRating = Math.max(0, personalCredit - excess);
+      occupational.creditRating = Math.min(occupationCredit, profile.credit[1]);
+    }
+  }
+  next.creation = {
+    rule: 'coc',
+    occupationSkills,
+    occupationAttribute:
+      profile?.bonus.find((key) => key === a.occupationAttribute) ?? profile?.bonus[0] ?? 'edu',
+    occupational,
+    personal,
+  };
+  result.returnedOccupation = pointsSpent(a.occupational) - pointsSpent(occupational);
+  result.returnedPersonal = pointsSpent(a.personal) - pointsSpent(personal);
+  result.card = syncAllocation(next);
+  return result;
+}
+
+export function updateCocOccupation(card: Character, occupation: string): CocCareerChange {
+  const career =
+    card.cocCareer && occupation !== card.occupation
+      ? { ...card.cocCareer, branchId: undefined }
+      : card.cocCareer;
+  return updateCocCareer(card, career, occupation);
+}
+
 export function dndAncestry(card: Character): {
   fixed: string[];
   choices: number;
@@ -555,9 +519,9 @@ export function syncAllocation(card: Character): Character {
       ...card,
       proficiencies: [],
       skills: Object.fromEntries(
-        COC_SKILLS.map((s) => [
+        cocSkillDefinitions(card).map((s) => [
           s.key,
-          cocSkillBase(card, s.key) + (a.occupational[s.key] ?? 0) + (a.personal[s.key] ?? 0),
+          cocSkillBase(card, s) + (a.occupational[s.key] ?? 0) + (a.personal[s.key] ?? 0),
         ]),
       ),
     };
@@ -593,38 +557,46 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
   if (!parsed.success || parsed.data.rule !== card.rule)
     return ['请在制卡器中补齐技能分配来源；旧版卡片需重新分配后提交审核'];
   const a = parsed.data;
+  const careerErrors = cocCareerErrors(card);
+  if (careerErrors.length) return careerErrors;
+  const cocProfile = a.rule === 'coc' ? cocOccupationProfile(card) : undefined;
   const duplicate = (values: string[], label: string) => {
     if (new Set(values).size !== values.length) errors.push(`${label}不可重复选择`);
   };
   if (a.rule === 'coc') {
-    const p = COC_OCCUPATION_RULES.find((p) => p.name === card.occupation);
+    const p = cocProfile;
     if (!p) errors.push('请选择已支持的职业方案，以便计算职业点与信用范围');
     else {
-      const options = occupationOptions(p);
-      if (
+      const options = occupationOptions(p, card);
+      if (chooseCocOccupationSkills(options).includes(''))
+        errors.push('当前职业技能范围不能选满八项不同技能，请启用专长或调整技能范围');
+      else if (
         a.occupationSkills.length !== 8 ||
         a.occupationSkills.some((s, i) => !options[i]?.includes(s))
       )
         errors.push('职业技能的八个位置须符合当前职业的选择范围');
-      if ((p.bonus.length ? p.bonus : ['edu']).includes(a.occupationAttribute) === false)
+      if (
+        p.bonus.length
+          ? !p.bonus.some((key) => key === a.occupationAttribute)
+          : a.occupationAttribute !== 'edu'
+      )
         errors.push('职业点公式使用了不允许的属性');
       const credit = card.skills.creditRating ?? 0;
       if (credit < p.credit[0] || credit > p.credit[1])
         errors.push(`信用评级须在职业范围 ${p.credit[0]}–${p.credit[1]} 内`);
     }
-    duplicate(a.occupationSkills, '职业技能');
+    duplicate(a.occupationSkills.filter(Boolean), '职业技能');
     const allowed = new Set([...a.occupationSkills, 'creditRating']);
-    const known = new Set(COC_SKILLS.map((s) => s.key));
+    const definitions = cocSkillDefinitions(card);
+    const known = new Map(definitions.map((skill) => [skill.key, skill]));
     for (const [key, value] of Object.entries(a.occupational)) {
       if (!known.has(key) || (value > 0 && !allowed.has(key)))
-        errors.push(`职业点不能用于 ${COC_SKILLS.find((s) => s.key === key)?.label ?? key}`);
+        errors.push(`职业点不能用于 ${known.get(key)?.label ?? key}`);
     }
     for (const [key, value] of Object.entries(a.personal)) {
       if (!known.has(key)) errors.push('兴趣点不能用于未支持的技能');
       if (policy.allowInterestOnOccupation === false && value > 0 && allowed.has(key))
-        errors.push(
-          `本房间兴趣点不能用于职业技能：${COC_SKILLS.find((s) => s.key === key)?.label ?? key}`,
-        );
+        errors.push(`本房间兴趣点不能用于职业技能：${known.get(key)?.label ?? key}`);
     }
     if (!policy.allowMythos && (card.skills.cthulhuMythos ?? 0) !== 0)
       errors.push('本房间新调查员的克苏鲁神话须为 0');
@@ -637,10 +609,10 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
       (b.spentOccupation !== b.occupational || b.spentPersonal !== b.personal)
     )
       errors.push('本房间要求分完职业点与兴趣点');
-    for (const s of COC_SKILLS) {
-      const expected =
-        cocSkillBase(card, s.key) + (a.occupational[s.key] ?? 0) + (a.personal[s.key] ?? 0);
-      if ((card.skills[s.key] ?? cocSkillBase(card, s.key)) !== expected)
+    for (const s of definitions) {
+      const base = cocSkillBase(card, s);
+      const expected = base + (a.occupational[s.key] ?? 0) + (a.personal[s.key] ?? 0);
+      if ((card.skills[s.key] ?? base) !== expected)
         errors.push(`${s.label}与基础值、职业点和兴趣点合计不一致`);
       const range = skillRange(policy, s.key);
       if (expected < range.min || expected > range.max)
@@ -648,12 +620,13 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
     }
     if (Object.keys(card.skills).some((s) => !known.has(s)))
       errors.push('包含没有分配来源的自定义技能');
+    const derived = synchronizeCocInvestigator(card);
     if (
-      card.maxHp !== Math.max(1, Math.floor((card.attributes.con + card.attributes.siz) / 10)) ||
-      card.maxMp !== Math.floor(card.attributes.pow / 5) ||
-      card.maxSan !== Math.max(0, 99 - (card.skills.cthulhuMythos ?? 0))
+      card.maxHp !== derived.maxHp ||
+      card.maxMp !== derived.maxMp ||
+      card.maxSan !== derived.maxSan
     )
-      errors.push('HP／MP／SAN 上限与属性及克苏鲁神话不一致');
+      errors.push('HP／MP／SAN 上限与调查员的派生设置不一致');
   } else {
     const modern = getDndEdition(card.dndEdition) === '2024';
     const cls = dndClassRule(card);
@@ -734,16 +707,15 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
     if (card.attributes[attr.key] < range.min || card.attributes[attr.key] > range.max)
       errors.push(`${attr.label}须在 ${range.min}–${range.max} 内`);
   }
-  const labels = policyFields(card.rule);
+  const labels = policyFields(card.rule, card);
   for (const range of policy.ranges) {
     let value: number;
     if (range.field.startsWith('attributes.')) continue;
-    if (range.field.startsWith('skills.'))
-      value =
-        card.rule === 'dnd'
-          ? dndSkillModifier(card, range.field.slice(7))
-          : (card.skills[range.field.slice(7)] ?? 0);
-    else if (range.field === 'attributeTotal')
+    if (range.field.startsWith('skills.')) {
+      // Active CoC skills were checked against these ranges above.
+      if (card.rule === 'coc') continue;
+      value = dndSkillModifier(card, range.field.slice(7));
+    } else if (range.field === 'attributeTotal')
       value = attrs
         .filter((s) => s.key !== 'luck')
         .reduce((sum, s) => sum + card.attributes[s.key], 0);
@@ -753,7 +725,11 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
         `${labels.find((l) => l.key === range.field)?.label ?? range.field}须在 ${range.min}–${range.max} 内（当前 ${value}）`,
       );
   }
-  if (policy.allowedOccupations.length && !policy.allowedOccupations.includes(card.occupation))
+  if (
+    policy.allowedOccupations.length &&
+    !policy.allowedOccupations.includes(card.occupation) &&
+    !(cocProfile && policy.allowedOccupations.includes(cocProfile.name))
+  )
     errors.push('职业不在本剧本允许的列表中');
   if (policy.allowedAncestries.length && !policy.allowedAncestries.includes(card.ancestry))
     errors.push('种族／国籍不在本剧本允许的列表中');
@@ -761,7 +737,13 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
 }
 /** A convenient starting distribution, still editable and subject to review. */
 export function suggestAllocation(card: Character, policy: CreationPolicy): Character {
-  let result = { ...card, creation: defaultAllocation(card.rule, card.occupation) };
+  const result = {
+    ...card,
+    creation:
+      card.rule === 'coc'
+        ? defaultCocAllocation(card)
+        : defaultAllocation(card.rule, card.occupation),
+  };
   if (result.creation.rule === 'dnd') {
     const cls = dndClassRule(card);
     const background = dndBackground(card);
@@ -790,37 +772,44 @@ export function suggestAllocation(card: Character, policy: CreationPolicy): Char
       .slice(0, count);
   } else {
     const a = result.creation;
-    const profile = COC_OCCUPATION_RULES.find((p) => p.name === card.occupation);
+    const profile = cocOccupationProfile(card);
     if (!profile) return syncAllocation(result);
+    a.occupationSkills = chooseCocOccupationSkills(
+      occupationOptions(profile, card),
+      card.creation?.rule === 'coc' ? card.creation.occupationSkills : [],
+    );
     a.occupationAttribute = profile.bonus.reduce(
       (best, key) => (card.attributes[key] > card.attributes[best] ? key : best),
       profile.bonus[0] ?? 'edu',
     );
     const budget = cocBudget(result);
     a.occupational.creditRating = profile.credit[0];
-    let remaining = budget.occupational - profile.credit[0];
+    const definitions = new Map(cocSkillDefinitions(card).map((skill) => [skill.key, skill]));
     const distribute = (pool: Record<string, number>, choices: string[], amount: number) => {
       let left = amount;
       for (let pass = 0; pass < 100 && left > 0; pass++)
         for (const key of choices) {
           if (!left) break;
+          const skill = definitions.get(key);
+          if (!skill) continue;
           const current =
-            cocSkillBase(card, key) + (a.occupational[key] ?? 0) + (a.personal[key] ?? 0);
+            cocSkillBase(card, skill) + (a.occupational[key] ?? 0) + (a.personal[key] ?? 0);
           if (current < skillRange(policy, key).max) {
             pool[key] = (pool[key] ?? 0) + 1;
             left--;
           }
         }
-      return left;
     };
-    remaining = distribute(a.occupational, a.occupationSkills, remaining);
     // A tight room cap can intentionally leave points unspent; validation explains it.
-    void remaining;
+    distribute(a.occupational, a.occupationSkills, budget.occupational - profile.credit[0]);
     distribute(
       a.personal,
-      policy.allowInterestOnOccupation === false
-        ? allCoc.filter((key) => !a.occupationSkills.includes(key))
-        : allCoc,
+      [...definitions.keys()].filter(
+        (key) =>
+          key !== 'creditRating' &&
+          key !== 'cthulhuMythos' &&
+          (policy.allowInterestOnOccupation !== false || !a.occupationSkills.includes(key)),
+      ),
       budget.personal,
     );
   }

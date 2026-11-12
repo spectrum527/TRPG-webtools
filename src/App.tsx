@@ -6,7 +6,7 @@ import {
   ArrowLeft,
   Menu,
   X,
-  CircleHelp,
+  HeartHandshake,
   PanelsTopLeft,
 } from 'lucide-react';
 import type {
@@ -26,6 +26,7 @@ import { Gateway, Library, RuleSelection, RulesModal } from './components/Lobby'
 import { CharacterEditor } from './components/CharacterEditor';
 import { getDndEdition, type DndEdition } from '../shared/dnd-edition';
 import { RoomView } from './components/RoomView';
+import { Acknowledgements } from './components/Acknowledgements';
 const HostToolkit = lazy(() =>
   import('./components/HostToolkit').then((module) => ({ default: module.HostToolkit })),
 );
@@ -61,6 +62,7 @@ export default function App() {
     inRoom?: boolean;
   } | null>(null);
   const [rules, setRules] = useState<RuleId | null>(null);
+  const [acknowledgements, setAcknowledgements] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,6 +142,7 @@ export default function App() {
   }, [theme]);
   const closeEditor = useCallback(() => setEditor(null), []);
   const closeRules = useCallback(() => setRules(null), []);
+  const closeAcknowledgements = useCallback(() => setAcknowledgements(false), []);
   async function action(value: RoomAction) {
     await act(value);
   }
@@ -206,10 +209,12 @@ export default function App() {
           <span className="vertical-text">THE STORY IS OURS.</span>
           <button
             className="nav-button"
-            onClick={() => setRules(room?.rule ?? rule)}
-            aria-label="使用帮助"
+            onClick={() => setAcknowledgements(true)}
+            aria-label="鸣谢"
+            title="鸣谢"
           >
-            <CircleHelp size={21} />
+            <HeartHandshake size={21} />
+            <span>鸣谢</span>
           </button>
         </div>
       </aside>
@@ -258,7 +263,20 @@ export default function App() {
             />
           </div>
         </header>
-        {mobileNav && <nav className="mobile-navigation">{navigation}</nav>}
+        {mobileNav && (
+          <nav className="mobile-navigation">
+            <div className="mobile-navigation-links">{navigation}</div>
+            <button
+              className="text-button mobile-acknowledgements"
+              onClick={() => {
+                setMobileNav(false);
+                setAcknowledgements(true);
+              }}
+            >
+              <HeartHandshake size={17} /> 鸣谢
+            </button>
+          </nav>
+        )}
         <main className={page === 'room' ? 'room-main' : 'main-content'}>
           {recovering && <div className="connection-banner">正在找回你上一次的座位…</div>}
           {!connected && room && (
@@ -383,6 +401,7 @@ export default function App() {
           onClose={closeRules}
         />
       )}
+      {acknowledgements && <Acknowledgements onClose={closeAcknowledgements} />}
       {toast && <Toast {...toast} />}
     </div>
   );

@@ -121,7 +121,7 @@ describe('in-session character adjustments', () => {
     ).toBe(7);
   });
 
-  it('does not reallocate CoC points, recompute acquired skills or change/heal resources when attributes change', () => {
+  it('keeps CoC allocations and acquired skills while permanent POW clamps magic points', () => {
     const base = preparedCharacter('coc');
     let card = setValue(base, 'attribute', 'int', 80);
     card = setValue(card, 'attribute', 'pow', 20);
@@ -134,8 +134,9 @@ describe('in-session character adjustments', () => {
     expect(cocBudget(card)).toEqual(cocBudget(base));
     expect(card.creation).toEqual(base.creation);
     expect(effectiveCharacter(card).skills.dodge).toBe(base.skills.dodge);
-    for (const key of ['hp', 'maxHp', 'mp', 'maxMp', 'san', 'maxSan', 'ac'] as const)
+    for (const key of ['hp', 'maxHp', 'san', 'maxSan', 'ac'] as const)
       expect(effectiveCharacter(card)[key]).toBe(base[key]);
+    expect(effectiveCharacter(card)).toMatchObject({ mp: 4, maxMp: 4 });
     expect(rollCheck('coc', card, request({ key: 'spotHidden' }), () => 5).target).toBe(75);
     expect(rollCheck('coc', card, request({ kind: 'ability', key: 'int' }), () => 5).target).toBe(
       80,

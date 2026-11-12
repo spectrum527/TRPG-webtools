@@ -265,7 +265,23 @@ describe('CoC 账本和职业约束', () => {
     expect(errors({ ...card, skills: { ...card.skills, inventedSkill: 0 } })).toContain(
       '没有分配来源的自定义技能',
     );
-    expect(errors({ ...card, maxHp: card.maxHp + 1 })).toContain('上限与属性及克苏鲁神话不一致');
+    expect(errors({ ...card, maxHp: card.maxHp + 1 })).toContain('上限与调查员的派生设置不一致');
+  });
+
+  it('审核尊重手动上限，房间仍可限制最终上限', () => {
+    const base = minimalCoc();
+    const card = deriveCharacter({
+      ...base,
+      cocInvestigator: { derived: { maxHp: { mode: 'manual', locked: true, manual: 14 } } },
+    });
+    expect(card.maxHp).toBe(14);
+    expect(errors(card)).toBe('');
+    expect(
+      errors(card, {
+        ...defaultCreationPolicy('coc'),
+        ranges: [{ field: 'maxHp', min: 1, max: 13 }],
+      }),
+    ).toContain('HP 上限须在 1–13 内（当前 14）');
   });
 
   it.each([-1, 1.5, 1000])('拒绝非法分配点数 %s', (value) => {

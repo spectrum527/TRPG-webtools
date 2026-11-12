@@ -1,3 +1,6 @@
+import { CocRoomRuleControls } from './CocRoomRules';
+import { CocCheckFollowup } from './CocCheckFollowup';
+import { cocCurrentLuck } from '../../shared/coc-session';
 import { IMAGE_MIMES, MAX_IMAGE_BYTES } from '../../shared/media';
 import { ChatImage } from './ChatImage';
 import { RoomConfiguration } from './RoomConfiguration';
@@ -551,15 +554,18 @@ export function RoomView({
             {tool === 'inventory' && <InventoryTool room={room} me={me} run={run} />}
           </div>
           <div className="host-tool-links">
-            {room.rule === 'dnd' && (
+            {
               <button aria-label="角色准备" onClick={() => setPreparingMember(me.id)}>
                 <WandSparkles size={18} />
                 <span>
-                  角色准备<small>法术、休息资源与装备联动</small>
+                  角色准备
+                  <small>
+                    {room.rule === 'coc' ? '理智、成长、装备与财产' : '法术、休息资源与装备联动'}
+                  </small>
                 </span>
                 <ChevronRight size={16} />
               </button>
-            )}
+            }
             <button
               aria-label={isHost ? '角色调整' : '角色数值'}
               onClick={() => setAdjustMember(isHost ? '' : me.id)}
@@ -658,7 +664,7 @@ export function RoomView({
           </div>
         </aside>
       </div>
-      {preparingMember !== null && room.rule === 'dnd' && (
+      {preparingMember !== null && (
         <Suspense fallback={<Spinner />}>
           <CharacterPreparation
             room={room}
@@ -1194,7 +1200,7 @@ function StoryLog({
         )}
         {log.length ? (
           log.map((event) => (
-            <EventEntry event={event} room={room} session={session} key={event.id} />
+            <EventEntry event={event} room={room} session={session} key={event.id} run={run} />
           ))
         ) : (
           <div className="empty-log">
@@ -1303,7 +1309,17 @@ function StoryLog({
     </div>
   );
 }
-function EventEntry({ event, room, session }: { event: RoomEvent; room: Room; session: Session }) {
+function EventEntry({
+  event,
+  room,
+  session,
+  run,
+}: {
+  event: RoomEvent;
+  room: Room;
+  session: Session;
+  run: Run;
+}) {
   if (event.type === 'system')
     return (
       <div className="system-event">
@@ -1374,6 +1390,9 @@ function EventEntry({ event, room, session }: { event: RoomEvent; room: Room; se
             </div>
             <strong>{event.secret ? '？' : (event.check?.total ?? event.roll?.total)}</strong>
           </div>
+        )}
+        {event.cocCheck?.kind === 'original' && !event.secret && (
+          <CocCheckFollowup room={room} event={event} memberId={session.memberId} run={run} />
         )}
       </div>
     </article>
@@ -1484,6 +1503,7 @@ function CheckTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
   const [dc, setDc] = useState(15);
   const [modifier, setModifier] = useState(0);
   const [target, setTarget] = useState(50);
+  const [difficulty, setDifficulty] = useState<'regular' | 'hard' | 'extreme'>('regular');
   const [edge, setEdge] = useState<Edge>('normal');
   const [visibility, setVisibility] = useState<Visibility>('public');
   const [busy, setBusy] = useState(false);
@@ -1515,7 +1535,9 @@ function CheckTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
       ? card.san
       : kind === 'skill'
         ? (card.skills[key] ?? COC_SKILLS.find((skill) => skill.key === key)?.base ?? 0)
-        : card.attributes[key]
+        : key === 'luck'
+          ? cocCurrentLuck(card)
+          : card.attributes[key]
     : target;
   return (
     <div className="check-tool">
@@ -1557,7 +1579,7 @@ function CheckTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
               <option key={option.key} value={option.key}>
                 {option.label}
                 {!dnd && card
-                  ? ` · ${kind === 'skill' ? (card.skills[option.key] ?? 0) : card.attributes[option.key]}`
+                  ? ` · ${kind === 'skill' ? (card.skills[option.key] ?? 0) : option.key === 'luck' ? cocCurrentLuck(card) : card.attributes[option.key]}`
                   : ''}
               </option>
             ))}
@@ -1617,6 +1639,20 @@ function CheckTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
           </b>
         </div>
       </div>
+      {!dnd && kind !== 'sanity' && (
+        <label className="field">
+          要求的成功等级
+          <select
+            aria-label="CoC 检定难度"
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value as typeof difficulty)}
+          >
+            <option value="regular">普通</option>
+            <option value="hard">困难</option>
+            <option value="extreme">极难</option>
+          </select>
+        </label>
+      )}
       {kind !== 'sanity' && (
         <>
           <span className="mini-label">{dnd ? '优势与劣势' : '奖励与惩罚骰'}</span>
@@ -1653,6 +1689,7 @@ function CheckTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
               modifier,
               edge: kind === 'sanity' ? 'normal' : edge,
               ...(!dnd && !card ? { target } : {}),
+              ...(!dnd && kind !== 'sanity' ? { cocDifficulty: difficulty } : {}),
             },
             visibility,
           });
@@ -2014,7 +2051,7 @@ function HostTools({
   const [title, setTitle] = useState(room.scene.title);
   const [description, setDescription] = useState(room.scene.description);
   const [busy, setBusy] = useState(false);
-  const [section, setSection] = useState<'scene' | 'encounter'>('scene');
+  const [section, setSection] = useState<'scene' | 'encounter' | 'coc'>('scene');
   return (
     <Modal
       title="场景与回合"
@@ -2032,7 +2069,13 @@ function HostTools({
         >
           行动与状态{room.encounter.round > 0 ? ` · 第 ${room.encounter.round} 轮` : ''}
         </button>
+        {room.rule === 'coc' && (
+          <button className={section === 'coc' ? 'active' : ''} onClick={() => setSection('coc')}>
+            选用规则
+          </button>
+        )}
       </div>
+      {section === 'coc' && <CocRoomRuleControls room={room} run={run} />}
       {section === 'scene' && (
         <>
           <div className="host-section">

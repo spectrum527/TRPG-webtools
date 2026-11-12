@@ -4,6 +4,41 @@ import { readArchive, exportArchive } from './archive.ts';
 import { roomSchema, validRoomReferences, visibleEvent } from '../shared/room-state.ts';
 import { AtlasLibrarySchema, mergeAtlases } from '../shared/atlas.ts';
 import { RoomConfigSchema } from '../shared/room-config.ts';
+import { cocRoomRules, type CocSession } from '../shared/coc-session.ts';
+import {
+  CocDifficultySchema,
+  CocRuntimeActionSchemas,
+  cocCheckEligibility,
+  cocCheckStatus,
+  cocLuckResult,
+  cocRangedDifficulty,
+  cocResultAtDifficulty,
+  type CocCheckFollowup,
+  type CocCheckOriginal,
+} from '../shared/coc-runtime.ts';
+import {
+  advanceCocEncounterRounds,
+  applyCocSessionEdit,
+  getCocSessionErrors,
+  markCocDevelopment,
+  mergeCocPreparation,
+  previewCocSpellHp,
+  reconcileCocDevelopmentMarks,
+  recordCocManualSan,
+  spendCocLuck,
+} from '../shared/coc-session-rules.ts';
+import {
+  applyCocInvestigatorEdit,
+  CocInvestigatorEditSchema,
+  synchronizeCocInvestigator,
+} from '../shared/coc-investigator.ts';
+import {
+  cocArmorValue,
+  cocWeaponValues,
+  consumeCocAmmunition,
+  rollCocWeaponDamage,
+  cocWeaponArmorReduction,
+} from '../shared/coc-equipment.ts';
 import { IMAGE_MIMES, MAX_IMAGE_BYTES } from '../shared/media.ts';
 import { decodeImage, imagePath, saveImage } from './images.ts';
 import express from 'express';
@@ -104,6 +139,7 @@ import type {
   Character,
   CheckRequest,
   CheckResult,
+  DiceResult,
   Inspiration,
   Member,
   Room,
@@ -151,6 +187,7 @@ const checkSchema = z
     modifier: z.number().int().min(-1000).max(1000),
     edge: z.enum(['normal', 'advantage', 'disadvantage']),
     target: z.number().int().min(0).max(100000).optional(),
+    cocDifficulty: CocDifficultySchema.optional(),
   })
   .strict();
 const createSchema = z
@@ -238,6 +275,7 @@ function migrateSaved(raw: unknown): unknown {
 const actionSchema = z.discriminatedUnion('type', [
   ...EncounterActionSchemas,
   ...CharacterRuntimeActionSchemas,
+  ...CocRuntimeActionSchemas,
   ...PreparationActionSchemas,
   z.object({ type: z.literal('atlas-save'), atlases: AtlasLibrarySchema.min(1) }).strict(),
   z.object({ type: z.literal('atlas-delete'), atlasId: id }).strict(),
@@ -457,6 +495,7 @@ export function createAppServer(options: ServerOptions = {}) {
   ] as const;
   function runtimeErrors(character: Character): string[] {
     try {
+      if (character.rule === 'coc') return getCocSessionErrors(character);
       const errors = character.dndMagic
         ? getDndMagicErrors(character, spellCatalog(character.dndEdition))
         : [];
@@ -611,6 +650,41 @@ export function createAppServer(options: ServerOptions = {}) {
       members: isHost
         ? entry.room.members
         : entry.room.members.map((member) => {
+            if (member.character?.rule === 'coc') {
+              const { cocSession, cocInvestigator: _investigator, ...card } = member.character;
+              if (member.id !== memberId) return { ...member, character: card };
+              if (!cocSession) return member;
+              const session: CocSession = {
+                ...cocSession,
+                sanity: {
+                  ...cocSession.sanity,
+                  pending:
+                    cocSession.sanity.pending?.visibility === 'public'
+                      ? cocSession.sanity.pending
+                      : undefined,
+                  insanity:
+                    cocSession.sanity.insanity?.visibility === 'host'
+                      ? null
+                      : cocSession.sanity.insanity,
+                  conditions: cocSession.sanity.conditions.filter(
+                    ({ visibility }) => visibility !== 'host',
+                  ),
+                  sources: [],
+                },
+                history: cocSession.history.filter(({ visibility }) => visibility === 'public'),
+                spells: cocSession.spells.map((spell) => ({
+                  ...spell,
+                  firstAttempt:
+                    spell.firstAttempt?.visibility === 'host' ? undefined : spell.firstAttempt,
+                  pushedAttempt:
+                    spell.firstAttempt?.visibility === 'host' ||
+                    spell.pushedAttempt?.visibility === 'host'
+                      ? undefined
+                      : spell.pushedAttempt,
+                })),
+              };
+              return { ...member, character: { ...member.character, cocSession: session } };
+            }
             if (member.id === memberId || member.character?.rule !== 'dnd') return member;
             const { dndMagic: _magic, dndEquipment: _equipment, ...card } = member.character;
             const items = card.items.filter((item) => !item.equipment);
@@ -869,6 +943,9 @@ export function createAppServer(options: ServerOptions = {}) {
           name: input.configuration?.name ?? input.name,
           rule: input.rule,
           ...(dndEdition === undefined ? {} : { dndEdition }),
+          ...(input.rule === 'coc'
+            ? { cocRules: cocRoomRules(input.configuration?.cocRules) }
+            : {}),
           mode: input.configuration?.mode ?? input.mode,
           hostId: member.id,
           phase: 'lobby',
@@ -1110,6 +1187,33 @@ export function createAppServer(options: ServerOptions = {}) {
         selected.character = { ...next, updatedAt: new Date(now()).toISOString() };
         characterChanged(selected.id);
       };
+      const activeCoc = () =>
+        requireCondition(room.rule === 'coc' && room.phase === 'active', '请先开启 CoC 故事');
+      const cocTarget = (input: {
+        memberId: string;
+        characterId: string;
+        expectedCharacterRevision: number;
+      }) => {
+        const character = target(input.memberId);
+        const selected = room.members.find((m) => m.id === input.memberId)!;
+        requireCondition(
+          room.rule === 'coc' && character.rule === 'coc',
+          '此操作仅适用于 CoC 调查员',
+        );
+        requireCondition(
+          character.id === input.characterId &&
+            selected.characterRevision === input.expectedCharacterRevision,
+          '角色状态已更新，请载入最新数值后再操作',
+        );
+        if (room.phase === 'active')
+          requireCondition(
+            selected.review.status === 'approved' &&
+              selected.review.policyRevision === room.policyRevision &&
+              selected.review.characterRevision <= selected.characterRevision,
+            '角色需通过主持人审核后才能操作局内资源',
+          );
+        return { selected, character };
+      };
       const resolveMagic = (
         character: Character,
         memberId: string,
@@ -1274,7 +1378,11 @@ export function createAppServer(options: ServerOptions = {}) {
           );
         }
       };
-      const autoConstitution = (c: Combatant, completedRound?: number) => {
+      const autoConstitution = (
+        c: Combatant,
+        completedRound?: number,
+        visibility: Visibility = c.memberId ? 'public' : 'host',
+      ) => {
         const character = room.members.find((m) => m.id === c.memberId)?.character;
         if ((character?.attributes.con ?? c.source?.attributes.con) == null) {
           addEvent(entry, 'system', member, `${c.name}缺少体质，伤势检定需由主持人处理。`, {
@@ -1282,7 +1390,7 @@ export function createAppServer(options: ServerOptions = {}) {
           });
           return;
         }
-        lifeCheck(c, 'constitution', c.memberId ? 'public' : 'host', { completedRound });
+        lifeCheck(c, 'constitution', visibility, { completedRound });
       };
       const advanceLifeChecks = (beforeRound: number, beforeId: string | null) => {
         if (!room.encounter.autoLifeChecks) return;
@@ -1347,20 +1455,53 @@ export function createAppServer(options: ServerOptions = {}) {
         if (room.encounter.autoLifeChecks && next.injuryChecks?.conPending && !next.dead)
           autoConstitution(next);
       };
+      const cocArmor = (c: Combatant, override?: number) => {
+        if (override !== undefined) return override;
+        const character = room.members.find((m) => m.id === c.memberId)?.character;
+        return character ? cocArmorValue(character) : effectiveCocArmor(c);
+      };
+      const equippedCocWeapon = (
+        combatant: Combatant,
+        weaponId: string,
+        revision: number | undefined,
+        distanceYards?: number,
+      ) => {
+        const selected = room.members.find((m) => m.id === combatant.memberId);
+        requireCondition(
+          selected?.character && revision !== undefined,
+          '使用人物卡装备须提供调查员和最新角色版本',
+        );
+        const target = cocTarget({
+          memberId: selected.id,
+          characterId: selected.character.id,
+          expectedCharacterRevision: revision,
+        });
+        requireCondition(
+          !combatant.dead && !combatant.unconscious && target.character.hp > 0,
+          '死亡或昏迷的角色不能攻击',
+        );
+        return {
+          ...target,
+          values: cocWeaponValues(target.character, weaponId, { distanceYards }),
+        };
+      };
       const unavailableDamage = (c: Combatant, armorOverride?: number) => {
         if (c.hp === null) return '目标 HP 未填写';
-        if (c.rule === 'coc' && effectiveCocArmor(c, armorOverride) === null) return '目标护甲未知';
+        if (c.rule === 'coc' && cocArmor(c, armorOverride) === null) return '目标护甲未知';
         return null;
       };
       const settleDamage = (
         c: Combatant,
-        expression: string,
+        expression: string | DiceResult,
         visibility: Visibility,
         options: { adjustment?: DamageAdjustment; armorOverride?: number; critical?: boolean },
       ) => {
-        const roll = rollDice(expression, rng);
+        const roll = typeof expression === 'string' ? rollDice(expression, rng) : expression;
         const result = applyEncounterDamage(room.encounter, c, roll.total, {
           ...options,
+          ...(c.rule === 'coc'
+            ? { armorOverride: cocArmor(c, options.armorOverride) ?? undefined }
+            : {}),
           edition: room.dndEdition,
         });
         storeLife(result.combatant, result.state);
@@ -1369,7 +1510,11 @@ export function createAppServer(options: ServerOptions = {}) {
           result.combatant.injuryChecks?.conPending &&
           !result.combatant.dead
         )
-          autoConstitution(result.combatant);
+          autoConstitution(
+            result.combatant,
+            undefined,
+            !result.combatant.memberId ? 'host' : visibility,
+          );
         const summary = `${combatantName(c, visibility)}的伤害骰 ${roll.expression} = ${roll.total}。`;
         if (!c.memberId && visibility === 'public')
           return { roll, summary: `${summary}已结算伤害。` };
@@ -1472,11 +1617,236 @@ export function createAppServer(options: ServerOptions = {}) {
           room.mode = action.configuration.mode;
           room.scene = structuredClone(action.configuration.scene);
           room.creationPolicy = structuredClone(action.configuration.creationPolicy);
+          if (room.rule === 'coc') room.cocRules = cocRoomRules(action.configuration.cocRules);
           room.configRevision += 1;
           room.policyRevision += 1;
           invalidateReviews(room);
           addEvent(entry, 'system', member, '导入了房间配置，请重新准备并审核人物卡');
           break;
+        case 'coc-rules': {
+          host();
+          requireCondition(room.rule === 'coc', '这组选用规则仅适用于 CoC');
+          const { replayed, ...identity } = requestIdentity(action.requestId);
+          if (replayed) return null;
+          requireCondition(
+            action.expectedRevision === room.configRevision,
+            '房间配置已更新，请刷新后再修改',
+          );
+          room.cocRules = action.rules;
+          room.configRevision += 1;
+          addEvent(entry, 'system', member, '更新了 CoC 房间选用规则。', identity);
+          break;
+        }
+        case 'character-coc': {
+          const { edit } = action;
+          const investigatorEdit = CocInvestigatorEditSchema.safeParse(edit);
+          const ownEquipment = [
+            'weapon-ammo',
+            'weapon-reload',
+            'weapon-clear-jam',
+            'weapon-notes',
+            'armor-equip',
+            'armor-notes',
+          ];
+          const ownSession = ['development-mark', 'development-lock', 'spell-cast'];
+          const preparatory = ['spell-save', 'spell-remove', 'tome-save', 'tome-remove'];
+          if (
+            room.phase === 'active' &&
+            investigatorEdit.success &&
+            !ownEquipment.includes(edit.kind) &&
+            !(edit.kind === 'wealth-transaction' && edit.operation !== 'override')
+          )
+            host();
+          const ownSanityRoll = edit.kind === 'sanity-roll' && edit.visibility === 'public';
+          if (
+            !investigatorEdit.success &&
+            !ownSession.includes(edit.kind) &&
+            !ownSanityRoll &&
+            !(room.phase === 'lobby' && preparatory.includes(edit.kind))
+          )
+            host();
+          if (!investigatorEdit.success && !preparatory.includes(edit.kind)) activeCoc();
+          if (edit.kind === 'spell-cast' && edit.push) host();
+          if ('visibility' in edit && edit.visibility === 'host') host();
+          requireCondition(
+            action.memberId === member.id || room.hostId === member.id,
+            '只能修改自己的角色',
+          );
+          const { replayed, ...identity } = requestIdentity(action.requestId);
+          if (replayed) return null;
+          const { character, selected } = cocTarget(action);
+          const baseState = room.encounter.participants.some((c) => c.memberId === selected.id)
+            ? room.encounter
+            : syncEncounterPlayers(room.encounter, room.members);
+          const life = baseState.participants.find((c) => c.memberId === selected.id)!;
+          let damage: Combatant | undefined;
+          const validateHpChange = (value: number) => {
+            if (value >= character.hp) return;
+            const spell =
+              edit.kind === 'spell-cast'
+                ? previewCocSpellHp(room, selected.id, edit.spellId)
+                : null;
+            const preview = spell ?? previewManualHp(room, { target: life, value });
+            const confirmation = action.hpConfirmation;
+            if (confirmation) {
+              encounterRevision(confirmation.expectedRevision);
+              requireCondition(
+                confirmation.expectedHp === character.hp,
+                '角色 HP 已变化，请重新确认',
+              );
+              if (confirmation.outcome === 'dead') {
+                host();
+                requireCondition(value === 0, '只有 HP 为 0 时才能确认死亡');
+              }
+            }
+            requireCondition(
+              !preview.requiresConfirmation || !!confirmation,
+              '此操作会触发昏迷、濒死或死亡，请先确认 HP 变化',
+            );
+            damage =
+              room.encounter.autoDamage && room.phase === 'active'
+                ? confirmation?.outcome === 'dead'
+                  ? markDead(preview.combatant)
+                  : preview.combatant
+                : { ...life, hp: value };
+          };
+          const context = {
+            now: new Date(now()).toISOString(),
+            rng,
+            id: randomUUID,
+            rules: room.cocRules,
+            life,
+            validateHpChange,
+          };
+          const result = investigatorEdit.success
+            ? {
+                character: applyCocInvestigatorEdit(character, investigatorEdit.data, context),
+                summary: '更新了调查员装备、财产或人物资料',
+                visibility: 'host' as const,
+                clearMajorWound: false,
+              }
+            : applyCocSessionEdit(
+                character,
+                edit as Parameters<typeof applyCocSessionEdit>[1],
+                context,
+              );
+          if (!damage) validateHpChange(result.character.hp);
+          if (character.cocSession?.sanity.pending && investigatorEdit.success)
+            requireCondition(
+              result.character.san === character.san,
+              '请先确认或撤销待结算的理智检定',
+            );
+          if (result.character.hp > character.hp) damage = healInjury(life, result.character.hp);
+          if (result.clearMajorWound) damage = { ...(damage ?? life), majorWound: false };
+          updateRuntimeCharacter(selected, result.character);
+          if (damage) {
+            room.encounter = replaceInjuredCombatant(baseState, damage);
+            if (room.encounter.autoLifeChecks && damage.injuryChecks?.conPending && !damage.dead)
+              autoConstitution(damage, undefined, result.visibility);
+          }
+          addEvent(
+            entry,
+            'system',
+            member,
+            `${character.name} · ${result.summary}`.slice(0, 4000),
+            {
+              ...identity,
+              visibility: result.visibility,
+              ...(edit.kind === 'sanity-roll' && result.visibility === 'host'
+                ? { secretLabel: '理智检定' }
+                : {}),
+            },
+          );
+          break;
+        }
+        case 'coc-check-followup': {
+          const { replayed, ...identity } = requestIdentity(action.requestId);
+          if (replayed) return null;
+          activeCoc();
+          const status = cocCheckStatus(room.log, action.eventId);
+          requireCondition(status, '这次检定没有可继续结算的记录');
+          if (action.edit.kind === 'decide-push') host();
+          else requireCondition(status.original.memberId === member.id, '只能继续结算自己的检定');
+          requireCondition(status.version === action.expectedVersion, '检定记录已更新，请重新查看');
+          const { selected, character } = cocTarget({
+            memberId: status.original.memberId,
+            characterId: status.record.characterId,
+            expectedCharacterRevision: action.expectedCharacterRevision,
+          });
+          requireCondition(
+            (character.cocSession?.development.cycle ?? 0) === status.record.cycle,
+            '这次检定已跨过幕间成长阶段',
+          );
+          const life = room.encounter.participants.find((c) => c.memberId === selected.id);
+          requireCondition(!life?.dead, '死亡角色不能继续结算检定');
+          const rules = cocRoomRules(room.cocRules);
+          const eligible = cocCheckEligibility(status, rules);
+          const followup = { originalEventId: status.original.id, version: status.version + 1 };
+          const original = status.original.check!;
+          const edit = action.edit;
+          let record: CocCheckFollowup;
+          let content: string;
+          if (edit.kind === 'spend-luck') {
+            requireCondition(eligible.canSpendLuck, '当前规则或检定结果不允许消耗幸运');
+            const result = cocLuckResult(original, status.record.difficulty, edit.points);
+            content = `${character.name}消耗 ${edit.points} 幸运，${original.label} ${original.total} → ${result.total}（${result.outcome}）。`;
+            const next = spendCocLuck(character, edit.points, status.original.id, content, {
+              now: new Date(now()).toISOString(),
+              id: randomUUID,
+            });
+            updateRuntimeCharacter(selected, next);
+            record = { kind: 'luck', ...followup, points: edit.points, result };
+          } else if (edit.kind === 'request-push') {
+            requireCondition(
+              eligible.canRequestPush && !room.encounter.activeId,
+              '当前规则、检定结果或战斗状态不允许孤注一掷',
+            );
+            record = {
+              kind: 'push-request',
+              ...followup,
+              reason: edit.reason,
+              consequence: edit.consequence,
+            };
+            content = `${character.name}申请孤注一掷，理由「${edit.reason}」，风险「${edit.consequence}」。`;
+          } else if (edit.kind === 'decide-push') {
+            requireCondition(eligible.canDecidePush, '没有等待批准的孤注一掷申请');
+            const consequence = edit.consequence ?? status.request!.consequence;
+            record = { kind: 'push-decision', ...followup, allowed: edit.allowed, consequence };
+            content = `主持人${edit.allowed ? '允许' : '拒绝'}${character.name}孤注一掷${edit.allowed ? `，失败后果「${consequence}」` : ''}。`;
+          } else {
+            requireCondition(
+              eligible.canPush && !room.encounter.activeId,
+              '孤注一掷未获批准、已经结算，或战斗正在进行',
+            );
+            const request = {
+              ...status.record.request,
+              target: original.target,
+              dc: 0,
+              modifier: 0,
+            };
+            const result = cocResultAtDifficulty(
+              rollCheck('coc', character, request, rng),
+              status.record.difficulty,
+            );
+            record = { kind: 'pushed', ...followup, result };
+            const consequence = status.decision?.consequence ?? status.request!.consequence;
+            content = `${character.name}孤注一掷，${original.label}原骰 ${original.total}，重掷 ${result.total}（${result.outcome}）${result.success ? '' : `，失败后果「${consequence}」`}。`;
+            if (rules.autoDevelopment && result.success && status.record.request.kind === 'skill') {
+              const next = markCocDevelopment(
+                character,
+                status.record.request.key,
+                status.original.id,
+              );
+              if (next !== character) updateRuntimeCharacter(selected, next);
+            }
+          }
+          addEvent(entry, 'system', member, content, {
+            ...identity,
+            cocCheck: record,
+            visibility: status.original.visibility,
+          });
+          break;
+        }
         case 'character-adjust': {
           host();
           requireCondition(
@@ -1749,7 +2119,31 @@ export function createAppServer(options: ServerOptions = {}) {
               '角色已死亡，请由主持人先确认复活',
             );
           }
-          member.character = structuredClone(action.character);
+          const previousSession = member.character?.cocSession;
+          if (member.character?.id === action.character.id && previousSession) {
+            const previous = member.character;
+            const card = synchronizeCocInvestigator({
+              ...action.character,
+              adjustments: previous.adjustments,
+              cocSession: mergeCocPreparation(previousSession, action.character.cocSession),
+            });
+            const san = Math.min(previous.san, card.maxSan);
+            requireCondition(
+              !previousSession.sanity.pending || san === previous.san,
+              '请先由主持人处理待结算的理智检定再修改角色上限',
+            );
+            const merged = reconcileCocDevelopmentMarks({
+              ...card,
+              san,
+              hp: Math.min(previous.hp, card.maxHp),
+              mp: Math.min(previous.mp, card.maxMp),
+            });
+            requireCondition(
+              getCharacterErrors(merged).length === 0 && !runtimeErrors(merged).length,
+              '编辑后的角色卡与已保存的局内记录不兼容',
+            );
+            member.character = structuredClone(merged);
+          } else member.character = structuredClone(action.character);
           characterChanged(member.id);
           break;
         case 'ready':
@@ -1814,17 +2208,69 @@ export function createAppServer(options: ServerOptions = {}) {
         }
         case 'check': {
           if (action.visibility === 'host') host();
-          const result = rollCheck(
-            room.rule,
-            member.role === 'host' ? null : member.character,
-            action.check as CheckRequest,
-            rng,
+          requireCondition(
+            room.rule === 'coc' || action.check.cocDifficulty === undefined,
+            '检定难度仅适用于 CoC',
           );
-          addEvent(entry, 'check', member, `${result.label}：${result.total}，${result.outcome}`, {
-            check: result,
-            visibility: action.visibility,
-            ...(action.requestId ? { requestId: action.requestId } : {}),
-          });
+          const identity =
+            room.rule === 'coc' && action.requestId ? requestIdentity(action.requestId) : undefined;
+          if (identity?.replayed) return null;
+          const character = member.role === 'host' ? null : member.character;
+          const raw = rollCheck(room.rule, character, action.check as CheckRequest, rng);
+          const { kind, key, edge, target: override, cocDifficulty } = action.check;
+          const difficulty = cocDifficulty ?? 'regular';
+          const result =
+            room.rule === 'coc' && (kind === 'skill' || kind === 'ability') && key !== 'luck'
+              ? cocResultAtDifficulty(raw, difficulty)
+              : raw;
+          const track =
+            room.rule === 'coc' &&
+            room.phase === 'active' &&
+            character?.rule === 'coc' &&
+            action.visibility === 'public' &&
+            override === undefined &&
+            key !== 'luck' &&
+            /^[a-z][a-zA-Z0-9]{0,39}$/.test(key) &&
+            (kind === 'skill' || kind === 'ability');
+          const cocCheck: CocCheckOriginal | undefined = track
+            ? {
+                kind: 'original',
+                characterId: character.id,
+                request: { kind, key, edge },
+                difficulty,
+                combat: !!room.encounter.activeId,
+                cycle: character.cocSession?.development.cycle ?? 0,
+              }
+            : undefined;
+          const eventId = randomUUID();
+          if (
+            cocCheck &&
+            result.success &&
+            kind === 'skill' &&
+            cocRoomRules(room.cocRules).autoDevelopment &&
+            character
+          ) {
+            const next = markCocDevelopment(character, key, eventId);
+            if (next !== character) updateRuntimeCharacter(member, next);
+          }
+          addEvent(
+            entry,
+            'check',
+            member,
+            `${result.label}：${result.total}，${result.outcome}${!result.success && result.outcome.endsWith('成功') ? '，未达到要求难度' : ''}`,
+            {
+              id: eventId,
+              check: result,
+              visibility: action.visibility,
+              ...(action.requestId ? { requestId: action.requestId } : {}),
+              ...(cocCheck
+                ? {
+                    cocCheck,
+                    ...(identity ? { combatRequestHash: identity.combatRequestHash } : {}),
+                  }
+                : {}),
+            },
+          );
           break;
         }
         case 'scene':
@@ -1854,6 +2300,28 @@ export function createAppServer(options: ServerOptions = {}) {
               finishManualHealth(change.next, change.confirmed);
               break;
             }
+          }
+          if (
+            action.resource === 'san' &&
+            character.rule === 'coc' &&
+            room.phase === 'active' &&
+            action.value !== character.san
+          ) {
+            if (
+              character.cocSession?.sanity.insanity?.kind === 'permanent' &&
+              action.value > character.san
+            )
+              host();
+            const result = recordCocManualSan(character, action.value, {
+              now: new Date(now()).toISOString(),
+              rng,
+              id: randomUUID,
+              rules: room.cocRules,
+            });
+            const selected = room.members.find((m) => m.id === action.memberId)!;
+            updateRuntimeCharacter(selected, result.character);
+            addEvent(entry, 'system', member, `${character.name} · ${result.summary}`);
+            break;
           }
           character[action.resource] = action.value;
           character.updatedAt = new Date(now()).toISOString();
@@ -2288,6 +2756,103 @@ export function createAppServer(options: ServerOptions = {}) {
           );
           break;
         }
+        case 'encounter-coc-weapon': {
+          activeCoc();
+          if (action.visibility === 'host' || action.armorOverride !== undefined) host();
+          const { replayed, ...identity } = encounterCommand(action);
+          if (replayed) return null;
+          const attacker = combatant(action.attackerId);
+          requireCondition(
+            attacker.memberId === member.id || room.hostId === member.id,
+            '只能使用自己角色的武器',
+          );
+          const defender = action.targetId
+            ? room.encounter.participants.find(
+                (c) => c.id === action.targetId && (c.revealed || room.hostId === member.id),
+              )
+            : undefined;
+          requireCondition(!action.targetId || defender, '请选择有效的攻击目标');
+          requireCondition(!defender || defender.id !== attacker.id, '请选择不同的攻击者和目标');
+          const { selected, character, values } = equippedCocWeapon(
+            attacker,
+            action.weaponId,
+            action.expectedCharacterRevision,
+            action.distanceYards,
+          );
+          requireCondition(values.category !== 'melee', '近战武器请使用近战对抗并选择防守方式');
+          requireCondition(!values.ammo.jammed, '武器发生故障，请先解除故障');
+          requireCondition(!values.capacity || values.ammo.loaded > 0, '武器弹药不足，请先装填');
+          const { difficulty, veryLong } = cocRangedDifficulty(
+            values,
+            action.distanceYards,
+            action.difficulty,
+          );
+          const pointBlank =
+            action.distanceYards !== undefined &&
+            ['handgun', 'rifle', 'shotgun'].includes(values.category) &&
+            action.distanceYards * 3 <= effectiveCharacter(character).attributes.dex / 5;
+          const edge = pointBlank
+            ? action.edge === 'disadvantage'
+              ? 'normal'
+              : 'advantage'
+            : action.edge;
+          const check = cocResultAtDifficulty(
+            rollCheck(
+              'coc',
+              character,
+              {
+                kind: 'attack',
+                key: values.skillKey,
+                target: values.skill,
+                dc: 0,
+                modifier: 0,
+                edge,
+              },
+              rng,
+            ),
+            difficulty,
+          );
+          const jammed = values.malfunction > 0 && check.selected >= values.malfunction;
+          let next = consumeCocAmmunition(character, action.weaponId, { roll: check.selected });
+          const hit = check.success && !jammed;
+          const extreme =
+            isCocExtremeSuccess(check) && (!veryLong || !values.impales || check.selected === 1);
+          const roll = hit ? rollCocWeaponDamage(values, rng, { extreme }) : undefined;
+          let damage = roll ? `伤害 ${roll.expression} = ${roll.total}，未结算 HP。` : '';
+          if (roll && defender && action.confirmedDamage && room.encounter.autoDamage) {
+            const unavailable = unavailableDamage(defender, action.armorOverride);
+            if (unavailable) damage += unavailable;
+            else {
+              const armor = cocArmor(defender, action.armorOverride)!;
+              const reduction =
+                values.category === 'shotgun'
+                  ? cocWeaponArmorReduction(values, roll, armor)
+                  : armor;
+              damage = settleDamage(defender, roll, action.visibility, {
+                armorOverride: reduction,
+              }).summary;
+            }
+          }
+          const eventId = randomUUID();
+          if (hit && action.visibility === 'public' && cocRoomRules(room.cocRules).autoDevelopment)
+            next = markCocDevelopment(next, values.skillKey, eventId);
+          if (next !== character) updateRuntimeCharacter(selected, next);
+          const level = { regular: '普通', hard: '困难', extreme: '极难' }[difficulty];
+          addEvent(
+            entry,
+            'system',
+            member,
+            `${combatantName(attacker, action.visibility)}使用「${values.name}」${defender ? `攻击${combatantName(defender, action.visibility)}` : '攻击'}：${level}难度${pointBlank ? '（近距奖励）' : ''}，${check.rolls.join(' / ')} 取 ${check.selected}，${check.outcome}${jammed ? '，武器故障' : hit ? '，命中' : '，未命中'}。${damage}`,
+            {
+              id: eventId,
+              ...identity,
+              visibility: action.visibility,
+              secretLabel: 'CoC 武器攻击',
+              ...(roll ? { roll } : {}),
+            },
+          );
+          break;
+        }
         case 'coc-melee': {
           host();
           requireCondition(room.rule === 'coc', '近战对抗仅适用于 CoC7 房间');
@@ -2297,6 +2862,32 @@ export function createAppServer(options: ServerOptions = {}) {
           const attacker = damage ? combatant(damage.attackerId) : undefined;
           const defender = damage ? combatant(damage.defenderId) : undefined;
           requireCondition(!damage || attacker !== defender, '近战对抗请选择不同参战者');
+          if (damage?.attackWeaponId || damage?.fightBackWeaponId) activeCoc();
+          const attackWeapon =
+            damage?.attackWeaponId && attacker
+              ? equippedCocWeapon(
+                  attacker,
+                  damage.attackWeaponId,
+                  damage.expectedAttackerCharacterRevision,
+                )
+              : undefined;
+          const defenseWeapon =
+            damage?.fightBackWeaponId && defender
+              ? equippedCocWeapon(
+                  defender,
+                  damage.fightBackWeaponId,
+                  damage.expectedDefenderCharacterRevision,
+                )
+              : undefined;
+          requireCondition(
+            !attackWeapon || attackWeapon.values.category === 'melee',
+            '近战对抗请选择近战武器',
+          );
+          requireCondition(
+            !defenseWeapon ||
+              (action.defense === 'fight-back' && defenseWeapon.values.category === 'melee'),
+            '只有近战反击可选择防守武器',
+          );
           if (damage && room.encounter.autoDamage) {
             for (const expression of [
               damage.attackExpression,
@@ -2307,11 +2898,11 @@ export function createAppServer(options: ServerOptions = {}) {
           }
           const attack = rollCheck(
             'coc',
-            null,
+            attackWeapon?.character ?? null,
             {
               kind: 'skill',
-              key: '进攻',
-              target: action.attackSkill,
+              key: attackWeapon?.values.skillKey ?? '进攻',
+              target: attackWeapon?.values.skill ?? action.attackSkill,
               dc: 0,
               modifier: 0,
               edge: action.attackEdge,
@@ -2320,11 +2911,11 @@ export function createAppServer(options: ServerOptions = {}) {
           );
           const defense = rollCheck(
             'coc',
-            null,
+            defenseWeapon?.character ?? null,
             {
               kind: 'skill',
-              key: action.defense === 'dodge' ? '闪避' : '反击',
-              target: action.defenseSkill,
+              key: defenseWeapon?.values.skillKey ?? (action.defense === 'dodge' ? '闪避' : '反击'),
+              target: defenseWeapon?.values.skill ?? action.defenseSkill,
               dc: 0,
               modifier: 0,
               edge: action.defenseEdge,
@@ -2332,9 +2923,41 @@ export function createAppServer(options: ServerOptions = {}) {
             rng,
           );
           let result: ReturnType<typeof settleDamage> | undefined;
+          const winner = cocMeleeWinner(attack, defense, action.defense);
+          const eventId = randomUUID();
+          if (
+            room.phase === 'active' &&
+            cocRoomRules(room.cocRules).autoDevelopment &&
+            action.visibility === 'public'
+          ) {
+            const successfulWeapon =
+              winner === 'attacker'
+                ? attackWeapon
+                : winner === 'defender'
+                  ? defenseWeapon
+                  : undefined;
+            const successfulDodge =
+              winner === 'dodge' && defender?.memberId
+                ? room.members.find((m) => m.id === defender.memberId)
+                : undefined;
+            const selected = successfulWeapon?.selected ?? successfulDodge;
+            if (selected?.character) {
+              const marked = markCocDevelopment(
+                selected.character,
+                successfulWeapon?.values.skillKey ?? 'dodge',
+                eventId,
+              );
+              if (marked !== selected.character) updateRuntimeCharacter(selected, marked);
+            }
+          }
           let resolution = `${compareCocMelee(attack, defense, action.defense)}（不自动扣除 HP）`;
-          if (damage && attacker && defender && room.encounter.autoDamage) {
-            const winner = cocMeleeWinner(attack, defense, action.defense);
+          if (
+            damage &&
+            attacker &&
+            defender &&
+            room.encounter.autoDamage &&
+            (!(attackWeapon || defenseWeapon) || damage.confirmedDamage)
+          ) {
             if (winner === 'attacker' || winner === 'defender') {
               const counter = winner === 'defender';
               const extreme = !counter && isCocExtremeSuccess(attack);
@@ -2348,15 +2971,19 @@ export function createAppServer(options: ServerOptions = {}) {
                 : damage.attackArmorOverride;
               const c = counter ? attacker : defender;
               const unavailable = unavailableDamage(c, armorOverride);
+              const equipped = counter ? defenseWeapon : attackWeapon;
               resolution = counter ? '防守方反击成功，结算普通伤害。' : '进攻方命中。';
-              if (!expression) {
+              if (!expression && !equipped) {
                 resolution += counter
                   ? '未填写反击伤害式，本次未自动扣除 HP。'
                   : '极难或大成功命中，未填写极难伤害式，本次未自动扣除 HP，由 KP 裁定伤害。';
               } else if (unavailable) {
                 resolution += `${unavailable}，本次未自动扣除 HP。`;
               } else {
-                result = settleDamage(c, expression, action.visibility, { armorOverride });
+                const rolled = equipped
+                  ? rollCocWeaponDamage(equipped.values, rng, { extreme })
+                  : expression!;
+                result = settleDamage(c, rolled, action.visibility, { armorOverride });
                 resolution += result.summary;
               }
             }
@@ -2375,6 +3002,7 @@ export function createAppServer(options: ServerOptions = {}) {
             member,
             `${attackerName}：${skillDisplay(attack, attacker)}；${defenderName}：${skillDisplay(defense, defender)}。${resolution}`,
             {
+              id: eventId,
               visibility: action.visibility,
               secretLabel: '近战对抗',
               ...(command
@@ -2430,6 +3058,29 @@ export function createAppServer(options: ServerOptions = {}) {
           const before = room.encounter;
           room.encounter = nextEncounterTurn(room.encounter, room.dndEdition);
           advanceLifeChecks(before.round, before.activeId);
+          if (room.rule === 'coc' && room.encounter.round > before.round && before.activeId) {
+            for (const selected of room.members) {
+              if (selected.role !== 'player' || !selected.character) continue;
+              const result = advanceCocEncounterRounds(
+                selected.character,
+                room.encounter.round - before.round,
+                {
+                  now: new Date(now()).toISOString(),
+                  id: randomUUID,
+                },
+              );
+              if (!result) continue;
+              updateRuntimeCharacter(selected, result.character);
+              if (result.summary)
+                addEvent(
+                  entry,
+                  'system',
+                  member,
+                  `${selected.character.name} · ${result.summary}`,
+                  { visibility: result.visibility },
+                );
+            }
+          }
           if (identity)
             addEvent(entry, 'system', member, '推进了行动顺序。', {
               requestId: identity.requestId,

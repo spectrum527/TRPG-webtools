@@ -1,15 +1,16 @@
+import { cocOccupationProfile, cocSkillDefinitions } from '../../shared/coc-career';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, Check, CircleAlert, RefreshCw, ShieldCheck } from 'lucide-react';
 import type { Character } from '../../shared/types';
-import { COC_SKILLS, DND_SKILLS, DND_ATTRIBUTES } from '../../shared/rules';
+import { DND_SKILLS, DND_ATTRIBUTES } from '../../shared/rules';
 import {
-  COC_OCCUPATION_RULES,
   dndClassRule,
   dndBackground,
   expertiseOptions,
   cocBudget,
   cocSkillBase,
   defaultAllocation,
+  defaultCocAllocation,
   dndAncestry,
   dndSaves,
   dndSkillModifier,
@@ -115,7 +116,13 @@ export function AllocationEditor({
         <p>原数值仍保留在卡中。开始重新分配会按规则基础值重建技能，建议先导出旧卡备份。</p>
         <button
           className="button primary"
-          onClick={() => set(defaultAllocation(card.rule, card.occupation))}
+          onClick={() =>
+            set(
+              card.rule === 'coc'
+                ? defaultCocAllocation(card)
+                : defaultAllocation(card.rule, card.occupation),
+            )
+          }
         >
           开始重新分配
         </button>
@@ -144,7 +151,7 @@ export function AllocationEditor({
     </div>
   );
   if (a.rule === 'coc') {
-    const profile = COC_OCCUPATION_RULES.find((p) => p.name === card.occupation);
+    const profile = cocOccupationProfile(card);
     const budget = cocBudget(card);
     const occupied = new Set([...a.occupationSkills, 'creditRating']);
     const restrictedInterest = policy.allowInterestOnOccupation === false;
@@ -242,7 +249,7 @@ export function AllocationEditor({
                 </label>
               )}
               <div className="occupation-slots">
-                {occupationOptions(profile).map((options, i) => (
+                {occupationOptions(profile, card).map((options, i) => (
                   <label className="field" key={i}>
                     职业技能 {i + 1}
                     <select
@@ -257,7 +264,7 @@ export function AllocationEditor({
                       <option value="">请选择</option>
                       {options.map((key) => (
                         <option key={key} value={key}>
-                          {COC_SKILLS.find((s) => s.key === key)?.label}
+                          {cocSkillDefinitions(card).find((s) => s.key === key)?.label}
                         </option>
                       ))}
                     </select>
@@ -309,45 +316,49 @@ export function AllocationEditor({
             <span>兴趣点</span>
             <span>合计</span>
           </div>
-          {COC_SKILLS.filter((s) => s.label.includes(search)).map((skill) => {
-            const base = cocSkillBase(card, skill.key),
-              total = card.skills[skill.key] ?? base;
-            const range = skillRange(policy, skill.key);
-            const mythosLocked = skill.key === 'cthulhuMythos' && !policy.allowMythos;
-            return (
-              <div
-                className={`allocation-row ${total > range.max || total < range.min ? 'out-of-range' : ''}`}
-                key={skill.key}
-              >
-                <span className="allocation-skill">
-                  <b>{skill.label}</b>
-                  <small>
-                    基础 {base} · 范围 {range.min}–{range.max}
-                    {occupied.has(skill.key) && ' · 职业'}
-                  </small>
-                </span>
-                <input
-                  aria-label={`${skill.label}职业点`}
-                  type="number"
-                  min={0}
-                  max={Math.max(0, range.max - base - (a.personal[skill.key] ?? 0))}
-                  disabled={!occupied.has(skill.key) || mythosLocked}
-                  value={a.occupational[skill.key] ?? 0}
-                  onChange={(e) => updatePoints(skill.key, 'occupational', Number(e.target.value))}
-                />
-                <input
-                  aria-label={`${skill.label}兴趣点`}
-                  type="number"
-                  min={0}
-                  max={Math.max(0, range.max - base - (a.occupational[skill.key] ?? 0))}
-                  disabled={mythosLocked || (restrictedInterest && occupied.has(skill.key))}
-                  value={a.personal[skill.key] ?? 0}
-                  onChange={(e) => updatePoints(skill.key, 'personal', Number(e.target.value))}
-                />
-                <strong aria-label={`${skill.label}最终值`}>{total}</strong>
-              </div>
-            );
-          })}
+          {cocSkillDefinitions(card)
+            .filter((s) => s.label.includes(search))
+            .map((skill) => {
+              const base = cocSkillBase(card, skill.key),
+                total = card.skills[skill.key] ?? base;
+              const range = skillRange(policy, skill.key);
+              const mythosLocked = skill.key === 'cthulhuMythos' && !policy.allowMythos;
+              return (
+                <div
+                  className={`allocation-row ${total > range.max || total < range.min ? 'out-of-range' : ''}`}
+                  key={skill.key}
+                >
+                  <span className="allocation-skill">
+                    <b>{skill.label}</b>
+                    <small>
+                      基础 {base} · 范围 {range.min}–{range.max}
+                      {occupied.has(skill.key) && ' · 职业'}
+                    </small>
+                  </span>
+                  <input
+                    aria-label={`${skill.label}职业点`}
+                    type="number"
+                    min={0}
+                    max={Math.max(0, range.max - base - (a.personal[skill.key] ?? 0))}
+                    disabled={!occupied.has(skill.key) || mythosLocked}
+                    value={a.occupational[skill.key] ?? 0}
+                    onChange={(e) =>
+                      updatePoints(skill.key, 'occupational', Number(e.target.value))
+                    }
+                  />
+                  <input
+                    aria-label={`${skill.label}兴趣点`}
+                    type="number"
+                    min={0}
+                    max={Math.max(0, range.max - base - (a.occupational[skill.key] ?? 0))}
+                    disabled={mythosLocked || (restrictedInterest && occupied.has(skill.key))}
+                    value={a.personal[skill.key] ?? 0}
+                    onChange={(e) => updatePoints(skill.key, 'personal', Number(e.target.value))}
+                  />
+                  <strong aria-label={`${skill.label}最终值`}>{total}</strong>
+                </div>
+              );
+            })}
         </div>
         <p className="subtle-note">
           {policy.requireAllPoints

@@ -9,7 +9,24 @@ import {
   Trash2,
 } from 'lucide-react';
 import type { Character, Item, Member, Room, RoomAction } from '../../shared/types';
-import { COC_ATTRIBUTES, COC_SKILLS, DND_ATTRIBUTES, DND_SKILLS } from '../../shared/rules';
+import { COC_ATTRIBUTES, DND_ATTRIBUTES, DND_SKILLS } from '../../shared/catalog';
+import {
+  COC_CAREER_SOURCE_LABELS,
+  COC_SKILL_CATALOG,
+  COC_SKILL_FAMILIES,
+  cocOccupationProfile,
+  cocSkillBase,
+  cocSkillDefinitions,
+  occupationOptions,
+} from '../../shared/coc-career';
+import { COC_DERIVED_FIELDS, cocDerivedValues } from '../../shared/coc-investigator';
+import {
+  COC_ARMOR_CATALOG,
+  COC_WEAPON_CATALOG,
+  cocArmorValues,
+  cocWeaponValues,
+} from '../../shared/coc-equipment';
+import { COC_WEALTH_FIELDS, cocWealthValues } from '../../shared/coc-wealth';
 import {
   CreationPolicySchema,
   cocBudget,
@@ -50,6 +67,12 @@ export function ReviewDesk({
   const [busy, setBusy] = useState(false);
   const players = room.members.filter((m) => m.role === 'player');
   const member = players.find((m) => m.id === selected) ?? players[0];
+  const character = member?.character;
+  const branch = character && cocOccupationProfile(character)?.name;
+  const occupationName =
+    branch && branch !== character?.occupation
+      ? `${character?.occupation} · ${branch}`
+      : character?.occupation;
   const errors = member?.character
     ? validateCreation(member.character, room.creationPolicy)
     : ['尚未提交角色卡'];
@@ -126,7 +149,7 @@ export function ReviewDesk({
                     </span>
                     <h3>{member.character?.name ?? member.name}</h3>
                     <p>
-                      {member.character?.occupation ?? '等待角色卡'} · {reviewLabel(member, room)}
+                      {occupationName ?? '等待角色卡'} · {reviewLabel(member, room)}
                     </p>
                   </div>
                   <FileText size={28} strokeWidth={1} />
@@ -211,6 +234,7 @@ function AuditCard({ card }: { card: Character }) {
   const ac = card.dndEquipment ? effectiveCharacter(card).ac : card.ac;
   const allocation = card.creation?.rule === 'dnd' ? card.creation : null;
   const edition = getDndEdition(card.dndEdition);
+  const skills = card.rule === 'coc' ? cocSkillDefinitions(card) : DND_SKILLS;
   return (
     <div className="audit-card">
       <p>
@@ -259,27 +283,32 @@ function AuditCard({ card }: { card: Character }) {
           ac={ac}
         />
       )}
+      {card.rule === 'coc' && <CocAudit card={card} />}
       <details>
         <summary>技能与分配来源</summary>
         <div className="audit-skills">
-          {(card.rule === 'coc' ? COC_SKILLS : DND_SKILLS).map((s) => (
-            <span key={s.key}>
-              <span>
-                {s.label}
-                {card.creation?.rule === 'coc' && (
-                  <small>
-                    基础 + {card.creation.occupational[s.key] ?? 0} 职业 +{' '}
-                    {card.creation.personal[s.key] ?? 0} 兴趣
-                  </small>
-                )}
+          {skills.map((skill) => {
+            const base = 'base' in skill ? cocSkillBase(card, skill) : 0;
+            const value =
+              card.rule === 'coc'
+                ? (card.skills[skill.key] ?? base)
+                : dndSkillModifier(card, skill.key);
+            return (
+              <span key={skill.key}>
+                <span>
+                  {skill.label}
+                  {'source' in skill && skill.source === 'custom' && ' · 自定义'}
+                  {card.creation?.rule === 'coc' && (
+                    <small>
+                      基础 {base} + 职业 {card.creation.occupational[skill.key] ?? 0}
+                      {' + '}兴趣 {card.creation.personal[skill.key] ?? 0}
+                    </small>
+                  )}
+                </span>
+                <b>{value}</b>
               </span>
-              <b>
-                {card.rule === 'coc'
-                  ? (card.skills[s.key] ?? ('base' in s ? s.base : 0))
-                  : dndSkillModifier(card, s.key)}
-              </b>
-            </span>
-          ))}
+            );
+          })}
         </div>
         {card.creation?.rule === 'dnd' && (
           <p className="subtle-note">
@@ -331,6 +360,249 @@ function AuditCard({ card }: { card: Character }) {
 }
 
 const signed = (value: number) => (value > 0 ? `+${value}` : String(value));
+
+const derivedLabels = {
+  db: '伤害加值 DB',
+  build: '体格',
+  mov: '移动力',
+  maxHp: 'HP 上限',
+  maxMp: 'MP 上限',
+  maxSan: 'SAN 上限',
+};
+const wealthLabels = { cash: '初始现金', assets: '初始资产', spending: '日常消费水平' };
+const armorCoverage = { head: '头部', body: '身体', all: '全身' };
+const weaponOverrideLabels: Record<string, string> = {
+  skill: '技能值',
+  skillKey: '关联技能',
+  range: '射程',
+  usesPerRound: '每轮次数',
+  rapidUsesPerRound: '速射次数',
+  capacity: '装弹量',
+  malfunction: '故障值',
+  damage: '基础伤害',
+  damageBonusMode: '伤害加值方式',
+};
+function CocAudit({ card }: { card: Character }) {
+  const profile = cocOccupationProfile(card);
+  const career = card.cocCareer;
+  const a = card.creation?.rule === 'coc' ? card.creation : undefined;
+  const investigator = card.cocInvestigator;
+  const derived = cocDerivedValues(card, { includeTemporary: false });
+  const age = investigator?.age?.applied;
+  const equipment = investigator?.equipment;
+  const wealth = investigator?.wealth ? cocWealthValues(card, investigator.wealth) : undefined;
+  const session = card.cocSession;
+  const skillNames = new Map(
+    [...COC_SKILL_CATALOG, ...(career?.customSkills ?? [])].map(({ key, label }) => [key, label]),
+  );
+  const skillName = (key: string) => skillNames.get(key) ?? key;
+  return (
+    <details>
+      <summary>调查员资料与制卡依据</summary>
+      <div className="audit-prose">
+        {profile && (
+          <>
+            <b>职业与专长</b>
+            <p>
+              {profile.name} · {COC_CAREER_SOURCE_LABELS[profile.source]} · 信用评级{' '}
+              {card.skills.creditRating ?? 0}（职业范围 {profile.credit[0]}–{profile.credit[1]}）
+              {' · '}
+              {career?.specializationsEnabled ? '技能专长已启用' : '基础技能模式'}
+            </p>
+            {a && (
+              <p>
+                {profile.bonus.length
+                  ? `职业点 EDU × 2 + ${a.occupationAttribute.toUpperCase()} × 2`
+                  : '职业点 EDU × 4'}
+                <br />
+                职业技能 {a.occupationSkills.filter(Boolean).map(skillName).join('、') || '未选择'}
+              </p>
+            )}
+            {profile.source === 'custom' && (
+              <details>
+                <summary>自定义职业范围</summary>
+                <p>
+                  自选位置 {profile.free} 项
+                  {profile.bonus.length > 1 &&
+                    ` · 公式备选 ${profile.bonus.map((key) => key.toUpperCase()).join('、')}`}
+                </p>
+                {occupationOptions(profile, card)
+                  .slice(0, profile.groups.length)
+                  .map((group, i) => (
+                    <p key={i}>
+                      位置 {i + 1} · {group.map(skillName).join('、') || '无可用技能'}
+                    </p>
+                  ))}
+              </details>
+            )}
+          </>
+        )}
+        {!!career?.customSkills.length && (
+          <details>
+            <summary>自定义技能定义</summary>
+            {career.customSkills.map((skill) => (
+              <p key={skill.key}>
+                <b>{skill.label}</b> · 基础 {skill.base}
+                {skill.family && ` · ${COC_SKILL_FAMILIES[skill.family]}`}
+                {skill.family && !career.specializationsEnabled && '（专长关闭）'}
+              </p>
+            ))}
+          </details>
+        )}
+        <b>衍生数值</b>
+        <p>
+          伤害加值 {derived.db} · 体格 {derived.build} · 移动力 {derived.mov}
+        </p>
+        {COC_DERIVED_FIELDS.map((field) => {
+          const control = investigator?.derived?.[field];
+          return (
+            control?.mode === 'manual' &&
+            control.manual !== null && (
+              <p key={field}>
+                {derivedLabels[field]} {control.manual}（手动{control.locked ? '并锁定' : ''}
+                ，自动值 {derived.automatic[field]}）
+              </p>
+            )
+          );
+        })}
+        {age && (
+          <>
+            <b>年龄修正</b>
+            <p>
+              {age.age} 岁 · {age.mode === 'auto' ? '自动规则' : '手动修正'} ·{' '}
+              {COC_ATTRIBUTES.flatMap(({ key, label }) => {
+                const change = age.changes[key as keyof typeof age.changes];
+                return change ? [`${label} ${signed(change)}`] : [];
+              }).join('、') || '属性无变化'}
+            </p>
+            {age.eduChecks.length > 0 && (
+              <p>
+                教育成长检定{' '}
+                {age.eduChecks.map(({ percentile, gain }) => `${percentile} → +${gain}`).join('、')}
+              </p>
+            )}
+            {age.reason && <p>修正原因 {age.reason}</p>}
+          </>
+        )}
+        {equipment && (equipment.weapons.length > 0 || equipment.armor.length > 0) && (
+          <details>
+            <summary>武器与防具</summary>
+            {equipment.weapons.map((weapon) => {
+              const v = cocWeaponValues(card, weapon, { includeTemporary: false });
+              const source =
+                COC_WEAPON_CATALOG.find((entry) => entry.id === weapon.catalogId)?.source ??
+                'custom';
+              const overrides = Object.entries(weapon.overrides ?? {}).flatMap(([key, control]) =>
+                control?.mode === 'manual' && control.manual !== null
+                  ? [
+                      `${weaponOverrideLabels[key]} ${key === 'skillKey' ? skillName(String(control.manual)) : control.manual}`,
+                    ]
+                  : [],
+              );
+              return (
+                <p key={weapon.id}>
+                  <b>{v.name}</b> · {COC_CAREER_SOURCE_LABELS[source]} · {skillName(v.skillKey)}{' '}
+                  {v.skill}%{' · '}伤害 {v.damageExpression}
+                  {v.range > 0 && ` · 射程 ${v.range} 码`}
+                  {' · '}每轮 {v.usesPerRound} 次
+                  {v.rapidUsesPerRound > v.usesPerRound && ` · 速射 ${v.rapidUsesPerRound} 次`}
+                  {v.capacity > 0 &&
+                    ` · 装填 ${v.ammo.loaded}/${v.capacity}，备用 ${v.ammo.reserve}`}
+                  {v.ammo.jammed && ' · 故障'}
+                  {overrides.length > 0 && (
+                    <>
+                      <br />
+                      手动设定 {overrides.join('、')}
+                    </>
+                  )}
+                  {weapon.notes && (
+                    <>
+                      <br />
+                      {weapon.notes}
+                    </>
+                  )}
+                </p>
+              );
+            })}
+            {equipment.armor.map((armor) => {
+              const v = cocArmorValues(armor);
+              const source =
+                COC_ARMOR_CATALOG.find((entry) => entry.id === armor.catalogId)?.source ?? 'custom';
+              const manual = Object.values(armor.overrides ?? {}).some(
+                (control) => control?.mode === 'manual' && control.manual !== null,
+              );
+              return (
+                <p key={armor.id}>
+                  <b>{v.name}</b> · {COC_CAREER_SOURCE_LABELS[source]} · {armorCoverage[v.coverage]}{' '}
+                  · 护甲 {v.rating}
+                  {v.movPenalty > 0 && ` · MOV −${v.movPenalty}`}
+                  {armor.equipped ? ' · 已穿戴' : ' · 未穿戴'}
+                  {manual && ' · 含手动设定'}
+                </p>
+              );
+            })}
+          </details>
+        )}
+        {wealth && (
+          <details>
+            <summary>财产与账目</summary>
+            <p>
+              {wealth.setting.era === 'custom'
+                ? `${wealth.setting.label} · 换算倍率 ${wealth.setting.rate}`
+                : wealth.setting.era === '1920s'
+                  ? '1920 年代'
+                  : '现代'}
+              {' · '}
+              {wealth.tier.label} · {wealth.currency}
+            </p>
+            <p>
+              当前现金 {wealth.current.cash.toLocaleString()} · 当前资产{' '}
+              {wealth.current.assets.toLocaleString()}
+              {' · '}日常消费水平 {wealth.reference.spending.toLocaleString()}
+              {wealth.ledger.length > 0 && ` · ${wealth.ledger.length} 条流水`}
+            </p>
+            {COC_WEALTH_FIELDS.map((field) => {
+              const control = investigator?.wealth?.controls?.[field];
+              const reason = investigator?.wealth?.controlReasons?.[field];
+              return (
+                control?.mode === 'manual' &&
+                control.manual !== null && (
+                  <p key={field}>
+                    {wealthLabels[field]} {control.manual.toLocaleString()}（手动
+                    {reason ? `，${reason}` : ''}）
+                  </p>
+                )
+              );
+            })}
+          </details>
+        )}
+        {session && (session.spells.length > 0 || session.tomes.length > 0) && (
+          <details>
+            <summary>法术与神话书</summary>
+            {session.spells.map(({ id, name, source, cost, learned, casting }) => (
+              <p key={id}>
+                <b>{name}</b> · {source || '自定义法术'} · MP {cost.mp} · HP {cost.hp} · SAN{' '}
+                {cost.san}
+                {' · '}
+                {cost.minutes} 分钟 / {cost.rounds} 轮{' · '}
+                {casting === 'mastered' ? '已掌握' : learned ? '已学习' : '尚未学习'}
+              </p>
+            ))}
+            {session.tomes.map((tome) => (
+              <p key={tome.id}>
+                <b>{tome.name}</b> · 初读 {tome.initialMinutes} 分钟（神话 +{tome.initialMythos}）
+                {' · '}研读 {tome.fullMinutes} 分钟（神话 +{tome.fullMythos}）· SAN {tome.sanLoss}
+                {tome.spellIds.length > 0 &&
+                  ` · 法术 ${tome.spellIds.map((id) => session.spells.find((s) => s.id === id)?.name ?? id).join('、')}`}
+              </p>
+            ))}
+          </details>
+        )}
+      </div>
+    </details>
+  );
+}
+
 const abilityLabel = (key: string) =>
   DND_ATTRIBUTES.find((attribute) => attribute.key === key)?.label ?? key;
 const grantSourceLabel: Record<DndSpellGrant['source'], string> = {
@@ -606,6 +878,21 @@ function PolicyEditor({
   const editable = isHost && room.phase === 'lobby';
   const p = isHost ? policy : room.creationPolicy;
   const fields = policyFields(room.rule);
+  if (room.rule === 'coc') {
+    const seen = new Set(fields.map(({ key }) => key));
+    for (const member of room.members) {
+      for (const skill of member.character?.cocCareer?.customSkills ?? []) {
+        const key = `skills.${skill.key}`;
+        if (seen.has(key)) continue;
+        fields.push({ key, label: `${skill.label}（自定义技能）` });
+        seen.add(key);
+      }
+    }
+    for (const range of p.ranges) {
+      if (!seen.has(range.field))
+        fields.push({ key: range.field, label: `${range.field.slice(7)}（自定义技能）` });
+    }
+  }
   const patch = (values: Partial<CreationPolicy>) => setPolicy((old) => ({ ...old, ...values }));
   const save = async () => {
     const parsed = CreationPolicySchema.safeParse(policy);

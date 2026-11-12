@@ -12,6 +12,10 @@ import type { DndEquipmentState, DndItemDetails } from './dnd-equipment';
 import type { CharacterRuntimeAction } from './character-runtime';
 import type { EncounterPlan, PreparationAction } from './preparation';
 import type { HpConfirmation } from './injury';
+import type { CocCareer } from './coc-career';
+import type { CocInvestigator } from './coc-investigator';
+import type { CocSession, CocRoomRules } from './coc-session';
+import type { CocRuntimeAction, CocCheckRecord, CocDifficulty } from './coc-runtime';
 
 export type { DndEdition } from './dnd-edition';
 export type RuleId = 'dnd' | 'coc';
@@ -35,6 +39,9 @@ export interface Character {
   passivePerceptionEnabled?: boolean;
   dndMagic?: DndMagicState;
   dndEquipment?: DndEquipmentState;
+  cocCareer?: CocCareer;
+  cocInvestigator?: CocInvestigator;
+  cocSession?: CocSession;
   name: string;
   occupation: string;
   ancestry: string;
@@ -73,6 +80,7 @@ export interface DiceResult {
   total: number;
 }
 export interface CheckRequest {
+  cocDifficulty?: CocDifficulty;
   kind: 'ability' | 'skill' | 'save' | 'attack' | 'sanity';
   key: string;
   dc: number;
@@ -127,6 +135,7 @@ export interface RoomEvent {
   secret?: { label: string };
   roll?: DiceResult;
   check?: CheckResult;
+  cocCheck?: CocCheckRecord;
 }
 export interface Room {
   code: string;
@@ -150,6 +159,7 @@ export interface Room {
   creationPolicy: CreationPolicy;
   policyRevision: number;
   configRevision: number;
+  cocRules?: CocRoomRules;
   atlases: Atlas[];
   keeperCards: KeeperCard[];
   dndCards: DndStatBlock[];
@@ -185,6 +195,7 @@ export interface JoinRoomInput {
 export type RoomAction =
   | EncounterAction
   | CharacterRuntimeAction
+  | CocRuntimeAction
   | PreparationAction
   | { type: 'atlas-save'; atlases: Atlas[] }
   | { type: 'atlas-delete'; atlasId: string }

@@ -8,6 +8,9 @@ import { DndStatBlockSchema } from './dnd.ts';
 import { DndEditionSchema, getDndEdition } from './dnd-edition.ts';
 import { EncounterSchema, validateEncounterReferences } from './encounter.ts';
 import { getCharacterErrors } from './rules.ts';
+import { CocRoomRulesSchema } from './coc-session.ts';
+import { CocCheckRecordSchema, validCocCheckHistory } from './coc-runtime.ts';
+import { getCocSessionErrors } from './coc-session-rules.ts';
 import { EncounterPlanLibrarySchema, validateEncounterPlanForRoom } from './preparation.ts';
 import type { Character, Room, RoomEvent } from './types.ts';
 const id = z.string().min(1).max(100);
@@ -32,7 +35,8 @@ const reviewSchema = z
   .strict();
 const characterSchema = z.custom<Character>((value) => {
   try {
-    return getCharacterErrors(value as Character).length === 0;
+    const card = value as Character;
+    return getCharacterErrors(card).length === 0 && getCocSessionErrors(card).length === 0;
   } catch {
     return false;
   }
@@ -110,12 +114,14 @@ export const eventSchema = z
     secretLabel: z.string().max(200).optional(),
     roll: diceSchema.optional(),
     check: checkResultSchema.optional(),
+    cocCheck: CocCheckRecordSchema.optional(),
   })
   .strict()
   .refine(
     (event) =>
       event.combatRequestHash === undefined ||
-      (event.type === 'system' && event.requestId !== undefined),
+      ((event.type === 'system' || event.cocCheck?.kind === 'original') &&
+        event.requestId !== undefined),
   );
 export const roomSchema = z
   .object({
@@ -137,6 +143,7 @@ export const roomSchema = z
     creationPolicy: CreationPolicySchema,
     policyRevision: revision,
     configRevision: revision,
+    cocRules: CocRoomRulesSchema.optional(),
     atlases: AtlasLibrarySchema,
     keeperCards: z.array(KeeperCardSchema).max(200),
     dndCards: z.array(DndStatBlockSchema).max(200),
@@ -145,7 +152,8 @@ export const roomSchema = z
     encounterPlanRevision: revision.optional(),
   })
   .strict()
-  .refine((room) => room.rule === 'dnd' || room.dndEdition === undefined);
+  .refine((room) => room.rule === 'dnd' || room.dndEdition === undefined)
+  .refine((room) => room.rule === 'coc' || room.cocRules === undefined);
 
 export function validRoomReferences(room: Room): boolean {
   const ids = new Set(room.members.map((m) => m.id));
@@ -162,6 +170,9 @@ export function validRoomReferences(room: Room): boolean {
           getDndEdition(character.dndEdition) !== getDndEdition(room.dndEdition)),
     ) ||
     room.creationPolicy.rule !== room.rule ||
+    (room.rule === 'coc'
+      ? !validCocCheckHistory(room.log)
+      : room.log.some((event) => !!event.cocCheck)) ||
     room.atlases.some((a) => a.rule !== 'any' && a.rule !== room.rule) ||
     (room.rule !== 'coc' && room.keeperCards.length > 0) ||
     (room.rule !== 'dnd' && room.dndCards.length > 0) ||

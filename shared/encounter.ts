@@ -328,6 +328,27 @@ export const EncounterActionSchemas = [
     ),
   z
     .object({
+      type: z.literal('encounter-coc-weapon'),
+      attackerId: id,
+      targetId: id.optional(),
+      weaponId: id,
+      expectedCharacterRevision: z
+        .number()
+        .int()
+        .min(0)
+        .max(Number.MAX_SAFE_INTEGER - 1),
+      edge,
+      difficulty: z.enum(['regular', 'hard', 'extreme']).optional(),
+      distanceYards: z.number().finite().min(0).max(100000).optional(),
+      armorOverride: armor.optional(),
+      confirmedDamage: z.literal(true).optional(),
+      visibility,
+      ...command,
+    })
+    .strict()
+    .refine((attack) => !attack.confirmedDamage || !!attack.targetId, '确认伤害时须选择目标'),
+  z
+    .object({
       type: z.literal('coc-melee'),
       attacker: z.string().trim().min(1).max(60),
       defender: z.string().trim().min(1).max(60),
@@ -341,14 +362,33 @@ export const EncounterActionSchemas = [
         .object({
           attackerId: id,
           defenderId: id,
-          attackExpression: expression,
+          attackExpression: expression.optional(),
           attackExtremeExpression: expression.optional(),
           fightBackExpression: expression.optional(),
+          attackWeaponId: id.optional(),
+          fightBackWeaponId: id.optional(),
+          expectedAttackerCharacterRevision: z
+            .number()
+            .int()
+            .min(0)
+            .max(Number.MAX_SAFE_INTEGER - 1)
+            .optional(),
+          expectedDefenderCharacterRevision: z
+            .number()
+            .int()
+            .min(0)
+            .max(Number.MAX_SAFE_INTEGER - 1)
+            .optional(),
+          confirmedDamage: z.literal(true).optional(),
           attackArmorOverride: armor.optional(),
           fightBackArmorOverride: armor.optional(),
           ...command,
         })
         .strict()
+        .refine(
+          (damage) => !!damage.attackExpression || !!damage.attackWeaponId,
+          '请填写进攻伤害式或选择武器',
+        )
         .optional(),
     })
     .strict(),
