@@ -9,6 +9,9 @@ import {
   chooseCocOccupationSkills,
   cocCareerErrors,
   cocOccupationBranches,
+  cocOccupationSkillPool,
+  cocOptionalOccupationSlots,
+  DEFAULT_COC_CAREER,
   cocOccupationProfile,
   cocSkillBase,
   cocSkillDefinitions,
@@ -152,7 +155,7 @@ export const CreationAllocationSchema = z.discriminatedUnion('rule', [
   z
     .object({
       rule: z.literal('coc'),
-      occupationSkills: z.array(z.union([keySchema, z.literal('')])).max(8),
+      occupationSkills: z.array(z.union([keySchema, z.literal('')])).max(32),
       occupationAttribute: z.string().max(10),
       occupational: points,
       personal: points,
@@ -353,8 +356,15 @@ export function updateCocCareer(
     occupation,
     ...(parsed?.data ? { cocCareer: parsed.data } : {}),
   };
+  if (next.cocCareer?.occupationId && !cocOccupationProfile(next))
+    throw new Error('职业目录编号与职业名称不匹配，请重新选择职业');
   const branchId = next.cocCareer?.branchId;
-  if (branchId && !cocOccupationBranches(occupation).some((branch) => branch.id === branchId))
+  if (
+    branchId &&
+    !cocOccupationBranches(occupation, next.cocCareer?.occupationId).some(
+      (branch) => branch.id === branchId,
+    )
+  )
     throw new Error('职业分支与当前职业不匹配');
 
   const active = new Set(cocSkillDefinitions(next).map((skill) => skill.key));
@@ -392,11 +402,11 @@ export function updateCocCareer(
   const occupationSkills = chooseCocOccupationSkills(
     occupationOptions(profile, next),
     a.occupationSkills,
+    profile ? cocOptionalOccupationSlots(profile, next) : undefined,
   );
+  const occupationPool = new Set(cocOccupationSkillPool(next, occupationSkills));
   const occupational = Object.fromEntries(
-    Object.entries(a.occupational).filter(
-      ([key]) => active.has(key) && (key === 'creditRating' || occupationSkills.includes(key)),
-    ),
+    Object.entries(a.occupational).filter(([key]) => active.has(key) && occupationPool.has(key)),
   );
   const personal = Object.fromEntries(
     Object.entries(a.personal).filter(([key]) => active.has(key)),
@@ -424,10 +434,15 @@ export function updateCocCareer(
   return result;
 }
 
-export function updateCocOccupation(card: Character, occupation: string): CocCareerChange {
-  const career =
-    card.cocCareer && occupation !== card.occupation
-      ? { ...card.cocCareer, branchId: undefined }
+export function updateCocOccupation(
+  card: Character,
+  occupation: string,
+  occupationId?: string,
+): CocCareerChange {
+  const career = occupationId
+    ? { ...(card.cocCareer ?? DEFAULT_COC_CAREER), occupationId, branchId: undefined }
+    : card.cocCareer && (occupation !== card.occupation || card.cocCareer.occupationId)
+      ? { ...card.cocCareer, occupationId: undefined, branchId: undefined }
       : card.cocCareer;
   return updateCocCareer(card, career, occupation);
 }
@@ -568,13 +583,34 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
     if (!p) errors.push('请选择已支持的职业方案，以便计算职业点与信用范围');
     else {
       const options = occupationOptions(p, card);
-      if (chooseCocOccupationSkills(options).includes(''))
-        errors.push('当前职业技能范围不能选满八项不同技能，请启用专长或调整技能范围');
+      const optional = cocOptionalOccupationSlots(p, card);
+      if (chooseCocOccupationSkills(options).some((skill, i) => !skill && !optional.has(i)))
+        errors.push(
+          p.reference
+            ? '当前职业技能范围无法选满，请启用技能专长或调整技能范围'
+            : '当前职业技能范围不能选满八项不同技能，请启用专长或调整技能范围',
+        );
       else if (
-        a.occupationSkills.length !== 8 ||
-        a.occupationSkills.some((s, i) => !options[i]?.includes(s))
+        a.occupationSkills.length !== options.length ||
+        a.occupationSkills.some(
+          (s, i) => !(s === '' && optional.has(i)) && !options[i]?.includes(s),
+        )
       )
-        errors.push('职业技能的八个位置须符合当前职业的选择范围');
+        errors.push(
+          p.reference
+            ? `职业技能的 ${options.length} 个位置须符合当前职业的选择范围`
+            : '职业技能的八个位置须符合当前职业的选择范围',
+        );
+      for (const requirement of p.requirements ?? []) {
+        const value = card.attributes[requirement.attribute];
+        const label =
+          COC_ATTRIBUTES.find((a) => a.key === requirement.attribute)?.label ??
+          requirement.attribute;
+        if (requirement.min !== undefined && value < requirement.min)
+          errors.push(`${p.name}要求${label}至少 ${requirement.min}`);
+        if (requirement.max !== undefined && value > requirement.max)
+          errors.push(`${p.name}要求${label}不高于 ${requirement.max}`);
+      }
       if (
         p.bonus.length
           ? !p.bonus.some((key) => key === a.occupationAttribute)
@@ -586,9 +622,15 @@ export function validateCreation(card: Character, policy: CreationPolicy): strin
         errors.push(`信用评级须在职业范围 ${p.credit[0]}–${p.credit[1]} 内`);
     }
     duplicate(a.occupationSkills.filter(Boolean), '职业技能');
-    const allowed = new Set([...a.occupationSkills, 'creditRating']);
+    const allowed = new Set(cocOccupationSkillPool(card));
     const definitions = cocSkillDefinitions(card);
     const known = new Map(definitions.map((skill) => [skill.key, skill]));
+    for (const skill of definitions) {
+      if (!skill.unlistedBase || !(a.occupational[skill.key] || a.personal[skill.key])) continue;
+      const control = card.cocCareer?.skillBases?.[skill.key];
+      if (control?.mode !== 'manual' || control.manual === null)
+        errors.push(`请在角色资料中确认${skill.label}的基础值`);
+    }
     for (const [key, value] of Object.entries(a.occupational)) {
       if (!known.has(key) || (value > 0 && !allowed.has(key)))
         errors.push(`职业点不能用于 ${known.get(key)?.label ?? key}`);
@@ -777,6 +819,7 @@ export function suggestAllocation(card: Character, policy: CreationPolicy): Char
     a.occupationSkills = chooseCocOccupationSkills(
       occupationOptions(profile, card),
       card.creation?.rule === 'coc' ? card.creation.occupationSkills : [],
+      cocOptionalOccupationSlots(profile, card),
     );
     a.occupationAttribute = profile.bonus.reduce(
       (best, key) => (card.attributes[key] > card.attributes[best] ? key : best),
@@ -801,14 +844,24 @@ export function suggestAllocation(card: Character, policy: CreationPolicy): Char
         }
     };
     // A tight room cap can intentionally leave points unspent; validation explains it.
-    distribute(a.occupational, a.occupationSkills, budget.occupational - profile.credit[0]);
+    const confirmed = (key: string) =>
+      !definitions.get(key)?.unlistedBase ||
+      (card.cocCareer?.skillBases?.[key]?.mode === 'manual' &&
+        card.cocCareer.skillBases[key].manual !== null);
+    distribute(
+      a.occupational,
+      a.occupationSkills.filter(confirmed),
+      budget.occupational - profile.credit[0],
+    );
     distribute(
       a.personal,
       [...definitions.keys()].filter(
         (key) =>
           key !== 'creditRating' &&
           key !== 'cthulhuMythos' &&
-          (policy.allowInterestOnOccupation !== false || !a.occupationSkills.includes(key)),
+          confirmed(key) &&
+          (policy.allowInterestOnOccupation !== false ||
+            !cocOccupationSkillPool(result).includes(key)),
       ),
       budget.personal,
     );

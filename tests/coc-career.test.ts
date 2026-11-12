@@ -153,8 +153,11 @@ describe('CoC 职业和专长目录', () => {
       skills: Object.fromEntries(COC_SKILLS.map(({ key }) => [key, card.skills[key]])),
     };
     const allocation = old.creation as CocAllocation;
-    // Older software had no optional modern or heavy-machinery skills.
-    const { computerUse, electronics, operateHeavyMachinery, ...personal } = allocation.personal;
+    // Reconstruct the original 51-skill card, before optional skills existed.
+    const originalKeys = new Set(COC_SKILLS.map((skill) => skill.key));
+    const personal = Object.fromEntries(
+      Object.entries(allocation.personal).filter(([key]) => originalKeys.has(key)),
+    );
     old.creation = { ...allocation, personal };
     expect(old.cocCareer).toBeUndefined();
     expect(allocation.occupationSkills).toContain('otherLanguage');

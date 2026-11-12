@@ -1,4 +1,5 @@
 """Personal keeper library, source imports, layout and floating budget acceptance."""
+from coc_browser_helpers import choose_occupation
 import argparse
 import json
 import re
@@ -157,7 +158,7 @@ with sync_playwright() as p:
         expect(player.locator('.room-title h1')).to_have_text('灯塔的备团夜')
         player.get_by_role('button',name='创建角色',exact=True).click()
         player.get_by_label('角色姓名').fill('洛温')
-        player.get_by_role('dialog').locator('select').first.select_option('记者')
+        choose_occupation(player, '记者')
         player.get_by_role('button',name='属性与状态',exact=True).click()
         player.get_by_label('智力属性',exact=True).fill('60')
         player.get_by_role('button',name='技能与熟练',exact=True).click()

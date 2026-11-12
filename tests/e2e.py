@@ -4,6 +4,7 @@ Run: python tests/e2e.py --url http://127.0.0.1:5173
 Requires Python Playwright and Chrome (or Playwright Chromium).
 """
 import argparse
+from coc_browser_helpers import choose_occupation
 import json
 import re
 from pathlib import Path
@@ -29,7 +30,10 @@ def prepare_card(page, rule, character_name):
     page.get_by_role('button', name='创建角色', exact=True).click()
     dialog = page.get_by_role('dialog')
     dialog.get_by_label('角色姓名').fill(character_name)
-    dialog.locator('select').first.select_option('游侠' if rule == 'dnd' else '记者')
+    if rule == 'dnd':
+        dialog.locator('select').first.select_option('游侠')
+    else:
+        choose_occupation(page, '记者')
     if rule == 'dnd':
         dialog.get_by_label('职业等级').fill('')
         expect(dialog.get_by_label('职业等级')).to_have_value('1')

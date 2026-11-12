@@ -1,4 +1,5 @@
 """Exercise CoC branch selection, custom skills, and occupation template reuse."""
+from coc_browser_helpers import choose_occupation
 import argparse
 import json
 import re
@@ -30,8 +31,8 @@ with sync_playwright() as play, TemporaryDirectory() as directory:
         page.goto(url, wait_until='domcontentloaded')
         page.locator('.sidebar').get_by_role('button', name='角色档案', exact=True).click()
         dialog, career = new_card(page)
-        occupation = dialog.get_by_role('combobox', name=re.compile('调查员职业'))
-        occupation.select_option('医生')
+        occupation = dialog.get_by_role('button', name='选择调查员职业', exact=True)
+        choose_occupation(page, '医生')
         career.get_by_label('启用职业分支', exact=True).check()
         expect(career.get_by_label('启用技能专长', exact=True)).not_to_be_checked()
         branch = career.get_by_role('combobox', name=re.compile('职业分支'))
@@ -65,7 +66,7 @@ with sync_playwright() as play, TemporaryDirectory() as directory:
         career.get_by_role('combobox', name='自选技能位置数', exact=True).select_option('7')
         career.get_by_role('combobox', name='职业技能位置 1', exact=True).select_option(label='无线电通联')
         career.get_by_role('button', name='保存并应用职业', exact=True).click()
-        expect(occupation).to_have_value('电台技师')
+        expect(occupation).to_have_text('电台技师')
         with page.expect_download() as result:
             career.get_by_role('button', name='导出模板', exact=True).click()
         template_file = Path(directory, 'career.json')
@@ -80,13 +81,13 @@ with sync_playwright() as play, TemporaryDirectory() as directory:
 
         dialog.get_by_role('button', name='关闭窗口', exact=True).click()
         dialog, career = new_card(page)
-        occupation = dialog.get_by_role('combobox', name=re.compile('调查员职业'))
+        occupation = dialog.get_by_role('button', name='选择调查员职业', exact=True)
         career.get_by_text('自定义职业', exact=True).click()
         career.get_by_label('导入自定义职业模板', exact=True).set_input_files(template_file)
         expect(career.get_by_role('status')).to_contain_text('已读取职业模板')
-        expect(occupation).not_to_have_value('电台技师')
+        expect(occupation).not_to_have_text('电台技师')
         career.get_by_role('button', name='保存并应用职业', exact=True).click()
-        expect(occupation).to_have_value('电台技师')
+        expect(occupation).to_have_text('电台技师')
         dialog.get_by_label(re.compile('角色姓名')).fill('陈默')
         dialog.get_by_role('button', name='技能与熟练', exact=True).click()
         dialog.get_by_placeholder('搜索技能名称…').fill('无线电通联')

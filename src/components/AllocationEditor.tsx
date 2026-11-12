@@ -1,4 +1,9 @@
-import { cocOccupationProfile, cocSkillDefinitions } from '../../shared/coc-career';
+import {
+  cocOccupationProfile,
+  cocSkillDefinitions,
+  cocOccupationSkillPool,
+  cocOptionalOccupationSlots,
+} from '../../shared/coc-career';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, Check, CircleAlert, RefreshCw, ShieldCheck } from 'lucide-react';
 import type { Character } from '../../shared/types';
@@ -153,7 +158,9 @@ export function AllocationEditor({
   if (a.rule === 'coc') {
     const profile = cocOccupationProfile(card);
     const budget = cocBudget(card);
-    const occupied = new Set([...a.occupationSkills, 'creditRating']);
+    const occupied = new Set(cocOccupationSkillPool(card));
+    const options = occupationOptions(profile, card);
+    const optional = profile ? cocOptionalOccupationSlots(profile, card) : new Set<number>();
     const restrictedInterest = policy.allowInterestOnOccupation === false;
     const invalidInterest =
       restrictedInterest && [...occupied].some((key) => (a.personal[key] ?? 0) > 0);
@@ -229,7 +236,11 @@ export function AllocationEditor({
         </div>
         <details className="allocation-options" open={!profile}>
           <summary>
-            职业技能范围 <span>{profile?.name ?? '请先在角色资料中选择职业'} · 八项技能</span>
+            职业技能范围{' '}
+            <span>
+              {profile?.name ?? '请先在角色资料中选择职业'}
+              {profile && ` · ${options.length} 个位置`}
+            </span>
           </summary>
           {profile && (
             <>
@@ -249,7 +260,7 @@ export function AllocationEditor({
                 </label>
               )}
               <div className="occupation-slots">
-                {occupationOptions(profile, card).map((options, i) => (
+                {options.map((options, i) => (
                   <label className="field" key={i}>
                     职业技能 {i + 1}
                     <select
@@ -261,7 +272,7 @@ export function AllocationEditor({
                         set({ ...a, occupationSkills: selections });
                       }}
                     >
-                      <option value="">请选择</option>
+                      <option value="">{optional.has(i) ? '不选择（可选）' : '请选择'}</option>
                       {options.map((key) => (
                         <option key={key} value={key}>
                           {cocSkillDefinitions(card).find((s) => s.key === key)?.label}
@@ -272,7 +283,13 @@ export function AllocationEditor({
                 ))}
               </div>
               <p className="subtle-note">
-                自选位置不能重复；更换技能后，原技能的职业投入需移回允许范围。记者按调查记者、军人按士兵／陆战队员处理。
+                技能不能重复；更换技能后，原技能的职业投入需移回允许范围。
+                {profile.reference &&
+                  !card.cocCareer?.specializationsEnabled &&
+                  '未启用专长时，同类技能的重复位置合并；启用后可分别分配。'}
+                {profile.additionalSkills?.length
+                  ? '此职业允许向多个艺术／手艺专长投入职业点。'
+                  : ''}
               </p>
             </>
           )}

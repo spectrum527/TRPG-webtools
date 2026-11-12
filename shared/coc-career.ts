@@ -1,5 +1,11 @@
 import { z } from 'zod';
 import type { Character } from './types';
+import {
+  COC_WORKBOOK_OCCUPATION_BY_ID,
+  COC_WORKBOOK_OCCUPATION_FAMILIES,
+  type CocOccupationBook,
+} from './coc-occupations';
+import { NumberControlSchema, controlledValue } from './value-control';
 
 export const COC_CAREER_SOURCE_LABELS = {
   legacy: '原有模板',
@@ -17,6 +23,7 @@ export const COC_SKILL_FAMILIES = {
   firearms: '射击',
   pilot: '驾驶',
   survival: '生存',
+  lore: '学问',
 };
 export type CocSkillFamily = keyof typeof COC_SKILL_FAMILIES;
 export const COC_OCCUPATION_ATTRIBUTES = [
@@ -94,6 +101,15 @@ export const CocCareerSchema = z
   .object({
     branchesEnabled: z.boolean(),
     specializationsEnabled: z.boolean(),
+    occupationId: z.string().max(40).optional(),
+    skillBases: z
+      .record(
+        CocSkillKeySchema,
+        NumberControlSchema.extend({
+          manual: z.number().int().min(0).max(99).nullable(),
+        }),
+      )
+      .optional(),
     branchId: z
       .string()
       .regex(/^[a-z][a-zA-Z0-9]{0,39}$/, '职业分支编号格式无效')
@@ -219,6 +235,25 @@ const additionalSkills = [
   { key: 'computerUse', label: '计算机使用', base: 5, era: 'modern' },
   { key: 'electronics', label: '电子学', base: 1, era: 'modern' },
 ] as const;
+// Numeric bases read from the workbook's 人物卡 sheet.
+const workbookSkills = [
+  { key: 'animalHandling', label: '驯兽', base: 5 },
+  { key: 'diving', label: '潜水', base: 1 },
+  { key: 'demolitions', label: '爆破', base: 1 },
+  { key: 'lipReading', label: '读唇', base: 1 },
+  { key: 'hypnosis', label: '催眠', base: 1 },
+  { key: 'artillery', label: '炮术', base: 1 },
+  { key: 'lore', label: '学问', base: 0 },
+] as const;
+
+// The workbook names these skills but does not supply a numeric base.
+// Zero is a visible placeholder, not an inferred rule; invested skills require
+// a confirmed manual base and remain subject to the keeper's card review.
+const unlistedBaseSkills: CocSkillDefinition[] = [
+  { key: 'driveCarriage', label: '马车驾驶', base: 0, source: 'workbook', unlistedBase: true },
+  { key: 'driveCycle', label: '自行车驾驶', base: 0, source: 'workbook', unlistedBase: true },
+  { key: 'etiquette', label: '礼仪', base: 0, source: 'workbook', unlistedBase: true },
+];
 
 export interface CocSkillDefinition {
   key: string;
@@ -227,6 +262,7 @@ export interface CocSkillDefinition {
   family?: CocSkillFamily;
   source: CocCareerSource;
   era?: 'modern';
+  unlistedBase?: boolean;
 }
 
 const legacyFamilies: Partial<Record<string, CocSkillFamily>> = {
@@ -248,6 +284,8 @@ const baseDefinitions: CocSkillDefinition[] = [
     source: 'legacy' as const,
   })),
   ...additionalSkills.map((skill) => ({ ...skill, source: 'coc7' as const })),
+  ...workbookSkills.map((skill) => ({ ...skill, source: 'workbook' as const })),
+  ...unlistedBaseSkills,
 ];
 
 function specialties(
@@ -280,6 +318,11 @@ const newSpecializations: CocSkillDefinition[] = [
     artFarming: '耕作',
     artCooking: '厨艺',
     artShorthand: '速记',
+    artCalligraphy: '书法',
+    artTyping: '打字',
+    artAcrobatics: '杂技',
+    artTailoring: '裁缝',
+    artBarber: '理发',
   }),
   ...specialties('science', 1, {
     scienceChemistry: '化学',
@@ -308,6 +351,8 @@ const newSpecializations: CocSkillDefinition[] = [
       languageRussian: '俄语',
       languageArabic: '阿拉伯语',
       languageGreek: '希腊语',
+      languageHebrew: '希伯来语',
+      languageSanskrit: '梵语',
     },
     'interlude',
   ),
@@ -323,6 +368,19 @@ const newSpecializations: CocSkillDefinition[] = [
   }),
   ...specialties('pilot', 1, { pilotBoat: '船只' }),
   ...specialties('pilot', 1, { pilotDirigible: '飞艇' }, 'coc7'),
+  ...specialties('pilot', 1, { pilotBalloon: '热气球' }),
+  ...specialties('lore', 0, {
+    loreBuddhism: '佛教',
+    loreShinto: '神道教',
+    loreTaoism: '道教',
+    loreOnmyodo: '阴阳道',
+  }),
+  ...specialties('artCraft', 5, {
+    artWelding: '焊接',
+    artPlumbing: '管道工',
+    artComedy: '喜剧',
+    artGaming: '游戏',
+  }),
   ...specialties(
     'survival',
     10,
@@ -355,6 +413,7 @@ export function cocSkillDefinitions(card?: CocCareerCard): CocSkillDefinition[] 
 const keys = (value: string) => value.split(' ');
 const social = keys('charm fastTalk intimidate persuade');
 export interface OccupationProfile {
+  id?: string;
   name: string;
   credit: [number, number];
   bonus: CocOccupationAttribute[];
@@ -363,6 +422,12 @@ export interface OccupationProfile {
   free: number;
   basicGroups?: string[][];
   era?: 'classic' | 'modern';
+  reference?: { number: number; row: number; book: CocOccupationBook };
+  skillsText?: string;
+  notes?: string;
+  additionalSkills?: string[];
+  optionalSlots?: number[];
+  requirements?: { attribute: CocOccupationAttribute; min?: number; max?: number }[];
 }
 const legacyOccupations: Array<Omit<OccupationProfile, 'source'>> = [
   {
@@ -1025,13 +1090,41 @@ export const COC_OCCUPATION_BRANCHES: CocOccupationBranch[] = [
   ),
 ];
 
-export function cocOccupationBranches(occupation: string): CocOccupationBranch[] {
+export function cocOccupationBranches(
+  occupation: string,
+  occupationId?: string,
+): CocOccupationBranch[] {
+  if (occupationId) {
+    const profile = COC_WORKBOOK_OCCUPATION_BY_ID.get(occupationId);
+    if (!profile || profile.name !== occupation) return [];
+    const family = COC_WORKBOOK_OCCUPATION_FAMILIES.find((numbers) =>
+      numbers.some((number) => number === profile.reference?.number),
+    );
+    return (family ?? [])
+      .filter((number) => number !== profile.reference?.number)
+      .map((number) => ({
+        ...COC_WORKBOOK_OCCUPATION_BY_ID.get(`workbook${number}`)!,
+        id: `workbook${number}`,
+        occupation,
+      }));
+  }
   return COC_OCCUPATION_BRANCHES.filter((branch) => branch.occupation === occupation);
 }
 
 export function cocOccupationProfile(card: CocCareerCard): OccupationProfile | undefined {
   if (card.rule !== 'coc') return undefined;
   const career = card.cocCareer;
+  if (career?.occupationId) {
+    const profile = COC_WORKBOOK_OCCUPATION_BY_ID.get(career.occupationId);
+    if (profile?.name !== card.occupation) return undefined;
+    return (
+      (career.branchesEnabled
+        ? cocOccupationBranches(card.occupation, career.occupationId).find(
+            (branch) => branch.id === career.branchId,
+          )
+        : undefined) ?? profile
+    );
+  }
   if (career?.customOccupation?.name === card.occupation)
     return { ...career.customOccupation, source: 'custom' };
   const branch = career?.branchesEnabled
@@ -1047,6 +1140,8 @@ const familyChoices: Partial<Record<string, CocSkillFamily>> = {
   survival: 'survival',
   anyFirearms: 'firearms',
   anyFighting: 'fighting',
+  anyPilot: 'pilot',
+  lore: 'lore',
 };
 const familyFallback: Record<CocSkillFamily, string[]> = {
   artCraft: ['artCraft'],
@@ -1056,6 +1151,7 @@ const familyFallback: Record<CocSkillFamily, string[]> = {
   firearms: ['firearmsHandgun', 'firearmsRifle'],
   pilot: ['pilot'],
   survival: ['survival'],
+  lore: ['lore'],
 };
 const skillsWithFixedSlots = new Set(['creditRating', 'cthulhuMythos']);
 
@@ -1070,6 +1166,40 @@ export function occupationOptions(profile?: OccupationProfile, card?: CocCareerC
     COC_SKILL_CATALOG.find((skill) => skill.key === key) ??
     card?.cocCareer?.customSkills.find((skill) => skill.key === key);
   const alternatives = (key: string): string[] => {
+    if (key === 'academic')
+      return skills
+        .filter(
+          (skill) =>
+            ['science', 'lore', 'language'].includes(skill.family ?? '') ||
+            [
+              'anthropology',
+              'archaeology',
+              'history',
+              'law',
+              'libraryUse',
+              'medicine',
+              'naturalWorld',
+              'occult',
+              'psychology',
+              'psychoanalysis',
+              'science',
+              'lore',
+              'otherLanguage',
+            ].includes(skill.key),
+        )
+        .map((skill) => skill.key);
+    if (key === 'europeanLanguage')
+      return specializationsEnabled
+        ? [
+            'languageEnglish',
+            'languageFrench',
+            'languageGerman',
+            'languageItalian',
+            'languageSpanish',
+            'languageRussian',
+            'languageGreek',
+          ]
+        : ['otherLanguage'];
     const family = Object.hasOwn(familyChoices, key) ? familyChoices[key] : undefined;
     if (family)
       return [
@@ -1091,26 +1221,68 @@ export function occupationOptions(profile?: OccupationProfile, card?: CocCareerC
     group.includes('firearmsRifle')
       ? alternatives('anyFirearms')
       : group.flatMap(alternatives);
+  const expanded = groups.map((group) =>
+    [...new Set(expand(group))].filter((key) => active.has(key)),
+  );
+  // When specializations are hidden, several source slots may collapse to the
+  // same single base skill. Merge only those slots; never add unrelated skills.
+  const seen = new Set<string>();
+  const collapsed =
+    profile.reference && !specializationsEnabled
+      ? expanded.filter((group) => {
+          if (group.length !== 1) return true;
+          if (seen.has(group[0])) return false;
+          seen.add(group[0]);
+          return true;
+        })
+      : expanded;
   return [
-    ...groups.map((group) => [...new Set(expand(group))].filter((key) => active.has(key))),
+    ...collapsed,
     ...Array.from({ length: profile.free }, () => skills.map((skill) => skill.key)),
   ];
 }
 
+/** Optional positions are remapped after base-mode duplicate slots collapse. */
+export function cocOptionalOccupationSlots(
+  profile: OccupationProfile,
+  card?: CocCareerCard,
+): Set<number> {
+  const original = profile.optionalSlots ?? [];
+  if (!profile.reference || card?.cocCareer?.specializationsEnabled) return new Set(original);
+  const shift = profile.groups.length + profile.free - occupationOptions(profile, card).length;
+  return new Set(original.map((slot) => slot - shift));
+}
+
+export function cocOccupationSkillPool(card: Character, selections?: string[]): string[] {
+  const profile = cocOccupationProfile(card);
+  const picked =
+    selections ?? (card.creation?.rule === 'coc' ? card.creation.occupationSkills : []);
+  const additional = profile?.additionalSkills?.length
+    ? occupationOptions({ ...profile, groups: [profile.additionalSkills], free: 0 }, card).flat()
+    : [];
+  return [...new Set([...picked.filter(Boolean), ...additional, 'creditRating'])];
+}
+
 /** Keep usable prior choices, then find distinct skills even when slots overlap. */
-export function chooseCocOccupationSkills(options: string[][], previous: string[] = []): string[] {
+export function chooseCocOccupationSkills(
+  options: string[][],
+  previous: string[] = [],
+  optional: Set<number> = new Set(),
+): string[] {
   if (
     previous.length === options.length &&
-    new Set(previous).size === previous.length &&
-    previous.every((key, i) => options[i].includes(key))
+    new Set(previous.filter(Boolean)).size === previous.filter(Boolean).length &&
+    previous.every((key, i) => options[i].includes(key) || (!key && optional.has(i)))
   )
     return [...previous];
 
   const choices = Array<string>(options.length).fill('');
   const taken = new Map<string, number>();
-  const candidates = options.map((group, i) => [
-    ...new Set([previous[i], ...previous, ...group].filter((key) => group.includes(key))),
-  ]);
+  const candidates = options.map((group, i) =>
+    previous[i] === '' && optional.has(i)
+      ? []
+      : [...new Set([previous[i], ...previous, ...group].filter((key) => group.includes(key)))],
+  );
   function place(slot: number, visited: Set<string>): boolean {
     const available = candidates[slot].find((key) => !taken.has(key) && !visited.has(key));
     if (available) {
@@ -1144,7 +1316,33 @@ const presetOccupationLabels = new Set(
 );
 
 function validateCareerDefinition(career: CocCareer, ctx: z.RefinementCtx): void {
-  if (career.branchId && !COC_OCCUPATION_BRANCHES.some((branch) => branch.id === career.branchId))
+  if (career.occupationId && !COC_WORKBOOK_OCCUPATION_BY_ID.has(career.occupationId))
+    ctx.addIssue({ code: 'custom', path: ['occupationId'], message: '未知的职业目录编号' });
+  if (
+    career.occupationId &&
+    career.branchId &&
+    !cocOccupationBranches(
+      COC_WORKBOOK_OCCUPATION_BY_ID.get(career.occupationId)?.name ?? '',
+      career.occupationId,
+    ).some((branch) => branch.id === career.branchId)
+  )
+    ctx.addIssue({
+      code: 'custom',
+      path: ['branchId'],
+      message: '职业分支与当前目录职业不匹配',
+    });
+  for (const key of Object.keys(career.skillBases ?? {}))
+    if (!COC_SKILL_CATALOG.some((skill) => skill.key === key && skill.unlistedBase))
+      ctx.addIssue({
+        code: 'custom',
+        path: ['skillBases', key],
+        message: '仅可填写来源未列出基础值的扩展技能',
+      });
+  if (
+    career.branchId &&
+    !career.occupationId &&
+    !COC_OCCUPATION_BRANCHES.some((branch) => branch.id === career.branchId)
+  )
     ctx.addIssue({ code: 'custom', path: ['branchId'], message: '未知的职业分支' });
   const keys = new Set(COC_SKILL_CATALOG.map((skill) => skill.key));
   const labels = new Set(presetSkillLabels);
@@ -1199,9 +1397,13 @@ export function cocCareerErrors(card: CocCareerCard): string[] {
   if (card.rule !== 'coc') return ['职业分支和技能专长仅适用于 CoC'];
   const parsed = CocCareerSchema.safeParse(card.cocCareer);
   if (!parsed.success) return parsed.error.issues.map((issue) => issue.message);
+  if (parsed.data.occupationId && !cocOccupationProfile(card))
+    return ['职业目录编号与职业名称不匹配，请重新选择职业'];
   if (
     parsed.data.branchId &&
-    !cocOccupationBranches(card.occupation).some((branch) => branch.id === parsed.data.branchId)
+    !cocOccupationBranches(card.occupation, card.cocCareer.occupationId).some(
+      (branch) => branch.id === parsed.data.branchId,
+    )
   )
     return ['职业分支与当前职业不匹配'];
   return [];
@@ -1214,6 +1416,14 @@ export function cocSkillBase(
   const key = typeof skill === 'string' ? skill : skill.key;
   if (key === 'dodge') return Math.floor(card.attributes.dex / 2);
   if (key === 'ownLanguage') return card.attributes.edu;
+  const override = card.cocCareer?.skillBases?.[key];
+  if (override)
+    return controlledValue(
+      override,
+      typeof skill === 'string'
+        ? (cocSkillDefinitions(card).find((entry) => entry.key === key)?.base ?? 0)
+        : skill.base,
+    );
   return typeof skill === 'string'
     ? (cocSkillDefinitions(card).find((entry) => entry.key === key)?.base ?? 0)
     : skill.base;

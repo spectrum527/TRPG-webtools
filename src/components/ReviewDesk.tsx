@@ -1,3 +1,4 @@
+import { cocOccupationSource } from '../../shared/coc-occupations';
 import { useState } from 'react';
 import {
   Check,
@@ -404,9 +405,12 @@ function CocAudit({ card }: { card: Character }) {
           <>
             <b>职业与专长</b>
             <p>
-              {profile.name} · {COC_CAREER_SOURCE_LABELS[profile.source]} · 信用评级{' '}
-              {card.skills.creditRating ?? 0}（职业范围 {profile.credit[0]}–{profile.credit[1]}）
-              {' · '}
+              {profile.name} ·{' '}
+              {profile.reference
+                ? cocOccupationSource(profile)
+                : COC_CAREER_SOURCE_LABELS[profile.source]}{' '}
+              · 信用评级 {card.skills.creditRating ?? 0}（职业范围 {profile.credit[0]}–
+              {profile.credit[1]}）{' · '}
               {career?.specializationsEnabled ? '技能专长已启用' : '基础技能模式'}
             </p>
             {a && (
@@ -418,6 +422,14 @@ function CocAudit({ card }: { card: Character }) {
                 职业技能 {a.occupationSkills.filter(Boolean).map(skillName).join('、') || '未选择'}
               </p>
             )}
+            {profile.notes && <p>{profile.notes}</p>}
+            {Object.entries(career?.skillBases ?? {})
+              .filter(([, control]) => control.mode === 'manual')
+              .map(([key, control]) => (
+                <p key={key}>
+                  {skillName(key)}基础值：{control.manual}（手动确认）
+                </p>
+              ))}
             {profile.source === 'custom' && (
               <details>
                 <summary>自定义职业范围</summary>

@@ -1,4 +1,5 @@
 """Keeper library, allocation, host review and scenario policy browser acceptance."""
+from coc_browser_helpers import choose_occupation
 import argparse
 import json
 import re
@@ -162,7 +163,7 @@ with sync_playwright() as p:
         player.get_by_role('button',name='创建角色',exact=True).click()
         d=player.get_by_role('dialog')
         d.get_by_label('角色姓名').fill('艾琳 · 洛温')
-        d.locator('select').first.select_option('记者')
+        choose_occupation(player, '记者')
         d.get_by_role('button',name='属性与状态',exact=True).click()
         for name in ['力量','体质','体型','敏捷','外貌','智力','意志','教育','幸运']:
             d.get_by_label(name+'属性',exact=True).fill('60')
