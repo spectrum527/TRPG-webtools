@@ -163,7 +163,10 @@ with sync_playwright() as p:
             expect(host.get_by_role('button',name='掷死亡豁免',exact=True)).to_be_disabled()
             expect(host.get_by_role('button',name='确认记录此结果',exact=True)).to_be_disabled()
             passed(f'{year}: cancelled and stale HP edits are safe; nested focus/Escape and automatic death save work')
-            hp(host,1);saved(host)
+            # A natural 20 already restores 1 HP. Use 2 so the next scenario
+            # always edits the record, including that successful death-save branch.
+            expect(host.get_by_label('当前 HP',exact=True)).to_have_value(re.compile(r'^[01]$'))
+            hp(host,2);saved(host)
             hp(host,0)
             modal.get_by_label('主持人裁定为死亡',exact=True).check();confirm(host)
             expect(player.locator('.my-injuries')).to_contain_text('死亡')

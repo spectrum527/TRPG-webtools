@@ -1,3 +1,4 @@
+import { CocReferenceLibrary } from './CocReferenceLibrary';
 import { AtlasToolkit } from './AtlasToolkit';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -49,6 +50,9 @@ export function HostToolkit({
   );
   const [loading, setLoading] = useState(true);
   const [dndSection, setDndSection] = useState<'blocks' | 'spell' | 'feat' | 'equipment'>('blocks');
+  const [cocSection, setCocSection] = useState<
+    'blocks' | 'magic' | 'equipment' | 'careers' | 'sanity'
+  >('blocks');
   const [error, setError] = useState('');
   const [workshop, setWorkshop] = useState<{
     scope: 'personal' | 'room';
@@ -154,7 +158,32 @@ export function HostToolkit({
           地图与场景
         </button>
       </div>
-      {libraryRule === 'plans' ? (
+      {libraryRule === 'coc' && (
+        <div className="dnd-preparation-nav">
+          <div className="tabs" aria-label="CoC 备团工具">
+            {(
+              [
+                ['blocks', 'NPC 与怪物'],
+                ['careers', '职业与技能'],
+                ['equipment', '武器与防具'],
+                ['magic', '法术与神话'],
+                ['sanity', '理智与疯狂'],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                className={cocSection === key ? 'active' : ''}
+                onClick={() => setCocSection(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {libraryRule === 'coc' && cocSection !== 'blocks' ? (
+        <CocReferenceLibrary key={cocSection} section={cocSection} />
+      ) : libraryRule === 'plans' ? (
         <EncounterPlans room={room} isHost={isHost} edition={dndEdition} run={run} />
       ) : libraryRule === 'atlas' ? (
         <AtlasToolkit room={room} isHost={isHost} onAction={onAction} />

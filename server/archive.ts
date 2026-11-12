@@ -72,7 +72,7 @@ export async function exportArchive(
   });
   snapshot.log = snapshot.log.map((e) => {
     const { requestId: _requestId, ...withoutRequest } = e;
-    // Retain the request identity of committed combat actions across archive restore.
+    // Retain request identities of committed encounter and CoC session actions across restore.
     const event = e.combatRequestHash ? e : withoutRequest;
     if (!event.image) return event;
     const description = descriptions[event.image.id]?.trim();
@@ -242,7 +242,15 @@ export function readArchive(bytes: unknown): { room: Room; exportedAt: string } 
   }
 }
 function validEvent(e: RoomEvent) {
-  if (e.combatRequestHash) {
+  if (e.cocCheck) {
+    if (e.image || e.imageDescription || e.scene || e.roll) return false;
+    return e.cocCheck.kind === 'original'
+      ? e.type === 'check' && !!e.check
+      : e.type === 'system' && !e.check && !!e.combatRequestHash;
+  }
+  const automaticInjuryCheck =
+    e.type === 'system' && (e.secretLabel === '伤势体质检定' || e.secretLabel === '死亡豁免');
+  if (e.combatRequestHash || automaticInjuryCheck) {
     if (e.type !== 'system' || e.image || e.imageDescription || e.scene) return false;
     if (e.roll) {
       const { groups, modifier, total } = e.roll;
@@ -251,17 +259,23 @@ function validEvent(e: RoomEvent) {
           result + group.sign * group.rolls.reduce((subtotal, die) => subtotal + die, 0),
         modifier,
       );
-      if (sum !== total) return false;
+      const cocWeapon = e.secretLabel === 'CoC 武器攻击' || e.secretLabel === '近战对抗';
+      if (sum !== total && !(cocWeapon && Math.max(0, sum) === total)) return false;
     }
     if (e.check) {
       const { rolls, selected, modifier, total, target, success } = e.check;
+      const constitution = e.secretLabel === '伤势体质检定';
+      const sides = constitution ? 100 : 20;
+      const expected = constitution
+        ? selected < (target < 50 ? 96 : 100) && (selected === 1 || selected <= target)
+        : selected === 20 || (selected !== 1 && total >= target);
       if (
         rolls.length < 1 ||
         rolls.length > 2 ||
-        rolls.some((die) => die < 1 || die > 20) ||
+        rolls.some((die) => die < 1 || die > sides) ||
         !rolls.includes(selected) ||
         selected + modifier !== total ||
-        success !== (selected === 20 || (selected !== 1 && total >= target))
+        success !== expected
       )
         return false;
     }

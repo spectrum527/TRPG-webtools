@@ -110,11 +110,11 @@ export function PartyOverview({
                 {combatant && injuryLabels(combatant).length > 0 && (
                   <p className="party-state-note">伤势 · {injuryLabels(combatant).join('、')}</p>
                 )}
-                {dnd && (
+                {
                   <button className="text-button" onClick={() => onPrepare(m.id)}>
-                    打开法术与装备 →
+                    {dnd ? '打开法术与装备' : '打开调查员管理'} →
                   </button>
-                )}
+                }
               </article>
             );
           })}

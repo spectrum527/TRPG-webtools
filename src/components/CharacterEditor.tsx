@@ -1,3 +1,11 @@
+import { CocCareerEditor } from './CocCareerEditor';
+import { CocDerivedFields, CocAgeCorrection } from './CocInvestigator';
+import { CocEquipment } from './CocEquipment';
+import { CocWealth } from './CocWealth';
+import { CocMagic } from './CocMagic';
+import { applyCocInvestigatorEdit, type CocInvestigatorEdit } from '../../shared/coc-investigator';
+import { updateCocOccupation } from '../../shared/creation';
+import { editCocPreparation } from '../../shared/coc-preparation';
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   Check,
@@ -59,7 +67,7 @@ import {
 import { AllocationEditor } from './AllocationEditor';
 import { Modal, Spinner, DieIcon, ruleEdition } from './ui';
 
-type Section = 'identity' | 'attributes' | 'skills' | 'story' | 'magic' | 'equipment';
+type Section = 'identity' | 'attributes' | 'skills' | 'story' | 'magic' | 'equipment' | 'wealth';
 type RollLimitPreference = { enabled: boolean; max: string };
 const ROLL_LIMIT_STORAGE = 'interlude-coc-attribute-cap';
 function readRollLimit(): RollLimitPreference {
@@ -131,6 +139,7 @@ export function CharacterEditor({
   const [card, setCard] = useState<Character>(draft.card);
   const [section, setSection] = useState<Section>(draft.error ? 'attributes' : 'identity');
   const [errors, setErrors] = useState<string[]>([]);
+  const [occupationNotice, setOccupationNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [rollCount, setRollCount] = useState(draft.rolled ? 1 : 0);
   const [rollError, setRollError] = useState(draft.error);
@@ -160,13 +169,21 @@ export function CharacterEditor({
       writeStored(ROLL_LIMIT_STORAGE, next);
     else if (!next.enabled) writeStored(ROLL_LIMIT_STORAGE, { enabled: false, max: '500' });
   };
+  const cocCardRef = useRef(card);
+  cocCardRef.current = card;
+  const editInvestigator = (edit: CocInvestigatorEdit) => {
+    const next = applyCocInvestigatorEdit(cocCardRef.current, edit);
+    cocCardRef.current = next;
+    setCard(next);
+    return Promise.resolve(true);
+  };
   const patch = (values: Partial<Character>) =>
     setCard((c) =>
       deriveCharacter(
         syncAllocation({
           ...c,
           ...values,
-          ...(values.occupation !== undefined && values.occupation !== c.occupation
+          ...(dnd && values.occupation !== undefined && values.occupation !== c.occupation
             ? { creation: defaultAllocation(rule, values.occupation) }
             : {}),
           ...(values.level !== undefined
@@ -176,6 +193,23 @@ export function CharacterEditor({
         }),
       ),
     );
+  const customOccupationName = !dnd ? card.cocCareer?.customOccupation?.name : undefined;
+  const occupations = dnd
+    ? classes
+    : [...COC_OCCUPATIONS, ...(customOccupationName ? [customOccupationName] : [])];
+  const changeOccupation = (occupation: string) => {
+    if (dnd) {
+      patch({ occupation });
+      return;
+    }
+    const change = updateCocOccupation(card, occupation);
+    const returned = [
+      change.returnedOccupation ? `职业点 ${change.returnedOccupation} 点` : '',
+      change.returnedPersonal ? `兴趣点 ${change.returnedPersonal} 点` : '',
+    ].filter(Boolean);
+    setOccupationNotice(returned.length ? `已退回${returned.join('、')}。` : '');
+    setCard(deriveCharacter({ ...change.card, updatedAt: new Date().toISOString() }));
+  };
   const setAttribute = (key: string, value: number) => {
     setAttributeNotice('');
     setCard((c) =>
@@ -267,6 +301,7 @@ export function CharacterEditor({
       setRollCount(0);
       setRollError('');
       setAttributeNotice('');
+      setOccupationNotice('');
       setManualDraft(false);
       setErrors([]);
     } catch (e) {
@@ -285,7 +320,11 @@ export function CharacterEditor({
           ['magic', '法术与资源'],
           ['equipment', '装备与负重'],
         ] as [Section, string][])
-      : []),
+      : ([
+          ['equipment', '武器与防具'],
+          ['wealth', '财产与账目'],
+          ['magic', '法术与神话'],
+        ] as [Section, string][])),
   ];
   const sectionClassName = 'editor-section editor-tab-section page-enter';
   const headingClassName = 'prep-section-heading editor-tab-heading';
@@ -422,22 +461,31 @@ export function CharacterEditor({
                   {dnd ? '职业' : '调查员职业'} <span className="required">*</span>
                   <select
                     value={card.occupation}
-                    onChange={(e) => patch({ occupation: e.target.value })}
+                    onChange={(e) => changeOccupation(e.target.value)}
                     required
                   >
                     <option value="">请选择职业</option>
-                    {!(dnd ? classes : COC_OCCUPATIONS).includes(card.occupation) &&
-                      card.occupation && (
-                        <option value={card.occupation}>{card.occupation}（旧卡，需重选）</option>
-                      )}
-                    {(dnd ? classes : COC_OCCUPATIONS).map((value) => (
+                    {!occupations.includes(card.occupation) && card.occupation && (
+                      <option value={card.occupation}>{card.occupation}（旧卡，需重选）</option>
+                    )}
+                    {occupations.map((value) => (
                       <option key={value} value={value}>
                         {value}
+                        {value === customOccupationName && '（自定义）'}
                       </option>
                     ))}
                   </select>
-                  <small>更换职业会重置技能分配。</small>
+                  <small>
+                    {dnd
+                      ? '更换职业会重置技能分配。'
+                      : '更换职业时退回不适用的职业投入，保留可用分配。'}
+                  </small>
                 </label>
+                {occupationNotice && (
+                  <p className="span-two prep-notice" role="status">
+                    {occupationNotice}
+                  </p>
+                )}
                 {dnd ? (
                   <>
                     <label className="field">
@@ -472,8 +520,8 @@ export function CharacterEditor({
                       年龄
                       <input
                         type="number"
-                        min={15}
-                        max={100}
+                        min={1}
+                        max={2000}
                         value={card.age}
                         onChange={(e) => patch({ age: Number(e.target.value) })}
                       />
@@ -530,6 +578,17 @@ export function CharacterEditor({
               </button>
             </div>
           )}
+          {section === 'identity' && !dnd && (
+            <CocCareerEditor
+              key={card.id}
+              card={card}
+              disabled={busy}
+              onChange={(next) => {
+                setOccupationNotice('');
+                setCard(deriveCharacter(next));
+              }}
+            />
+          )}
           {section === 'attributes' && (
             <div className={sectionClassName}>
               <div className={headingClassName}>
@@ -539,7 +598,7 @@ export function CharacterEditor({
                   <p>
                     {dnd
                       ? '4D6 去掉最低骰 · 属性加值可直接修改'
-                      : '属性按 CoC 7 生成 · 年龄等修正请手动填写'}
+                      : '属性按 CoC 7 生成；年龄修正在下方单独应用'}
                   </p>
                 </div>
                 <button
@@ -748,7 +807,12 @@ export function CharacterEditor({
                   />
                 </label>
                 <label className="field">
-                  生命上限{!dnd && <span className="auto-label">自动</span>}
+                  生命上限
+                  {!dnd && (
+                    <span className="auto-label">
+                      {card.cocInvestigator?.derived?.maxHp?.mode === 'manual' ? '手动' : '自动'}
+                    </span>
+                  )}
                   <input
                     type="number"
                     min={1}
@@ -809,6 +873,16 @@ export function CharacterEditor({
               </div>
             </div>
           )}
+          {section === 'attributes' && !dnd && (
+            <div className="editor-section">
+              <CocDerivedFields card={card} onEdit={editInvestigator} />
+              <CocAgeCorrection
+                key={`${card.id}-${card.age}`}
+                card={card}
+                onEdit={editInvestigator}
+              />
+            </div>
+          )}
           {section === 'skills' && (
             <div className={sectionClassName}>
               <AllocationEditor
@@ -820,6 +894,21 @@ export function CharacterEditor({
           )}
           {section === 'magic' && dnd && <CharacterMagic card={card} onChange={setCard} />}
           {section === 'equipment' && dnd && <CharacterEquipment card={card} onChange={setCard} />}
+          {section === 'equipment' && !dnd && (
+            <CocEquipment card={card} onEdit={editInvestigator} />
+          )}
+          {section === 'wealth' && !dnd && <CocWealth card={card} onEdit={editInvestigator} />}
+          {section === 'magic' && !dnd && (
+            <CocMagic
+              card={card}
+              onEdit={async (edit) => {
+                const next = editCocPreparation(cocCardRef.current, edit);
+                cocCardRef.current = next;
+                setCard(next);
+                return true;
+              }}
+            />
+          )}
           {section === 'story' && (
             <div className={sectionClassName}>
               <div className={headingClassName}>

@@ -1,13 +1,5 @@
 import { z } from 'zod';
-import type {
-  Character,
-  CheckRequest,
-  CheckResult,
-  DiceGroup,
-  DiceResult,
-  Edge,
-  RuleId,
-} from './types';
+import type { Character, CheckRequest, CheckResult, Edge, RuleId } from './types';
 import { DndEditionSchema, getDndEdition, type DndEdition } from './dnd-edition';
 import { DndMagicStateSchema, getDndMagicErrors } from './dnd-magic';
 import {
@@ -29,83 +21,21 @@ import {
   hasAdjustments,
 } from './adjustments';
 
-/** An injectable die returns a whole number in the inclusive range 1..sides. */
-export type DieRandom = (sides: number) => number;
+import { rollDice, secureDie, die, integer, type DieRandom } from './dice';
+export { rollDice, type DieRandom } from './dice';
+import { CocCareerSchema, cocSkillDefinitions, cocCareerErrors } from './coc-career';
+import {
+  CocInvestigatorSchema,
+  synchronizeCocInvestigator,
+  resetCocAgeApplication,
+  getCocInvestigatorErrors,
+} from './coc-investigator';
+import { CocSessionSchema, cocCurrentLuck } from './coc-session';
 export const MAX_CHARACTER_BYTES = 1024 * 1024;
-
 import { DND_ATTRIBUTES, COC_ATTRIBUTES, DND_SKILLS, COC_SKILLS } from './catalog';
 export * from './catalog';
-function secureDie(sides: number): number {
-  // Rejection sampling avoids the bias produced by a plain uint32 % sides.
-  const range = 0x1_0000_0000;
-  const limit = range - (range % sides);
-  const value = new Uint32Array(1);
-  do {
-    globalThis.crypto.getRandomValues(value);
-  } while (value[0] >= limit);
-  return (value[0] % sides) + 1;
-}
-
-function die(sides: number, rng: DieRandom): number {
-  const value = rng(sides);
-  if (!Number.isInteger(value) || value < 1 || value > sides) {
-    throw new Error(`随机源必须返回 1 至 ${sides} 的整数`);
-  }
-  return value;
-}
-
 function requireRule(rule: unknown): asserts rule is RuleId {
   if (rule !== 'dnd' && rule !== 'coc') throw new Error('不支持的规则类型');
-}
-
-function integer(value: unknown, min: number, max: number, name: string): asserts value is number {
-  if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) {
-    throw new Error(`${name}须为 ${min} 至 ${max} 的整数`);
-  }
-}
-
-/** Grammar: signed dice/integer terms joined by + or -. No code is evaluated. */
-export function rollDice(expression: string, rng: DieRandom = secureDie): DiceResult {
-  if (typeof expression !== 'string' || expression.length > 120)
-    throw new Error('骰子表达式最多 120 个字符');
-  const compact = expression.toLowerCase().replace(/\s+/g, '');
-  if (!compact || !/^[+\-]?(?:\d*d\d+|\d+)(?:[+\-](?:\d*d\d+|\d+))*$/.test(compact)) {
-    throw new Error('请输入如 2d6+3、d20 或 1d8+1d4-2 的表达式');
-  }
-  const terms = compact.match(/[+\-]?[^+\-]+/g)!;
-  const parsed: Array<{ sign: number; count: number; sides: number } | { value: number }> = [];
-  let diceCount = 0;
-  let modifier = 0;
-  // Validate the complete expression before consuming any randomness.
-  for (const term of terms) {
-    const sign = term.startsWith('-') ? -1 : 1;
-    const unsigned = term.replace(/^[+\-]/, '');
-    if (unsigned.includes('d')) {
-      const [rawCount, rawSides] = unsigned.split('d');
-      const count = rawCount === '' ? 1 : Number(rawCount);
-      const sides = Number(rawSides);
-      integer(count, 1, 100, '骰子数量');
-      integer(sides, 2, 1000, '骰子面数');
-      diceCount += count;
-      if (diceCount > 100) throw new Error('每次最多投掷 100 颗骰子');
-      parsed.push({ count, sides, sign });
-    } else {
-      const value = Number(unsigned);
-      integer(value, 0, 10000, '固定修正值');
-      modifier += sign * value;
-      if (Math.abs(modifier) > 10000) throw new Error('固定修正值的合计不可超过 ±10000');
-      parsed.push({ value: sign * value });
-    }
-  }
-  const groups: DiceGroup[] = [];
-  let total = modifier;
-  for (const term of parsed) {
-    if ('value' in term) continue;
-    const rolls = Array.from({ length: term.count }, () => die(term.sides, rng));
-    groups.push({ ...term, rolls });
-    total += term.sign * rolls.reduce((sum, value) => sum + value, 0);
-  }
-  return { expression: compact, groups, modifier, total };
 }
 
 export function abilityModifier(score: number): number {
@@ -204,7 +134,9 @@ export function rollCheck(
     label = '理智检定';
     target = character?.san ?? 0;
   } else if (request.kind === 'skill' || request.kind === 'attack') {
-    const skill = COC_SKILLS.find((entry) => entry.key === request.key);
+    const skill = (character ? cocSkillDefinitions(character) : COC_SKILLS).find(
+      (entry) => entry.key === request.key,
+    );
     const customSkill = character && Object.hasOwn(character.skills, request.key);
     if (!skill && !customSkill && request.target === undefined)
       throw new Error('未找到该 CoC 技能');
@@ -214,7 +146,10 @@ export function rollCheck(
     const attribute = COC_ATTRIBUTES.find((entry) => entry.key === request.key);
     if (!attribute) throw new Error('未找到该 CoC 属性');
     label = `${attribute.label}检定`;
-    target = character?.attributes[request.key] ?? 0;
+    target =
+      character && request.key === 'luck'
+        ? cocCurrentLuck(character)
+        : (character?.attributes[request.key] ?? 0);
   }
   if (request.target !== undefined) target = request.target;
   else if (!character) throw new Error('无人物卡检定时请填写目标百分比');
@@ -278,6 +213,9 @@ const CharacterSchema = z
     passivePerceptionEnabled: z.boolean().optional(),
     dndMagic: DndMagicStateSchema.optional(),
     dndEquipment: DndEquipmentStateSchema.optional(),
+    cocCareer: CocCareerSchema.optional(),
+    cocInvestigator: CocInvestigatorSchema.optional(),
+    cocSession: CocSessionSchema.optional(),
     name: string(80),
     occupation: string(80),
     ancestry: string(80),
@@ -285,7 +223,7 @@ const CharacterSchema = z
     age: whole(1, 2000),
     level: whole(1, 20),
     attributes: z.record(safeKey, whole(1, 100)),
-    skills: z.record(safeKey, whole(-100, 100)),
+    skills: z.record(safeKey, whole(-100, 1000)),
     proficiencies: z.array(string(80)).max(50),
     creation: CreationAllocationSchema.optional(),
     adjustments: CharacterAdjustmentsSchema.optional(),
@@ -335,7 +273,17 @@ const CharacterSchema = z
     }
     for (const key of Object.keys(character.attributes))
       if (!allowed.has(key)) issue(['attributes', key], '包含当前规则不使用的属性');
-    if (Object.keys(character.skills).length > 100) issue(['skills'], '技能最多 100 项');
+    const skillLimit = character.rule === 'coc' && character.cocCareer ? 150 : 100;
+    if (Object.keys(character.skills).length > skillLimit)
+      issue(['skills'], `技能最多 ${skillLimit} 项`);
+    if (character.rule === 'dnd') {
+      for (const field of ['cocCareer', 'cocInvestigator', 'cocSession'] as const)
+        if (character[field] !== undefined) issue([field], '仅适用于 CoC');
+      for (const [key, value] of Object.entries(character.skills))
+        if (value > 100) issue(['skills', key], 'D&D 技能不可大于 100');
+    } else {
+      for (const error of cocCareerErrors(character)) issue(['cocCareer'], error);
+    }
     if (character.rule === 'coc') {
       for (const [key, value] of Object.entries(character.skills))
         if (value < 0) issue(['skills', key], '技能百分比不可为负数');
@@ -360,6 +308,7 @@ const CharacterSchema = z
     for (const error of getAdjustmentErrors(character)) issue(['adjustments'], error);
     for (const error of getDndEquipmentErrors(character)) issue(['dndEquipment'], error);
     for (const error of getDndMagicErrors(character)) issue(['dndMagic'], error);
+    for (const error of getCocInvestigatorErrors(character)) issue(['cocInvestigator'], error);
   });
 
 const FIELD_LABELS: Record<string, string> = {
@@ -392,6 +341,9 @@ const FIELD_LABELS: Record<string, string> = {
   passivePerceptionEnabled: '被动察觉开关',
   dndMagic: '法术与资源',
   dndEquipment: '装备联动',
+  cocCareer: '职业与专长',
+  cocInvestigator: '调查员资料',
+  cocSession: '调查记录',
   schemaVersion: '格式版本',
 };
 
@@ -527,22 +479,12 @@ function rolledAttributes(
  */
 export function deriveCharacter(character: Character): Character {
   requireRule(character.rule);
-  let maxHp = character.maxHp;
-  let maxMp = character.maxMp;
-  let maxSan = character.maxSan;
-  if (character.rule === 'coc') {
-    maxHp = Math.max(1, Math.floor((character.attributes.con + character.attributes.siz) / 10));
-    maxMp = Math.floor(character.attributes.pow / 5);
-    maxSan = Math.max(0, 99 - (character.skills.cthulhuMythos ?? 0));
-  }
+  const next = character.rule === 'coc' ? synchronizeCocInvestigator(character) : character;
   return {
-    ...character,
-    maxHp,
-    maxMp,
-    maxSan,
-    hp: Math.max(0, Math.min(character.hp, maxHp)),
-    mp: Math.max(0, Math.min(character.mp, maxMp)),
-    san: Math.max(0, Math.min(character.san, maxSan)),
+    ...next,
+    hp: Math.max(0, Math.min(next.hp, next.maxHp)),
+    mp: Math.max(0, Math.min(next.mp, next.maxMp)),
+    san: Math.max(0, Math.min(next.san, next.maxSan)),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -624,6 +566,7 @@ export function rerollAttributes(
   cocLimits?: CocAttributeRollLimits,
 ): Character {
   requireRule(character.rule);
+  character = resetCocAgeApplication(character);
   const attributes = rolledAttributes(character.rule, rng, cocLimits);
   const skills = { ...character.skills };
   if (character.rule === 'coc') {

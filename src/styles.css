@@ -1226,6 +1226,48 @@ h1 > span {
 .rules-modal {
   width: 650px;
 }
+.acknowledgements-modal {
+  width: 610px;
+}
+.credits-list {
+  display: grid;
+  gap: 16px;
+}
+.credits-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-soft);
+}
+.credits-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: var(--subtle);
+  color: var(--green);
+}
+.credits-card > div {
+  min-width: 0;
+}
+.credits-card h3 {
+  margin: 4px 0 8px;
+  font-size: 18px;
+  font-weight: 550;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.credits-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.85;
+  color: var(--muted);
+}
 .rules-intro {
   display: flex;
   align-items: center;
@@ -3517,12 +3559,26 @@ h1 > span {
     right: 0;
     z-index: 30;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     padding: 10px 20px;
     background: var(--panel);
     border-bottom: 1px solid var(--line);
     box-shadow: 0 12px 20px #0000000a;
     gap: 9px;
+  }
+  .mobile-navigation-links {
+    display: flex;
+    gap: 9px;
+  }
+  .mobile-acknowledgements {
+    justify-content: center;
+    padding: 10px 0 4px;
+    border-top: 1px solid var(--line);
+  }
+  .credits-card {
+    padding: 16px;
+    gap: 12px;
   }
   .mobile-navigation .nav-button {
     min-height: 61px;

@@ -1,3 +1,4 @@
+import { cocWeaponValues } from '../../shared/coc-equipment';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   BookOpen,
@@ -1400,6 +1401,9 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
   const command = useEncounterCommand(room, run);
   const autoDamage = room.encounter.autoDamage ?? false;
   const [attackDamage, setAttackDamage] = useState('');
+  const [attackWeaponId, setAttackWeaponId] = useState('');
+  const [defenseWeaponId, setDefenseWeaponId] = useState('');
+  const [confirmWeaponDamage, setConfirmWeaponDamage] = useState(false);
   const [extremeDamage, setExtremeDamage] = useState('');
   const [fightBackDamage, setFightBackDamage] = useState('');
   const [attackArmor, setAttackArmor] = useState('');
@@ -1436,11 +1440,39 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
           : (pc?.skills.fightingBrawl ?? null);
     return target;
   };
-  const attackSkill = attackOverride ? attackOverride.value : personSkill(attackId, 'attack');
-  const defenseSkill = defenseOverride ? defenseOverride.value : personSkill(defenseId, 'defense');
+  const attackOwner = room.members.find((m) => m.id === attack?.memberId),
+    defenseOwner = room.members.find((m) => m.id === defend?.memberId);
+  const attackWeapons =
+    attackOwner?.character?.cocInvestigator?.equipment?.weapons.filter(
+      (w) => w.profile.category === 'melee',
+    ) ?? [];
+  const defenseWeapons =
+    defenseOwner?.character?.cocInvestigator?.equipment?.weapons.filter(
+      (w) => w.profile.category === 'melee',
+    ) ?? [];
+  const attackEquipped = attackWeapons.find((w) => w.id === attackWeaponId),
+    defenseEquipped =
+      defense === 'fight-back' ? defenseWeapons.find((w) => w.id === defenseWeaponId) : undefined;
+  const attackValues =
+    attackEquipped && attackOwner?.character
+      ? cocWeaponValues(attackOwner.character, attackEquipped)
+      : null;
+  const defenseValues =
+    defenseEquipped && defenseOwner?.character
+      ? cocWeaponValues(defenseOwner.character, defenseEquipped)
+      : null;
+  const attackSkill =
+    attackValues?.skill ??
+    (attackOverride ? attackOverride.value : personSkill(attackId, 'attack'));
+  const defenseSkill =
+    defenseValues?.skill ??
+    (defenseOverride ? defenseOverride.value : personSkill(defenseId, 'defense'));
+  const usingEquipment = !!(attackValues || defenseValues);
   const usePerson = (id: string, side: 'attack' | 'defense') => {
     if (side === 'attack') {
       setAttackId(id);
+      setAttackWeaponId('');
+      setConfirmWeaponDamage(false);
       setAttackOverride(null);
       const actor = participants.find((entry) => entry.id === id);
       setAttackDamage(actor?.source?.rule === 'coc' ? (actor.source.attacks[0]?.damage ?? '') : '');
@@ -1448,6 +1480,8 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
       setFightBackArmor('');
     } else {
       setDefenseId(id);
+      setDefenseWeaponId('');
+      setConfirmWeaponDamage(false);
       setDefenseOverride(null);
       const actor = participants.find((entry) => entry.id === id);
       setFightBackDamage(
@@ -1490,6 +1524,25 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
               ))}
             </select>
           </label>
+          {attackWeapons.length > 0 && (
+            <label className="field">
+              进攻武器
+              <select
+                value={attackWeaponId}
+                onChange={(e) => {
+                  setAttackWeaponId(e.target.value);
+                  setConfirmWeaponDamage(false);
+                }}
+              >
+                <option value="">手填技能与伤害</option>
+                {attackWeapons.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.profile.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="field">
             进攻技能百分比
             <input
@@ -1499,6 +1552,7 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
               max={100000}
               placeholder="请填写"
               value={attackSkill ?? ''}
+              disabled={!!attackValues}
               onChange={(e) => setAttackOverride({ value: nullable(e.target.value) })}
             />
             {attackOverride && attackId && (
@@ -1539,6 +1593,25 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
               <option value="fight-back">反击</option>
             </select>
           </label>
+          {defense === 'fight-back' && defenseWeapons.length > 0 && (
+            <label className="field">
+              反击武器
+              <select
+                value={defenseWeaponId}
+                onChange={(e) => {
+                  setDefenseWeaponId(e.target.value);
+                  setConfirmWeaponDamage(false);
+                }}
+              >
+                <option value="">手填反击伤害</option>
+                {defenseWeapons.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.profile.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="field">
             防守技能百分比
             <input
@@ -1548,6 +1621,7 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
               max={100000}
               placeholder="请填写"
               value={defenseSkill ?? ''}
+              disabled={!!defenseValues}
               onChange={(e) => setDefenseOverride({ value: nullable(e.target.value) })}
             />
             {defenseOverride && defenseId && (
@@ -1571,7 +1645,8 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
               进攻方普通伤害
               <input
                 aria-label="进攻方普通伤害"
-                value={attackDamage}
+                value={attackValues?.damageExpression ?? attackDamage}
+                disabled={!!attackValues}
                 maxLength={120}
                 onChange={(event) => setAttackDamage(event.target.value)}
                 placeholder="完整骰式，含伤害加值"
@@ -1581,7 +1656,8 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
               极难命中伤害
               <input
                 aria-label="极难命中伤害"
-                value={extremeDamage}
+                value={attackValues ? '按武器规则自动计算' : extremeDamage}
+                disabled={!!attackValues}
                 maxLength={120}
                 onChange={(event) => setExtremeDamage(event.target.value)}
                 placeholder="按武器最大伤害／贯穿规则填写"
@@ -1596,7 +1672,7 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
                 max={100000}
                 value={attackArmor}
                 onChange={(event) => setAttackArmor(event.target.value)}
-                placeholder="留空采用资料；玩家默认为 0"
+                placeholder="留空采用资料或已穿戴防具"
               />
             </label>
             {defense === 'fight-back' && (
@@ -1605,7 +1681,8 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
                   反击普通伤害
                   <input
                     aria-label="反击普通伤害"
-                    value={fightBackDamage}
+                    value={defenseValues?.damageExpression ?? fightBackDamage}
+                    disabled={!!defenseValues}
                     maxLength={120}
                     onChange={(event) => setFightBackDamage(event.target.value)}
                     placeholder="反击成功时扣进攻方 HP"
@@ -1620,7 +1697,7 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
                     max={100000}
                     value={fightBackArmor}
                     onChange={(event) => setFightBackArmor(event.target.value)}
-                    placeholder="留空采用资料；玩家默认为 0"
+                    placeholder="留空采用资料或已穿戴防具"
                   />
                 </label>
               </>
@@ -1649,12 +1726,13 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
             !!command.retry ||
             attackSkill === null ||
             defenseSkill === null ||
+            (usingEquipment && (!attack || !defend || attackId === defenseId)) ||
             (autoDamage &&
               (!attack ||
                 !defend ||
                 attackId === defenseId ||
-                !attackDamage.trim() ||
-                (defense === 'fight-back' && !fightBackDamage.trim())))
+                (!attackValues && !attackDamage.trim()) ||
+                (defense === 'fight-back' && !defenseValues && !fightBackDamage.trim())))
           }
           onClick={async () => {
             if (attackSkill === null || defenseSkill === null) return;
@@ -1670,14 +1748,32 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
                 attackEdge,
                 defenseEdge,
                 visibility,
-                ...(autoDamage && attack && defend
+                ...((autoDamage || usingEquipment) && attack && defend
                   ? {
                       damage: {
                         attackerId: attack.id,
                         defenderId: defend.id,
-                        attackExpression: attackDamage,
-                        ...(extremeDamage.trim() ? { attackExtremeExpression: extremeDamage } : {}),
-                        ...(fightBackDamage.trim() ? { fightBackExpression: fightBackDamage } : {}),
+                        ...(attackValues
+                          ? {
+                              attackWeaponId,
+                              expectedAttackerCharacterRevision: attackOwner!.characterRevision,
+                            }
+                          : { attackExpression: attackDamage }),
+                        ...(defenseValues
+                          ? {
+                              fightBackWeaponId: defenseWeaponId,
+                              expectedDefenderCharacterRevision: defenseOwner!.characterRevision,
+                            }
+                          : {}),
+                        ...(usingEquipment && confirmWeaponDamage
+                          ? { confirmedDamage: true as const }
+                          : {}),
+                        ...(!attackValues && extremeDamage.trim()
+                          ? { attackExtremeExpression: extremeDamage }
+                          : {}),
+                        ...(!defenseValues && fightBackDamage.trim()
+                          ? { fightBackExpression: fightBackDamage }
+                          : {}),
                         ...(attackArmor !== '' ? { attackArmorOverride: Number(attackArmor) } : {}),
                         ...(fightBackArmor !== ''
                           ? { fightBackArmorOverride: Number(fightBackArmor) }
@@ -1697,6 +1793,16 @@ function CocMelee({ room, run }: { room: Room; run: Run }) {
           {autoDamage ? '掷骰并结算' : '掷骰并比较'}
         </button>
       </div>
+      {autoDamage && usingEquipment && (
+        <label className="coc-toggle">
+          <input
+            type="checkbox"
+            checked={confirmWeaponDamage}
+            onChange={(e) => setConfirmWeaponDamage(e.target.checked)}
+          />
+          按选定武器自动计算伤害，并扣减败方 HP
+        </label>
+      )}
       {command.retry && <CombatCommandStatus command={command} />}
       {latest && (
         <div className="coc-melee-result" aria-live="polite">

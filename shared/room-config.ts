@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CreationPolicySchema } from './creation';
 import { DndEditionSchema } from './dnd-edition';
+import { CocRoomRulesSchema, cocRoomRules } from './coc-session';
 import type { Room } from './types';
 import { parsePortable, portableMarkdown } from './portable';
 
@@ -17,6 +18,7 @@ export const RoomConfigSchema = z
     schemaVersion: z.literal(1),
     rule: z.enum(['coc', 'dnd']),
     dndEdition: DndEditionSchema.optional(),
+    cocRules: CocRoomRulesSchema.optional(),
     name: z.string().trim().min(1).max(60),
     mode: z.enum(['in-room', 'external']),
     creationPolicy: CreationPolicySchema,
@@ -24,6 +26,7 @@ export const RoomConfigSchema = z
   })
   .strict()
   .refine((c) => c.rule === 'dnd' || c.dndEdition === undefined, '规则版次仅适用于 D&D')
+  .refine((c) => c.rule === 'coc' || c.cocRules === undefined, 'CoC 选用规则仅适用于 CoC')
   .refine((c) => c.rule === c.creationPolicy.rule, '制卡规则与房间规则不匹配');
 export type RoomConfig = z.infer<typeof RoomConfigSchema>;
 export function roomConfiguration(room: Room): RoomConfig {
@@ -32,6 +35,7 @@ export function roomConfiguration(room: Room): RoomConfig {
     schemaVersion: 1,
     rule: room.rule,
     ...(room.dndEdition !== undefined ? { dndEdition: room.dndEdition } : {}),
+    ...(room.rule === 'coc' ? { cocRules: cocRoomRules(room.cocRules) } : {}),
     name: room.name,
     mode: room.mode,
     creationPolicy: room.creationPolicy,
@@ -51,6 +55,6 @@ export function exportRoomConfig(config: RoomConfig, format: 'json' | 'md') {
     : portableMarkdown(
         `${checked.name} · 房间配置`,
         checked,
-        '仅包含房名、规则、跑团方式、制卡要求与当前公开场景，不含角色、房间码、登录凭证、聊天记录和备团库。导入不会覆盖这些数据，但会重置角色审核与成员准备状态。',
+        '包含房名、规则、跑团方式、制卡要求、CoC 选用规则与当前公开场景。导入会重置角色审核与成员准备状态。',
       );
 }

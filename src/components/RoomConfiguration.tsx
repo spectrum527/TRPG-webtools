@@ -12,10 +12,12 @@ import { policyFields } from '../../shared/creation';
 import { downloadFile } from '../storage';
 import { Modal, Spinner, ruleEdition } from './ui';
 import { getDndEdition } from '../../shared/dnd-edition';
+import { cocRoomRules } from '../../shared/coc-session';
 
 export function ConfigurationSummary({ value }: { value: RoomConfig }) {
   const p = value.creationPolicy;
   const fields = policyFields(value.rule);
+  const coc = cocRoomRules(value.cocRules);
   return (
     <div className="configuration-summary">
       <dl>
@@ -34,6 +36,16 @@ export function ConfigurationSummary({ value }: { value: RoomConfig }) {
               {p.allowInterestOnOccupation ? '兴趣点可投入职业技能' : '专点专用（含信用评级）'}；
               {p.requireAllPoints ? '须分完全部点数' : '允许保留余点'}；
               {p.allowMythos ? '允许初始神话' : '初始神话为 0'}
+            </dd>
+            <dt>选用规则</dt>
+            <dd>
+              幸运消耗：{coc.allowLuckSpending ? '开启' : '关闭'}；孤注一掷：
+              {coc.allowPushedRolls ? '开启' : '关闭'}
+            </dd>
+            <dt>理智与成长</dt>
+            <dd>
+              疯狂判定：{coc.autoSanity ? '自动' : '手动'}；成长标记：
+              {coc.autoDevelopment ? '自动' : '手动'}
             </dd>
           </>
         ) : (

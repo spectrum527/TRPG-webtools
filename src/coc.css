@@ -1,0 +1,496 @@
+/* Shared CoC controls use Interlude's existing paper and forest palette. */
+.auto-value-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.auto-value-field {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-soft);
+}
+.auto-value-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.auto-value-label label {
+  font-size: 12px;
+  font-weight: 550;
+}
+.value-lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--green);
+  flex: 0 0 auto;
+}
+.value-lock:hover {
+  background: var(--subtle);
+}
+.value-lock[aria-pressed='false'] {
+  color: var(--muted);
+}
+.auto-value-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.auto-value-input input {
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 21px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.auto-value-input input:disabled {
+  opacity: 1;
+  color: var(--text);
+  -webkit-text-fill-color: var(--text);
+  border-color: transparent;
+  background: transparent;
+  padding-left: 0;
+}
+.auto-value-input select {
+  width: 66px;
+  flex: 0 0 66px;
+  padding: 6px 4px;
+  font-size: 11px;
+  background: var(--panel);
+}
+.auto-value-source {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+.auto-value-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+.coc-section {
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+.coc-section .prep-section-heading {
+  min-width: 0;
+}
+.coc-section .prep-section-heading > div {
+  min-width: 0;
+}
+.coc-section .prep-section-heading > .button {
+  flex: 0 0 auto;
+}
+.coc-subsection {
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+.coc-subsection h4 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.coc-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.coc-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+}
+.coc-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--green);
+}
+.coc-inline-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+}
+.coc-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.coc-record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.coc-record {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-soft);
+  min-width: 0;
+}
+.coc-record > summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.coc-record[open] > summary {
+  margin-bottom: 18px;
+}
+.coc-record-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.coc-record-title h4 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.coc-record-title small {
+  color: var(--muted);
+}
+.coc-data-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: var(--muted);
+  font-size: 12px;
+  margin: 10px 0;
+}
+.coc-data-line b {
+  color: var(--text);
+  font-weight: 550;
+}
+.coc-compact-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.coc-compact-table th,
+.coc-compact-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.coc-compact-table th {
+  color: var(--muted);
+  font-weight: 500;
+}
+.coc-status-note {
+  padding: 12px 14px;
+  border-left: 3px solid var(--green);
+  background: var(--panel-soft);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.coc-empty {
+  color: var(--muted);
+  padding: 20px 0;
+  font-size: 13px;
+}
+@media (max-width: 700px) {
+  .auto-value-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .auto-value-field {
+    padding: 10px 12px;
+  }
+  .coc-section {
+    gap: 20px;
+  }
+  .coc-section .prep-section-heading {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 380px) {
+  .auto-value-grid,
+  .coc-inline-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .coc-record {
+    padding: 13px;
+  }
+}
+.coc-section .allocation-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.coc-section .allocation-summary > div {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--panel-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.coc-section .allocation-summary span,
+.coc-section .allocation-summary small {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.coc-section .allocation-summary strong {
+  font-size: 30px;
+  line-height: 1.2;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.coc-description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.coc-section .field-help,
+.coc-subsection .field-help {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.coc-section form,
+.coc-subsection form {
+  margin-top: 14px;
+}
+.coc-section details > summary {
+  cursor: pointer;
+  color: var(--green);
+  font-size: 13px;
+  padding: 12px 0;
+}
+.coc-section details[open] > summary {
+  margin-bottom: 10px;
+}
+.coc-section progress {
+  width: 100%;
+  accent-color: var(--green);
+  height: 7px;
+}
+.coc-inline-fields > .button {
+  align-self: end;
+  justify-self: start;
+}
+.coc-inline-fields .field {
+  min-width: 0;
+}
+.coc-inline-fields input,
+.coc-inline-fields select {
+  width: 100%;
+  min-width: 0;
+}
+.coc-rule-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.coc-rule-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+}
+.coc-rule-option input {
+  margin-top: 3px;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  accent-color: var(--green);
+}
+.coc-rule-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.coc-rule-option b {
+  font-weight: 550;
+  font-size: 14px;
+}
+.coc-rule-option small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.coc-development-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  max-height: 420px;
+  overflow: auto;
+  padding: 2px;
+}
+.coc-development-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  gap: 6px;
+  padding: 8px 0;
+}
+.coc-development-row > label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+.coc-development-row input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  accent-color: var(--green);
+}
+.coc-development-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+.coc-development-row select {
+  width: 62px;
+  flex: 0 0 auto;
+  font-size: 11px;
+  padding: 6px 4px;
+}
+.coc-check-followup {
+  margin: 8px 0;
+}
+.coc-check-followup .text-button {
+  font-size: 11px;
+}
+.coc-check-followup form {
+  margin-top: 12px;
+}
+.coc-form-details {
+  grid-column: 1/-1;
+}
+@media (max-width: 600px) {
+  .coc-development-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .coc-section .allocation-summary {
+    gap: 8px;
+  }
+  .coc-section .allocation-summary > div {
+    padding: 12px 10px;
+  }
+  .coc-section .allocation-summary strong {
+    font-size: 24px;
+  }
+  .coc-record-title {
+    flex-wrap: wrap;
+  }
+}
+.coc-library-panel {
+  padding: 28px;
+}
+.coc-library-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: flex-end;
+}
+.coc-import-guide {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  margin-top: 24px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.coc-import-guide summary {
+  cursor: pointer;
+  font-weight: 550;
+}
+.coc-import-guide ol {
+  padding-left: 20px;
+  color: var(--muted);
+}
+.coc-prompt {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  font-family: monospace;
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  .coc-library-panel {
+    padding: 18px;
+  }
+  .coc-library-toolbar {
+    justify-content: flex-start;
+  }
+}
+.character-editor .editor-tabs {
+  overflow-x: auto;
+  gap: 24px;
+  justify-content: flex-start;
+  scrollbar-width: thin;
+}
+.character-editor .editor-tabs > button {
+  flex: 0 0 auto;
+}
+@media (max-width: 700px) {
+  .character-editor .editor-tabs {
+    gap: 20px;
+  }
+  .character-editor .editor-tabs > button {
+    font-size: 12px;
+  }
+}
+.coc-wealth .auto-value-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.coc-wealth .auto-value-input input {
+  width: 100%;
+}
+.coc-wealth .auto-value-input select {
+  width: 100%;
+}
+@media (max-width: 600px) {
+  .coc-wealth .auto-value-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.preparation-modal .prep-main-tabs {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.preparation-modal .prep-main-tabs > button {
+  flex: 0 0 auto;
+}
+.dnd-preparation-nav .tabs[aria-label='CoC 备团工具'] {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.dnd-preparation-nav .tabs[aria-label='CoC 备团工具'] > button {
+  flex: 0 0 auto;
+}

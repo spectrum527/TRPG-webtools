@@ -1,7 +1,9 @@
 import { z } from 'zod';
-import { COC_ATTRIBUTES, COC_SKILLS, DND_ATTRIBUTES, DND_SKILLS } from './catalog';
+import { COC_ATTRIBUTES, DND_ATTRIBUTES, DND_SKILLS } from './catalog';
 import { dndSkillModifier } from './creation';
 import type { Character } from './types';
+import { cocSkillDefinitions } from './coc-career';
+import { synchronizeCocInvestigator } from './coc-physical';
 import { effectiveDndAC } from './dnd-equipment';
 
 const key = z
@@ -13,7 +15,7 @@ const amount = z.number().int().min(-100).max(100);
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,80}$/);
 const change = z.object({ target, key, amount }).strict();
 const permanent = change
-  .extend({ amount: z.number().int().min(-200).max(200), reason: z.string().trim().max(200) })
+  .extend({ amount: z.number().int().min(-1000).max(1000), reason: z.string().trim().max(200) })
   .strict();
 
 export const TemporaryEffectSchema = z
@@ -28,7 +30,7 @@ export const TemporaryEffectSchema = z
 
 export const CharacterAdjustmentsSchema = z
   .object({
-    permanent: z.array(permanent).max(110),
+    permanent: z.array(permanent).max(160),
     temporary: z.array(TemporaryEffectSchema).max(30),
   })
   .strict();
@@ -39,7 +41,7 @@ export const CharacterAdjustmentEditSchema = z.discriminatedUnion('kind', [
       kind: z.literal('set-value'),
       target,
       key,
-      value: amount,
+      value: z.number().int().min(-100).max(1000),
       reason: z.string().trim().max(200),
     })
     .strict(),
@@ -58,9 +60,10 @@ export type TemporaryEffect = z.infer<typeof TemporaryEffectSchema>;
 export function adjustmentFields(card: Character, target: AdjustmentTarget) {
   if (target === 'attribute') return card.rule === 'dnd' ? DND_ATTRIBUTES : COC_ATTRIBUTES;
   if (card.rule === 'dnd') return DND_SKILLS;
-  const known = new Set(COC_SKILLS.map((entry) => entry.key));
+  const definitions = cocSkillDefinitions(card);
+  const known = new Set(definitions.map((entry) => entry.key));
   return [
-    ...COC_SKILLS,
+    ...definitions,
     ...Object.keys(card.skills)
       .filter((entry) => !known.has(entry))
       .map((key) => ({ key, label: key })),
@@ -76,7 +79,7 @@ export function adjustmentBounds(card: Character, target: AdjustmentTarget, key:
     ? target === 'attribute'
       ? { min: 1, max: 30 }
       : { min: -100, max: 100 }
-    : { min: 0, max: key === 'cthulhuMythos' && target === 'skill' ? 99 : 100 };
+    : { min: 0, max: target === 'skill' ? (key === 'cthulhuMythos' ? 99 : 1000) : 100 };
 }
 
 export function hasAdjustments(card: Character) {
@@ -105,7 +108,7 @@ export function effectiveCharacter(card: Character, includeTemporary = true): Ch
           DND_SKILLS.map((entry) => [entry.key, dndSkillModifier(withAttributes, entry.key)]),
         )
       : {
-          ...Object.fromEntries(COC_SKILLS.map((entry) => [entry.key, entry.base])),
+          ...Object.fromEntries(cocSkillDefinitions(card).map((entry) => [entry.key, entry.base])),
           ...card.skills,
         };
   for (const entry of changes) {
@@ -203,7 +206,7 @@ export function applyCharacterAdjustment(
   const result = { ...card, adjustments, updatedAt };
   const errors = getAdjustmentErrors(result);
   if (errors.length) throw new Error(errors[0]);
-  return result;
+  return synchronizeCocInvestigator(result);
 }
 
 export function adjustmentDescription(
