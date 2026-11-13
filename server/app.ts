@@ -37,6 +37,7 @@ import {
   cocWeaponValues,
   consumeCocAmmunition,
   rollCocWeaponDamage,
+  cocUnresolvedArmor,
   cocWeaponArmorReduction,
 } from '../shared/coc-equipment.ts';
 import { IMAGE_MIMES, MAX_IMAGE_BYTES } from '../shared/media.ts';
@@ -1458,7 +1459,11 @@ export function createAppServer(options: ServerOptions = {}) {
       const cocArmor = (c: Combatant, override?: number) => {
         if (override !== undefined) return override;
         const character = room.members.find((m) => m.id === c.memberId)?.character;
-        return character ? cocArmorValue(character) : effectiveCocArmor(c);
+        return character
+          ? cocUnresolvedArmor(character).length
+            ? null
+            : cocArmorValue(character)
+          : effectiveCocArmor(c);
       };
       const equippedCocWeapon = (
         combatant: Combatant,
@@ -1480,9 +1485,15 @@ export function createAppServer(options: ServerOptions = {}) {
           !combatant.dead && !combatant.unconscious && target.character.hp > 0,
           '死亡或昏迷的角色不能攻击',
         );
+        const values = cocWeaponValues(target.character, weaponId, { distanceYards });
+        requireCondition(!values.rangeRequiresRuling, '请先确认此武器的射程并以码数手动填写');
+        requireCondition(
+          !values.damageRequiresRuling,
+          '此武器没有固定 HP 伤害，请由主持人裁定或手动填写伤害骰式',
+        );
         return {
           ...target,
-          values: cocWeaponValues(target.character, weaponId, { distanceYards }),
+          values,
         };
       };
       const unavailableDamage = (c: Combatant, armorOverride?: number) => {
@@ -2789,7 +2800,7 @@ export function createAppServer(options: ServerOptions = {}) {
           );
           const pointBlank =
             action.distanceYards !== undefined &&
-            ['handgun', 'rifle', 'shotgun'].includes(values.category) &&
+            ['handgun', 'rifle', 'shotgun', 'smg', 'machineGun'].includes(values.category) &&
             action.distanceYards * 3 <= effectiveCharacter(character).attributes.dex / 5;
           const edge = pointBlank
             ? action.edge === 'disadvantage'

@@ -3,6 +3,11 @@ import { LockKeyhole, LockKeyholeOpen, Plus, Trash2, RotateCcw, Shield } from 'l
 import {
   COC_WEAPON_CATALOG,
   COC_ARMOR_CATALOG,
+  COC_ARMOR_KINDS,
+  COC_ARMOR_LOCATIONS,
+  COC_WEAPON_CATEGORIES,
+  cocArmorCoverageLabel,
+  cocUnresolvedArmor,
   cocWeaponValues,
   cocArmorValues,
   cocArmorValue,
@@ -18,6 +23,8 @@ import {
 } from '../../shared/value-control';
 import { readCocPreparationLibrary, saveCocPreparationLibrary } from '../coc-library-storage';
 import { AutoValueField } from './AutoValueField';
+import { CocEquipmentPicker } from './CocEquipmentCatalog';
+import { sortCocSkills } from '../../shared/coc-skill-order';
 import {
   CocSectionHeading,
   useCocInvestigatorEdit,
@@ -173,7 +180,9 @@ export function CocEquipment({
   const canDefine = !active || isHost;
   const definitionsBlocked = blocked || !canDefine;
   const equipment = card.cocInvestigator?.equipment;
-  const skills = cocSkillDefinitions(card).map(({ key, label }) => ({ value: key, label }));
+  const skills = sortCocSkills(cocSkillDefinitions(card), card, 'invested').map(
+    ({ key, label }) => ({ value: key, label }),
+  );
   const headArmor = cocArmorValue(card, { location: 'head' });
   const refreshLibrary = () => {
     const refreshed = readCocPreparationLibrary();
@@ -236,31 +245,14 @@ export function CocEquipment({
       <CocSectionHeading title="武器与防具" eyebrow="EQUIPMENT" />
       {canDefine && (
         <div className="coc-inline-fields">
-          <label className="field">
-            武器
-            <select
-              value={selected}
-              disabled={definitionsBlocked}
-              onFocus={refreshLibrary}
-              onChange={(e) => setSelected(e.target.value)}
-            >
-              {COC_WEAPON_CATALOG.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.profile.name}
-                  {w.source === 'workbook' ? '（参考卡）' : ''}
-                </option>
-              ))}
-              {library.weapons.length > 0 && (
-                <optgroup label="备团库">
-                  {library.weapons.map((record) => (
-                    <option key={record.id} value={`${libraryPrefix}${record.id}`}>
-                      {record.profile.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          </label>
+          <CocEquipmentPicker
+            kind="weapon"
+            library={library}
+            value={selected}
+            onChange={setSelected}
+            disabled={definitionsBlocked}
+            onOpen={refreshLibrary}
+          />
           <button
             type="button"
             className="button secondary"
@@ -278,6 +270,11 @@ export function CocEquipment({
       <div className="coc-record-list">
         {equipment?.weapons.map((w) => {
           const values = cocWeaponValues(card, w);
+          const specialRate = w.profile.sourceText?.usesPerRound;
+          const showSpecialRate =
+            specialRate &&
+            /全自动|连射|布置|一次/.test(specialRate) &&
+            w.overrides?.usesPerRound?.mode !== 'manual';
           return (
             <article className="coc-record" key={w.id}>
               <div className="coc-record-title">
@@ -287,16 +284,28 @@ export function CocEquipment({
                     {skills.find((s) => s.value === values.skillKey)?.label ??
                       COC_SKILL_CATALOG.find(({ key }) => key === values.skillKey)?.label ??
                       '未登记技能'}{' '}
-                    {values.skill}% · 伤害 {values.damageExpression} ·{' '}
-                    {values.range === 0
-                      ? '接触'
-                      : `${[values.range, ...values.longerRanges.map((band) => band.range)].join(' / ')} 码`}{' '}
-                    · {values.roundsPerUse ? `每 ${values.roundsPerUse} 轮` : '每轮'}{' '}
-                    {values.usesPerRound}
-                    {values.rapidUsesPerRound > values.usesPerRound
-                      ? `（${values.rapidUsesPerRound}）`
-                      : ''}{' '}
-                    次
+                    {values.skill}% · 伤害{' '}
+                    {values.damageRequiresRuling ? '需裁定' : values.damageExpression} ·{' '}
+                    {values.rangeRequiresRuling
+                      ? '射程待确认'
+                      : values.range === 0
+                        ? w.profile.sourceText?.range === '布置'
+                          ? '布置'
+                          : '接触'
+                        : `${[values.range, ...values.longerRanges.map((band) => band.range)].join(' / ')} 码`}{' '}
+                    ·{' '}
+                    {showSpecialRate ? (
+                      specialRate.replace(/or/g, ' 或 ')
+                    ) : (
+                      <>
+                        {values.roundsPerUse ? `每 ${values.roundsPerUse} 轮` : '每轮'}{' '}
+                        {values.usesPerRound}
+                        {values.rapidUsesPerRound > values.usesPerRound
+                          ? `（${values.rapidUsesPerRound}）`
+                          : ''}{' '}
+                        次
+                      </>
+                    )}
                   </p>
                 </div>
                 {canDefine && (
@@ -311,6 +320,7 @@ export function CocEquipment({
                   </button>
                 )}
               </div>
+              {w.profile.rulesNotes && <p className="field-help">{w.profile.rulesNotes}</p>}
               {(values.capacity > 0 || w.ammo.jammed) && (
                 <div className="coc-actions">
                   <span className="pill">
@@ -362,7 +372,7 @@ export function CocEquipment({
                         min: values.usesPerRound,
                         max: 20,
                       },
-                      { key: 'capacity', label: '装弹量', min: 0, max: 1000 },
+                      { key: 'capacity', label: '装弹量', min: 0, max: 9999 },
                       { key: 'malfunction', label: '故障值', min: 0, max: 100 },
                     ] as const
                   ).map(({ key, label, min, max }) => (
@@ -374,6 +384,7 @@ export function CocEquipment({
                       disabled={definitionsBlocked}
                       min={min}
                       max={max}
+                      step={key === 'range' ? 0.001 : 1}
                       source={key === 'malfunction' ? '0 表示无故障值' : undefined}
                       onEdit={(change) =>
                         send({ kind: 'weapon-control', itemId: w.id, field: key, change })
@@ -515,37 +526,21 @@ export function CocEquipment({
           <h4>防具</h4>
           <span className="pill">
             <Shield size={14} />
-            身体护甲 {cocArmorValue(card)}
-            {headArmor > 0 && ` · 头部护甲 ${headArmor}`}
+            躯干护甲 {cocUnresolvedArmor(card).length ? '待裁定' : cocArmorValue(card)}
+            {(headArmor > 0 || cocUnresolvedArmor(card, 'head').length > 0) &&
+              ` · 头部护甲 ${cocUnresolvedArmor(card, 'head').length ? '待裁定' : headArmor}`}
           </span>
         </div>
         {canDefine && (
           <div className="coc-inline-fields">
-            <label className="field">
-              防具
-              <select
-                value={armor}
-                disabled={definitionsBlocked}
-                onFocus={refreshLibrary}
-                onChange={(e) => setArmor(e.target.value)}
-              >
-                {COC_ARMOR_CATALOG.map((a) => (
-                  <option value={a.id} key={a.id}>
-                    {a.profile.name}
-                    {a.source === 'workbook' ? '（参考卡）' : ''}
-                  </option>
-                ))}
-                {library.armor.length > 0 && (
-                  <optgroup label="备团库">
-                    {library.armor.map((record) => (
-                      <option key={record.id} value={`${libraryPrefix}${record.id}`}>
-                        {record.profile.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            </label>
+            <CocEquipmentPicker
+              kind="armor"
+              library={library}
+              value={armor}
+              onChange={setArmor}
+              disabled={definitionsBlocked}
+              onOpen={refreshLibrary}
+            />
             <button
               type="button"
               className="button secondary"
@@ -574,12 +569,8 @@ export function CocEquipment({
                       }
                     />
                     <span>
-                      {a.profile.name} ·{' '}
-                      {a.profile.coverage === 'head'
-                        ? '头部'
-                        : a.profile.coverage === 'all'
-                          ? '全身'
-                          : '身体'}
+                      {a.profile.name} · {cocArmorCoverageLabel(a.profile)} ·{' '}
+                      {COC_ARMOR_KINDS[a.profile.kind ?? 'worn']}
                     </span>
                   </label>
                   {canDefine && (
@@ -594,6 +585,7 @@ export function CocEquipment({
                     </button>
                   )}
                 </div>
+                {a.profile.rulesNotes && <p className="field-help">{a.profile.rulesNotes}</p>}
                 <div className="auto-value-grid">
                   {(['rating', 'movPenalty'] as const).map((key) => (
                     <AutoValueField
@@ -604,7 +596,11 @@ export function CocEquipment({
                       disabled={definitionsBlocked}
                       min={0}
                       max={key === 'rating' ? 99 : 20}
-                      source={`生效 ${values[key]}`}
+                      source={
+                        key === 'rating' && !values.resolved
+                          ? `原文 ${a.profile.sourceText?.rating ?? '未知'} · 请手动确认`
+                          : `生效 ${values[key]}`
+                      }
                       onEdit={(change) =>
                         send({ kind: 'armor-control', itemId: a.id, field: key, change })
                       }
@@ -638,192 +634,273 @@ export function CocEquipment({
         {!equipment?.armor.length && <p className="coc-empty">暂无防具</p>}
         <p className="field-help">
           同部位防具取最高护甲值，不叠加。主持人可按命中部位调整伤害结算。
+          盾牌、掩体与环境防护按当次情境裁定，不计入常驻躯干护甲。
         </p>
       </section>
       {canDefine && (
-        <details open={custom} onToggle={(e) => setCustom(e.currentTarget.open)}>
-          <summary>自定义武器与防具</summary>
-          <div className="coc-inline-fields">
-            <label className="field">
-              武器名称
-              <input
-                maxLength={100}
-                value={weaponDraft.name}
-                disabled={definitionsBlocked}
-                onChange={(e) => setWeaponDraft({ ...weaponDraft, name: e.target.value })}
-              />
-            </label>
-            <label className="field">
-              关联技能
-              <select
-                value={weaponDraft.skillKey}
-                disabled={definitionsBlocked}
-                onChange={(e) => setWeaponDraft({ ...weaponDraft, skillKey: e.target.value })}
-              >
-                {skills.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              伤害骰式
-              <input
-                value={weaponDraft.damage}
-                disabled={definitionsBlocked}
-                maxLength={59}
-                onChange={(e) => setWeaponDraft({ ...weaponDraft, damage: e.target.value })}
-              />
-            </label>
-            <label className="field">
-              DB
-              <select
-                value={weaponDraft.damageBonusMode}
-                disabled={definitionsBlocked}
-                onChange={(e) =>
-                  setWeaponDraft({
-                    ...weaponDraft,
-                    damageBonusMode: e.target.value as CocWeaponProfile['damageBonusMode'],
-                  })
-                }
-              >
-                {dbModes.map((mode) => (
-                  <option value={mode.value} key={mode.value}>
-                    {mode.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              类别
-              <select
-                value={weaponDraft.category}
-                disabled={definitionsBlocked}
-                onChange={(e) =>
-                  setWeaponDraft({
-                    ...weaponDraft,
-                    category: e.target.value as CocWeaponProfile['category'],
-                  })
-                }
-              >
-                {[
-                  ['melee', '近战'],
-                  ['thrown', '投掷'],
-                  ['bow', '弓'],
-                  ['handgun', '手枪'],
-                  ['rifle', '步枪'],
-                  ['shotgun', '霰弹枪'],
-                  ['other', '其他'],
-                ].map(([k, l]) => (
-                  <option value={k} key={k}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {(
-              [
-                { key: 'range', label: '射程（码）', min: 0, max: 10000 },
-                { key: 'usesPerRound', label: '每轮次数', min: 1, max: 20 },
-                { key: 'capacity', label: '装弹量', min: 0, max: 1000 },
-                { key: 'malfunction', label: '故障值', min: 0, max: 100 },
-              ] as const
-            ).map(({ key, label, min, max }) => (
-              <label className="field" key={key}>
-                {label}
+        <>
+          <details open={custom} onToggle={(e) => setCustom(e.currentTarget.open)}>
+            <summary>自定义武器</summary>
+            <div className="coc-inline-fields">
+              <label className="field">
+                武器类型
+                <select
+                  aria-label="自定义武器类型"
+                  value={weaponDraft.category}
+                  disabled={definitionsBlocked}
+                  onChange={(event) =>
+                    setWeaponDraft({
+                      ...weaponDraft,
+                      category: event.target.value as CocWeaponProfile['category'],
+                    })
+                  }
+                >
+                  {Object.entries(COC_WEAPON_CATEGORIES).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                武器名称
                 <input
-                  type="number"
-                  min={min}
-                  max={max}
-                  step={1}
-                  value={weaponDraft[key]}
+                  maxLength={100}
+                  value={weaponDraft.name}
+                  disabled={definitionsBlocked}
+                  onChange={(e) => setWeaponDraft({ ...weaponDraft, name: e.target.value })}
+                />
+              </label>
+              <label className="field">
+                关联技能
+                <select
+                  value={weaponDraft.skillKey}
+                  disabled={definitionsBlocked}
+                  onChange={(e) => setWeaponDraft({ ...weaponDraft, skillKey: e.target.value })}
+                >
+                  {skills.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                伤害骰式
+                <input
+                  value={weaponDraft.damage}
+                  disabled={definitionsBlocked}
+                  maxLength={59}
+                  onChange={(e) => setWeaponDraft({ ...weaponDraft, damage: e.target.value })}
+                />
+              </label>
+              <label className="field">
+                DB
+                <select
+                  value={weaponDraft.damageBonusMode}
                   disabled={definitionsBlocked}
                   onChange={(e) =>
-                    setWeaponDraft({ ...weaponDraft, [key]: Number(e.target.value) })
+                    setWeaponDraft({
+                      ...weaponDraft,
+                      damageBonusMode: e.target.value as CocWeaponProfile['damageBonusMode'],
+                    })
+                  }
+                >
+                  {dbModes.map((mode) => (
+                    <option value={mode.value} key={mode.value}>
+                      {mode.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {(
+                [
+                  { key: 'range', label: '射程（码）', min: 0, max: 10000 },
+                  { key: 'usesPerRound', label: '每轮次数', min: 1, max: 20 },
+                  { key: 'capacity', label: '装弹量', min: 0, max: 9999 },
+                  { key: 'malfunction', label: '故障值', min: 0, max: 100 },
+                ] as const
+              ).map(({ key, label, min, max }) => (
+                <label className="field" key={key}>
+                  {label}
+                  <input
+                    type="number"
+                    min={min}
+                    max={max}
+                    step={key === 'range' ? 0.001 : 1}
+                    value={weaponDraft[key]}
+                    disabled={definitionsBlocked}
+                    onChange={(e) =>
+                      setWeaponDraft({ ...weaponDraft, [key]: Number(e.target.value) })
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+            <label className="coc-toggle">
+              <input
+                type="checkbox"
+                checked={weaponDraft.impales}
+                disabled={definitionsBlocked}
+                onChange={(e) => setWeaponDraft({ ...weaponDraft, impales: e.target.checked })}
+              />
+              可贯穿
+            </label>
+            <button
+              type="button"
+              className="button secondary"
+              disabled={definitionsBlocked || !weaponDraft.name.trim()}
+              onClick={() => void send({ kind: 'weapon-add', entry: { profile: weaponDraft } })}
+            >
+              添加自定义武器
+            </button>
+          </details>
+          <details className="coc-custom-armor">
+            <summary>自定义防具</summary>
+            <div className="coc-inline-fields">
+              <label className="field">
+                防护类型
+                <select
+                  aria-label="自定义防护类型"
+                  value={armorDraft.kind ?? 'worn'}
+                  disabled={definitionsBlocked}
+                  onChange={(event) => {
+                    const kind = event.target.value as NonNullable<CocArmorProfile['kind']>;
+                    setArmorDraft({
+                      ...armorDraft,
+                      kind,
+                      coverage: ['shield', 'cover', 'environment'].includes(kind)
+                        ? 'none'
+                        : armorDraft.coverage === 'none'
+                          ? 'body'
+                          : armorDraft.coverage,
+                    });
+                  }}
+                >
+                  {Object.entries(COC_ARMOR_KINDS).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                防具名称
+                <input
+                  value={armorDraft.name}
+                  maxLength={100}
+                  disabled={definitionsBlocked}
+                  onChange={(e) => setArmorDraft({ ...armorDraft, name: e.target.value })}
+                />
+              </label>
+              <label className="field">
+                护甲值
+                <input
+                  type="number"
+                  min={0}
+                  max={99}
+                  value={armorDraft.rating}
+                  disabled={definitionsBlocked}
+                  onChange={(e) => setArmorDraft({ ...armorDraft, rating: Number(e.target.value) })}
+                />
+              </label>
+              <label className="field">
+                MOV 减值
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={armorDraft.movPenalty}
+                  disabled={definitionsBlocked}
+                  onChange={(e) =>
+                    setArmorDraft({ ...armorDraft, movPenalty: Number(e.target.value) })
                   }
                 />
               </label>
-            ))}
-          </div>
-          <label className="coc-toggle">
-            <input
-              type="checkbox"
-              checked={weaponDraft.impales}
-              disabled={definitionsBlocked}
-              onChange={(e) => setWeaponDraft({ ...weaponDraft, impales: e.target.checked })}
-            />
-            可贯穿
-          </label>
-          <button
-            type="button"
-            className="button secondary"
-            disabled={definitionsBlocked || !weaponDraft.name.trim()}
-            onClick={() => void send({ kind: 'weapon-add', entry: { profile: weaponDraft } })}
-          >
-            添加自定义武器
-          </button>
-          <div className="coc-inline-fields">
+              <label className="field">
+                防护部位
+                <select
+                  aria-label="防护部位"
+                  value={armorDraft.coverage}
+                  disabled={definitionsBlocked}
+                  onChange={(e) =>
+                    setArmorDraft({
+                      ...armorDraft,
+                      coverage: e.target.value as CocArmorProfile['coverage'],
+                      ...(e.target.value === 'custom'
+                        ? {
+                            locations: armorDraft.locations?.length
+                              ? armorDraft.locations
+                              : ['body'],
+                          }
+                        : {}),
+                    })
+                  }
+                >
+                  <option value="body">躯干</option>
+                  <option value="head">头部</option>
+                  <option value="all">全身</option>
+                  <option value="custom">自选多个部位</option>
+                  <option value="none">按遮挡范围裁定</option>
+                </select>
+              </label>
+            </div>
+            {armorDraft.coverage === 'custom' && (
+              <fieldset className="coc-coverage-grid">
+                <legend>覆盖部位</legend>
+                {Object.entries(COC_ARMOR_LOCATIONS).map(([key, label]) => (
+                  <label key={key} className="coc-toggle">
+                    <input
+                      type="checkbox"
+                      checked={
+                        armorDraft.locations?.includes(key as keyof typeof COC_ARMOR_LOCATIONS) ??
+                        false
+                      }
+                      disabled={definitionsBlocked}
+                      onChange={(event) =>
+                        setArmorDraft({
+                          ...armorDraft,
+                          locations: event.target.checked
+                            ? [
+                                ...(armorDraft.locations ?? []),
+                                key as keyof typeof COC_ARMOR_LOCATIONS,
+                              ]
+                            : armorDraft.locations?.filter((value) => value !== key),
+                        })
+                      }
+                    />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
+            )}
             <label className="field">
-              防具名称
-              <input
-                value={armorDraft.name}
-                maxLength={100}
+              防护条件与备注
+              <textarea
+                rows={2}
+                maxLength={2000}
+                value={armorDraft.rulesNotes ?? ''}
                 disabled={definitionsBlocked}
-                onChange={(e) => setArmorDraft({ ...armorDraft, name: e.target.value })}
-              />
-            </label>
-            <label className="field">
-              护甲值
-              <input
-                type="number"
-                min={0}
-                max={99}
-                value={armorDraft.rating}
-                disabled={definitionsBlocked}
-                onChange={(e) => setArmorDraft({ ...armorDraft, rating: Number(e.target.value) })}
-              />
-            </label>
-            <label className="field">
-              MOV 减值
-              <input
-                type="number"
-                min={0}
-                max={20}
-                value={armorDraft.movPenalty}
-                disabled={definitionsBlocked}
-                onChange={(e) =>
-                  setArmorDraft({ ...armorDraft, movPenalty: Number(e.target.value) })
+                onChange={(event) =>
+                  setArmorDraft({ ...armorDraft, rulesNotes: event.target.value })
                 }
+                placeholder="例如只防护正面、只对钝击有效"
               />
             </label>
-            <label className="field">
-              部位
-              <select
-                value={armorDraft.coverage}
-                disabled={definitionsBlocked}
-                onChange={(e) =>
-                  setArmorDraft({
-                    ...armorDraft,
-                    coverage: e.target.value as CocArmorProfile['coverage'],
-                  })
-                }
-              >
-                <option value="body">身体</option>
-                <option value="head">头部</option>
-                <option value="all">全身</option>
-              </select>
-            </label>
-          </div>
-          <button
-            type="button"
-            className="button secondary"
-            disabled={definitionsBlocked || !armorDraft.name.trim()}
-            onClick={() => void send({ kind: 'armor-add', entry: { profile: armorDraft } })}
-          >
-            添加自定义防具
-          </button>
-        </details>
+            <button
+              type="button"
+              className="button secondary"
+              disabled={
+                definitionsBlocked ||
+                !armorDraft.name.trim() ||
+                (armorDraft.coverage === 'custom' && !armorDraft.locations?.length)
+              }
+              onClick={() => void send({ kind: 'armor-add', entry: { profile: armorDraft } })}
+            >
+              添加自定义防具
+            </button>
+          </details>
+        </>
       )}
       {notice && (
         <p className="field-help" role="status">

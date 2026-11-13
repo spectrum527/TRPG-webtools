@@ -1,4 +1,86 @@
 /* Shared CoC controls use Interlude's existing paper and forest palette. */
+.coc-skill-order {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 16px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.coc-skill-order > span {
+  white-space: nowrap;
+}
+.coc-skill-order select {
+  flex: 1;
+  min-width: 0;
+  max-width: 220px;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--text);
+}
+.equipment-browser-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px 140px;
+  gap: 10px;
+}
+.equipment-browser-filters select {
+  min-width: 0;
+  font-size: 13px;
+}
+.coc-equipment-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 0 20px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-soft);
+}
+.coc-equipment-tabs button {
+  padding: 9px 18px;
+  font-size: 13px;
+  color: var(--muted);
+  border-radius: 7px;
+}
+.coc-equipment-tabs button.selected {
+  background: var(--panel);
+  color: var(--green);
+  box-shadow: var(--shadow);
+}
+.coc-coverage-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.coc-coverage-grid legend {
+  padding: 0 7px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.coc-coverage-grid .coc-toggle {
+  padding: 6px 0;
+  font-size: 13px;
+}
+@media (max-width: 620px) {
+  .equipment-browser-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .equipment-browser-filters .occupation-search {
+    grid-column: 1 / -1;
+  }
+  .coc-coverage-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 12px;
+    gap: 7px;
+  }
+}
 .occupation-picker-trigger {
   display: flex;
   align-items: center;

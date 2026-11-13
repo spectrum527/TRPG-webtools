@@ -1,8 +1,7 @@
 import { useRef, useState } from 'react';
-import { Download, Upload, Copy, Trash2 } from 'lucide-react';
-import { COC_WEAPON_CATALOG, COC_ARMOR_CATALOG } from '../../shared/coc-equipment';
+import { Download, Upload, Copy } from 'lucide-react';
+import { CocEquipmentBrowser } from './CocEquipmentCatalog';
 import { CocOccupationBrowser } from './CocOccupationPicker';
-import { COC_SKILL_CATALOG } from '../../shared/coc-career';
 import { COC_BOUTS, emptyCocSession } from '../../shared/coc-session';
 import { createCharacter } from '../../shared/rules';
 import { editCocPreparation } from '../../shared/coc-preparation';
@@ -24,6 +23,7 @@ export function CocReferenceLibrary({
 }) {
   const [library, setLibrary] = useState(readCocPreparationLibrary);
   const [query, setQuery] = useState('');
+  const [equipmentKind, setEquipmentKind] = useState<'weapon' | 'armor'>('weapon');
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const file = useRef<HTMLInputElement>(null);
@@ -42,14 +42,6 @@ export function CocReferenceLibrary({
     },
   });
   const card = libraryCard(library);
-  const weapons = [
-    ...COC_WEAPON_CATALOG.map((record) => ({ ...record, saved: false as const })),
-    ...library.weapons.map((record) => ({ ...record, saved: true as const })),
-  ];
-  const armor = [
-    ...COC_ARMOR_CATALOG.map((record) => ({ ...record, saved: false as const })),
-    ...library.armor.map((record) => ({ ...record, saved: true as const })),
-  ];
   const save = (next: typeof library) => {
     const stored = saveCocPreparationLibrary(next);
     setLibrary(stored);
@@ -81,7 +73,7 @@ export function CocReferenceLibrary({
       setError((e as Error).message);
     }
   };
-  const prompt = `请根据我提供的 CoC 第七版剧本提取法术、神话书、武器和防具，输出一个 JSON 数据块。保留来源中的骰式、单位和规则条件，不补造缺失数据；不确定的项先向我提问。文件必须使用此结构：\n${JSON.stringify({ schemaVersion: 1, type: 'interlude-coc-preparation', spells: [{ id: 'spell-example', name: '法术名', description: '条件与效果', source: '剧本页码', cost: { mp: 0, san: '1d4', hp: 0, minutes: 1, rounds: 0 } }], tomes: [{ id: 'tome-example', name: '书名', description: '阅读条件', initialMinutes: 60, fullMinutes: 1440, initialMythos: 1, fullMythos: 2, sanLoss: '1d4', spellIds: ['spell-example'] }], weapons: [{ id: 'weapon-example', profile: { name: '武器名', category: 'melee', skillKey: 'fightingBrawl', damage: '1d6', damageBonusMode: 'full', impales: false, range: 0, usesPerRound: 1, capacity: 0, malfunction: 0, era: 'any' } }], armor: [{ id: 'armor-example', profile: { name: '防具名', rating: 1, movPenalty: 0, coverage: 'body', era: 'any' } }] }, null, 2)}\n没有对应内容时使用空数组。ID 仅用英文字母、数字、短横线和下划线。同一文件不得重复 ID。神话书 spellIds 必须引用 spells 中的 ID。武器 category 为 melee/thrown/bow/handgun/rifle/shotgun/other，damageBonusMode 为 none/full/half，era 为 1920s/modern/any，防具 coverage 为 body/head/all。距离统一换算为码，时间为分钟，损失写骰式或整数。不要把示例占位项留在输出中。`;
+  const prompt = `请根据我提供的 CoC 第七版剧本提取法术、神话书、武器和防具，输出一个 JSON 数据块。保留来源中的骰式、单位和规则条件，不补造缺失数据；不确定的项先向我提问。文件必须使用此结构：\n${JSON.stringify({ schemaVersion: 1, type: 'interlude-coc-preparation', spells: [{ id: 'spell-example', name: '法术名', description: '条件与效果', source: '剧本页码', cost: { mp: 0, san: '1d4', hp: 0, minutes: 1, rounds: 0 } }], tomes: [{ id: 'tome-example', name: '书名', description: '阅读条件', initialMinutes: 60, fullMinutes: 1440, initialMythos: 1, fullMythos: 2, sanLoss: '1d4', spellIds: ['spell-example'] }], weapons: [{ id: 'weapon-example', profile: { name: '武器名', category: 'melee', skillKey: 'fightingBrawl', damage: '1d6', damageBonusMode: 'full', impales: false, range: 0, usesPerRound: 1, capacity: 0, malfunction: 0, era: 'any' } }], armor: [{ id: 'armor-example', profile: { name: '防具名', rating: 1, movPenalty: 0, coverage: 'body', era: 'any' } }] }, null, 2)}\n没有对应内容时使用空数组。ID 仅用英文字母、数字、短横线和下划线。同一文件不得重复 ID。神话书 spellIds 必须引用 spells 中的 ID。武器 category 为 melee/thrown/bow/handgun/rifle/shotgun/smg/machineGun/heavy/explosive/other，damageBonusMode 为 none/full/half，era 为 1920s/modern/any，防具 kind 可选 worn/shield/natural/cover/environment；coverage 为 body/head/all/custom/none，custom 必须提供 locations 数组，值为 body/head/face/eyes/neck/arms/hands/legs/feet/chest/back/abdomen。特殊防护条件保留在 rulesNotes 中；未知或情境护甲可设 rating 为 0、manualRating 为 true 并保留 sourceText.rating。距离统一换算为码，时间为分钟，损失写骰式或整数。不要把示例占位项留在输出中。`;
   return (
     <section className="panel coc-library-panel">
       <div className="coc-library-toolbar">
@@ -171,93 +163,30 @@ export function CocReferenceLibrary({
       {section === 'equipment' && (
         <div className="coc-section">
           <CocSectionHeading title="武器与防具资料库" eyebrow="EQUIPMENT LIBRARY" />
-          <label className="field">
-            搜索装备
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="装备名称"
-            />
-          </label>
-          <div className="coc-record-list">
-            {weapons
-              .filter((w) => w.profile.name.includes(query))
-              .map((w) => (
-                <article className="coc-record" key={`${w.saved ? 'library' : 'catalog'}:${w.id}`}>
-                  <div className="coc-record-title">
-                    <h4>{w.profile.name}</h4>
-                    {w.saved && (
-                      <button
-                        type="button"
-                        className="icon-button small"
-                        aria-label={`删除资料${w.profile.name}`}
-                        onClick={() => remove('weapons', w.id)}
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
-                  </div>
-                  <p className="coc-data-line">
-                    {COC_SKILL_CATALOG.find((s) => s.key === w.profile.skillKey)?.label ??
-                      w.profile.skillKey}{' '}
-                    · {w.profile.damage}{' '}
-                    {w.profile.damageBonusMode === 'none'
-                      ? ''
-                      : w.profile.damageBonusMode === 'half'
-                        ? '+ ½DB'
-                        : '+ DB'}{' '}
-                    ·{' '}
-                    {w.profile.rangeRule === 'strFifth'
-                      ? 'STR ÷ 5 码'
-                      : w.profile.range
-                        ? `${[w.profile.range, ...(w.profile.longerRanges ?? []).map(({ range }) => range)].join(' / ')} 码`
-                        : '接触'}{' '}
-                    · {w.profile.roundsPerUse ? `每 ${w.profile.roundsPerUse} 轮` : '每轮'}{' '}
-                    {w.profile.usesPerRound}
-                    {w.profile.rapidUsesPerRound &&
-                    w.profile.rapidUsesPerRound > w.profile.usesPerRound
-                      ? `（${w.profile.rapidUsesPerRound}）`
-                      : ''}{' '}
-                    次 · 装弹 {w.profile.capacity} · 故障 {w.profile.malfunction || '无'}
-                    {!w.saved && w.source === 'workbook' ? ' · 参考卡' : ''}
-                  </p>
-                  {'notes' in w && typeof w.notes === 'string' && w.notes && (
-                    <p className="field-help">{w.notes}</p>
-                  )}
-                </article>
-              ))}
+          <div className="coc-equipment-tabs" aria-label="装备目录分类">
+            <button
+              type="button"
+              className={equipmentKind === 'weapon' ? 'selected' : ''}
+              aria-pressed={equipmentKind === 'weapon'}
+              onClick={() => setEquipmentKind('weapon')}
+            >
+              武器
+            </button>
+            <button
+              type="button"
+              className={equipmentKind === 'armor' ? 'selected' : ''}
+              aria-pressed={equipmentKind === 'armor'}
+              onClick={() => setEquipmentKind('armor')}
+            >
+              防具与掩体
+            </button>
           </div>
-          <h4>防具</h4>
-          <div className="coc-record-list">
-            {armor
-              .filter((a) => a.profile.name.includes(query))
-              .map((a) => (
-                <article className="coc-record" key={`${a.saved ? 'library' : 'catalog'}:${a.id}`}>
-                  <div className="coc-record-title">
-                    <h4>{a.profile.name}</h4>
-                    {a.saved && (
-                      <button
-                        type="button"
-                        className="icon-button small"
-                        aria-label={`删除资料${a.profile.name}`}
-                        onClick={() => remove('armor', a.id)}
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
-                  </div>
-                  <p className="coc-data-line">
-                    护甲 {a.profile.rating} · MOV −{a.profile.movPenalty} ·{' '}
-                    {a.profile.coverage === 'all'
-                      ? '全身'
-                      : a.profile.coverage === 'head'
-                        ? '头部'
-                        : '身体'}
-                    {!a.saved && a.source === 'workbook' ? ' · 参考卡' : ''}
-                  </p>
-                </article>
-              ))}
-          </div>
+          <CocEquipmentBrowser
+            key={equipmentKind}
+            kind={equipmentKind}
+            library={library}
+            onRemove={(id) => remove(equipmentKind === 'weapon' ? 'weapons' : 'armor', id)}
+          />
         </div>
       )}
       {section === 'careers' && (

@@ -30,6 +30,8 @@ import {
   type DndAllocation,
 } from '../../shared/creation';
 import { getDndEdition } from '../../shared/dnd-edition';
+import { sortCocSkills } from '../../shared/coc-skill-order';
+import { CocSkillOrderSelect, useCocSkillOrder } from './CocSkillOrder';
 
 export function ValidationSummary({
   errors,
@@ -75,6 +77,8 @@ export function AllocationEditor({
   onChange: (card: Character) => void;
 }) {
   const [search, setSearch] = useState('');
+  const [skillOrder, setSkillOrder] = useCocSkillOrder('allocation', 'occupation');
+  const [pinnedSkills, setPinnedSkills] = useState<string[] | null>(null);
   const budgetRef = useRef<HTMLDivElement>(null);
   const [floatingBudget, setFloatingBudget] = useState(false);
   const [budgetOffset, setBudgetOffset] = useState(60);
@@ -159,6 +163,13 @@ export function AllocationEditor({
     const profile = cocOccupationProfile(card);
     const budget = cocBudget(card);
     const occupied = new Set(cocOccupationSkillPool(card));
+    const sortedSkills = sortCocSkills(cocSkillDefinitions(card), card, skillOrder);
+    const skillRanks = pinnedSkills ? new Map(pinnedSkills.map((key, i) => [key, i])) : null;
+    const displaySkills = skillRanks
+      ? [...sortedSkills].sort(
+          (a, b) => (skillRanks.get(a.key) ?? 999) - (skillRanks.get(b.key) ?? 999),
+        )
+      : sortedSkills;
     const options = occupationOptions(profile, card);
     const optional = profile ? cocOptionalOccupationSlots(profile, card) : new Set<number>();
     const restrictedInterest = policy.allowInterestOnOccupation === false;
@@ -303,6 +314,7 @@ export function AllocationEditor({
           />
           <span>技能上限 {policy.cocSkillCap} · 单项范围优先</span>
         </div>
+        <CocSkillOrderSelect value={skillOrder} onChange={setSkillOrder} />
         {restrictedInterest && (
           <div className="allocation-policy-note">
             <p>本房间专点专用：兴趣点不能投入职业技能或信用评级。</p>
@@ -326,14 +338,23 @@ export function AllocationEditor({
             )}
           </div>
         )}
-        <div className="allocation-ledger">
+        <div
+          className="allocation-ledger"
+          onFocusCapture={(event) => {
+            if (event.target instanceof HTMLInputElement && !pinnedSkills)
+              setPinnedSkills(sortedSkills.map((skill) => skill.key));
+          }}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setPinnedSkills(null);
+          }}
+        >
           <div className="allocation-row ledger-head">
             <span>技能 / 基础</span>
             <span>职业点</span>
             <span>兴趣点</span>
             <span>合计</span>
           </div>
-          {cocSkillDefinitions(card)
+          {displaySkills
             .filter((s) => s.label.includes(search))
             .map((skill) => {
               const base = cocSkillBase(card, skill.key),

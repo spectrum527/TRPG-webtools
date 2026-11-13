@@ -6,7 +6,10 @@ export function cocArmorMovementPenalty(card: Character): number {
   return Math.max(
     0,
     ...(card.cocInvestigator?.equipment?.armor ?? [])
-      .filter((armor) => armor.equipped)
+      .filter(
+        (armor) =>
+          armor.equipped && !['cover', 'environment'].includes(armor.profile.kind ?? 'worn'),
+      )
       .map((armor) => controlledValue(armor.overrides?.movPenalty, armor.profile.movPenalty)),
   );
 }
