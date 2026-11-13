@@ -1,0 +1,5250 @@
+{
+  "weapons": [
+    {
+      "id": "workbook-weapon-2",
+      "profile": {
+        "name": "弓箭",
+        "category": "bow",
+        "skillKey": "firearmsBow",
+        "damage": "1d6",
+        "damageBonusMode": "half",
+        "impales": false,
+        "range": 30,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 97,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 2
+        },
+        "sourceText": {
+          "skill": "弓",
+          "damage": "1D6+半DB",
+          "range": "30码",
+          "usesPerRound": "1",
+          "capacity": "1",
+          "malfunction": "97",
+          "era": "1920s,现代",
+          "price": "7/75",
+          "kind": "常规武器"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-3",
+      "profile": {
+        "name": "黄铜指虎",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "1d3+1",
+        "damageBonusMode": "full",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 3
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "1D3+1+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "1/10"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-4",
+      "profile": {
+        "name": "长鞭",
+        "category": "melee",
+        "skillKey": "fightingWhip",
+        "damage": "1d3",
+        "damageBonusMode": "half",
+        "impales": false,
+        "range": 3.333,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 4
+        },
+        "sourceText": {
+          "skill": "鞭子",
+          "damage": "1D3+半DB",
+          "range": "10步",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s",
+          "price": "5/50"
+        },
+        "rulesNotes": "长鞭射程按 Chaosium 武器表的 10 英尺换算为约 3.333 码。"
+      }
+    },
+    {
+      "id": "workbook-weapon-5",
+      "profile": {
+        "name": "燃烧的火把",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "1d6",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 5
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "1D6+燃烧",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "0.05/0.5"
+        },
+        "rulesNotes": "仅自动结算初始伤害，起火与持续燃烧由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-6",
+      "profile": {
+        "name": "电锯",
+        "category": "melee",
+        "skillKey": "fightingChainsaw",
+        "damage": "2d8",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 95,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 6
+        },
+        "sourceText": {
+          "skill": "电锯",
+          "damage": "2D8",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "95",
+          "era": "现代",
+          "price": "——/300"
+        },
+        "rulesNotes": "电锯的大失败、反伤和伤残效果由主持人按规则处理。"
+      }
+    },
+    {
+      "id": "workbook-weapon-7",
+      "profile": {
+        "name": "包皮铁棍(甩棍、护身短棒)",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "1d8",
+        "damageBonusMode": "full",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 7
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "1D8+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "2/15"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-8",
+      "profile": {
+        "name": "大型棍状物(棒球棍、板球棒、拨火棍等)",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "1d8",
+        "damageBonusMode": "full",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 8
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "1D8+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "3/35"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-9",
+      "profile": {
+        "name": "小型棍状物(警棍等)",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "1d6",
+        "damageBonusMode": "full",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 9
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "1D6+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "3/35"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-10",
+      "profile": {
+        "name": "弩",
+        "category": "bow",
+        "skillKey": "firearmsBow",
+        "damage": "1d8+2",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 50,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 96,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 10
+        },
+        "sourceText": {
+          "skill": "弓",
+          "damage": "1D8+2",
+          "range": "50码",
+          "usesPerRound": "1/2",
+          "capacity": "1",
+          "malfunction": "96",
+          "era": "1920s,现代",
+          "price": "10/100"
+        },
+        "roundsPerUse": 2
+      }
+    },
+    {
+      "id": "workbook-weapon-11",
+      "profile": {
+        "name": "绞具",
+        "category": "melee",
+        "skillKey": "fightingGarrote",
+        "damage": "1d6",
+        "damageBonusMode": "full",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 11
+        },
+        "sourceText": {
+          "skill": "绞具",
+          "damage": "1D6+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "0.5/3"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-12",
+      "profile": {
+        "name": "手斧/镰刀",
+        "category": "melee",
+        "skillKey": "fightingAxe",
+        "damage": "1d6+1",
+        "damageBonusMode": "full",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 12
+        },
+        "sourceText": {
+          "skill": "斧",
+          "damage": "1D6+1+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "3/9"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-13",
+      "profile": {
+        "name": "大型刀具(大砍刀等)",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "1d8",
+        "damageBonusMode": "full",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 13
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "1D8+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "4/50"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-14",
+      "profile": {
+        "name": "中型刀具(切肉菜刀等)",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "1d4+2",
+        "damageBonusMode": "full",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 14
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "1D4+2+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "2/15"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-15",
+      "profile": {
+        "name": "小型刀具(弹簧折叠刀等)",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "1d4",
+        "damageBonusMode": "full",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 15
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "1D4+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "2/6"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-16",
+      "profile": {
+        "name": "220v通电导线",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "2d8",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 95,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 16
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "2D8+眩晕",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "95",
+          "era": "现代",
+          "price": "——"
+        },
+        "rulesNotes": "仅自动结算基础 HP 伤害，眩晕效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-17",
+      "profile": {
+        "name": "催泪瓦斯",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "0",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 25,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 17
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "眩晕",
+          "range": "6步",
+          "usesPerRound": "1",
+          "capacity": "25次",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "——/10"
+        },
+        "manualRange": true,
+        "manualDamage": true,
+        "rulesNotes": "原表射程单位为“步”，须由主持人确认并手填码数。 眩晕不作为 HP 伤害骰式自动结算；请由主持人裁定效果。"
+      }
+    },
+    {
+      "id": "workbook-weapon-18",
+      "profile": {
+        "name": "双节棍",
+        "category": "melee",
+        "skillKey": "fightingFlail",
+        "damage": "1d8",
+        "damageBonusMode": "full",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 18
+        },
+        "sourceText": {
+          "skill": "链枷",
+          "damage": "1D8+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "1/10"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-19",
+      "profile": {
+        "name": "投石",
+        "category": "thrown",
+        "skillKey": "throw",
+        "damage": "1d4",
+        "damageBonusMode": "half",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 19
+        },
+        "sourceText": {
+          "skill": "投掷",
+          "damage": "1D4+半DB",
+          "range": "STR/5步",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "——"
+        },
+        "rangeRule": "strFifth",
+        "rulesNotes": "投掷基础射程按 STR ÷ 5 码计算。"
+      }
+    },
+    {
+      "id": "workbook-weapon-20",
+      "profile": {
+        "name": "手里剑",
+        "category": "thrown",
+        "skillKey": "throw",
+        "damage": "1d3",
+        "damageBonusMode": "half",
+        "impales": true,
+        "range": 20,
+        "usesPerRound": 2,
+        "capacity": 1,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 20
+        },
+        "sourceText": {
+          "skill": "投掷",
+          "damage": "1D3+半DB",
+          "range": "20码",
+          "usesPerRound": "2",
+          "capacity": "一次性",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "0.5/3"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-21",
+      "profile": {
+        "name": "矛、骑士长枪",
+        "category": "melee",
+        "skillKey": "fightingSpear",
+        "damage": "1d8+1",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 21
+        },
+        "sourceText": {
+          "skill": "矛",
+          "damage": "1D8+1",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "25/150"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-22",
+      "profile": {
+        "name": "掷矛",
+        "category": "thrown",
+        "skillKey": "throw",
+        "damage": "1d8",
+        "damageBonusMode": "half",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 22
+        },
+        "sourceText": {
+          "skill": "投掷",
+          "damage": "1D8+半DB",
+          "range": "STR/5码",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "罕见",
+          "price": "1/25"
+        },
+        "rangeRule": "strFifth",
+        "rulesNotes": "投掷基础射程按 STR ÷ 5 码计算。"
+      }
+    },
+    {
+      "id": "workbook-weapon-23",
+      "profile": {
+        "name": "大型剑(马刀)",
+        "category": "melee",
+        "skillKey": "fightingSword",
+        "damage": "1d8+1",
+        "damageBonusMode": "full",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 23
+        },
+        "sourceText": {
+          "skill": "剑",
+          "damage": "1D8+1+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "30/75"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-24",
+      "profile": {
+        "name": "中型剑(佩剑等)",
+        "category": "melee",
+        "skillKey": "fightingSword",
+        "damage": "1d6+1",
+        "damageBonusMode": "full",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 24
+        },
+        "sourceText": {
+          "skill": "剑",
+          "damage": "1D6+1+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "15/100"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-25",
+      "profile": {
+        "name": "轻剑(击剑、剑杖等)",
+        "category": "melee",
+        "skillKey": "fightingSword",
+        "damage": "1d6",
+        "damageBonusMode": "full",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 25
+        },
+        "sourceText": {
+          "skill": "剑",
+          "damage": "1D6+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "25/100"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-26",
+      "profile": {
+        "name": "电棍、电击枪(接触)",
+        "category": "melee",
+        "skillKey": "fightingBrawl",
+        "damage": "1d3",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 97,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 26
+        },
+        "sourceText": {
+          "skill": "斗殴",
+          "damage": "1D3+眩晕",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "97",
+          "era": "现代",
+          "price": "——/200"
+        },
+        "rulesNotes": "仅自动结算基础 HP 伤害，眩晕效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-27",
+      "profile": {
+        "name": "电击枪(远程)",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d3",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 3,
+        "malfunction": 95,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 27
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D3+眩晕",
+          "range": "15步",
+          "usesPerRound": "1",
+          "capacity": "3",
+          "malfunction": "95",
+          "era": "现代",
+          "price": "——/400"
+        },
+        "manualRange": true,
+        "rulesNotes": "原表射程单位为“步”，须由主持人确认并手填码数。 仅自动结算基础 HP 伤害，眩晕效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-28",
+      "profile": {
+        "name": "利刃回旋镖",
+        "category": "thrown",
+        "skillKey": "throw",
+        "damage": "1d8",
+        "damageBonusMode": "half",
+        "impales": false,
+        "range": 20,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 28
+        },
+        "sourceText": {
+          "skill": "投掷",
+          "damage": "1D8+半DB",
+          "range": "20码",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "罕见",
+          "price": "2/4"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-29",
+      "profile": {
+        "name": "伐木斧",
+        "category": "melee",
+        "skillKey": "fightingAxe",
+        "damage": "1d8+2",
+        "damageBonusMode": "full",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 0,
+        "malfunction": 0,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 29
+        },
+        "sourceText": {
+          "skill": "斧",
+          "damage": "1D8+2+DB",
+          "range": "接触",
+          "usesPerRound": "1",
+          "capacity": "——",
+          "malfunction": "——",
+          "era": "1920s,现代",
+          "price": "5/10"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-30",
+      "profile": {
+        "name": "遂发枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d6+1",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 10,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 95,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 30
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D6+1",
+          "range": "10",
+          "usesPerRound": "1/4",
+          "capacity": "1",
+          "malfunction": "95",
+          "era": "罕见",
+          "price": "30/300",
+          "kind": "手枪"
+        },
+        "roundsPerUse": 4
+      }
+    },
+    {
+      "id": "workbook-weapon-31",
+      "profile": {
+        "name": ".22 短口自动手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 10,
+        "usesPerRound": 1,
+        "capacity": 6,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 31
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D6",
+          "range": "10",
+          "usesPerRound": "1(3)",
+          "capacity": "6",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "25/190"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-32",
+      "profile": {
+        "name": ".25 短口手枪 (单管)",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 3,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 100,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 32
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D6",
+          "range": "3",
+          "usesPerRound": "1",
+          "capacity": "1",
+          "malfunction": "100",
+          "era": "1920s",
+          "price": "12/55"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-33",
+      "profile": {
+        "name": ".32 or 7.65mm 左轮手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d8",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 6,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 33
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D8",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "6",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "15/200"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-34",
+      "profile": {
+        "name": ".32 or 7.65mm 自动手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d8",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 8,
+        "malfunction": 99,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 34
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D8",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "8",
+          "malfunction": "99",
+          "era": "1920s,现代",
+          "price": "20/350"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-35",
+      "profile": {
+        "name": ".357 Magnum 左轮手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d8+1d4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 6,
+        "malfunction": 100,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 35
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D8+1D4",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "6",
+          "malfunction": "100",
+          "era": "现代",
+          "price": "——/425"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-36",
+      "profile": {
+        "name": ".38 or 9mm 左轮手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 6,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 36
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "6",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "25/200"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-37",
+      "profile": {
+        "name": ".38 自动手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 8,
+        "malfunction": 99,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 37
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "8",
+          "malfunction": "99",
+          "era": "1920s,现代",
+          "price": "30/375"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-38",
+      "profile": {
+        "name": "贝雷塔M9",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 15,
+        "malfunction": 98,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 38
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "15",
+          "malfunction": "98",
+          "era": "现代",
+          "price": "——/500"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-39",
+      "profile": {
+        "name": "格洛克17 9mm 自动手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 17,
+        "malfunction": 98,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 39
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "17",
+          "malfunction": "98",
+          "era": "现代",
+          "price": "——/500"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-40",
+      "profile": {
+        "name": "鲁格P08",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 8,
+        "malfunction": 99,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 40
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "8",
+          "malfunction": "99",
+          "era": "1920s,现代",
+          "price": "75/600"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-41",
+      "profile": {
+        "name": ".41 左轮手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 8,
+        "malfunction": 100,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 41
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "8",
+          "malfunction": "100",
+          "era": "1920s,罕见",
+          "price": "30/——"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-42",
+      "profile": {
+        "name": ".44 马格南左轮手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10+1d4+2",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 6,
+        "malfunction": 100,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 42
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10+1D4+2",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "6",
+          "malfunction": "100",
+          "era": "现代",
+          "price": "475"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-43",
+      "profile": {
+        "name": ".45 左轮手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10+2",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 6,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 43
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10+2",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "6",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "30/300"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-44",
+      "profile": {
+        "name": ".45 自动手枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10+2",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 7,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 44
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10+2",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "7",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "40/375"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-45",
+      "profile": {
+        "name": "沙漠之鹰",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10+1d6+3",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 7,
+        "malfunction": 94,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 45
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10+1D6+3",
+          "range": "15",
+          "usesPerRound": "1(3)",
+          "capacity": "7",
+          "malfunction": "94",
+          "era": "现代",
+          "price": "650"
+        },
+        "rapidUsesPerRound": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-46",
+      "profile": {
+        "name": ".58 斯普林菲尔德步枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "1d10+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 60,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 95,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 46
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "1D10+4",
+          "range": "60",
+          "usesPerRound": "1/4",
+          "capacity": "1",
+          "malfunction": "95",
+          "era": "罕见",
+          "price": "25/350",
+          "kind": "步枪"
+        },
+        "roundsPerUse": 4
+      }
+    },
+    {
+      "id": "workbook-weapon-47",
+      "profile": {
+        "name": ".22 杠杆式枪机步枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "1d6+1",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 30,
+        "usesPerRound": 1,
+        "capacity": 6,
+        "malfunction": 99,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 47
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "1D6+1",
+          "range": "30",
+          "usesPerRound": "1",
+          "capacity": "6",
+          "malfunction": "99",
+          "era": "1920s,现代",
+          "price": "13/70"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-48",
+      "profile": {
+        "name": ".30 卡宾枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 50,
+        "usesPerRound": 1,
+        "capacity": 6,
+        "malfunction": 98,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 48
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6",
+          "range": "50",
+          "usesPerRound": "1",
+          "capacity": "6",
+          "malfunction": "98",
+          "era": "1920s,现代",
+          "price": "19/150"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-49",
+      "profile": {
+        "name": ".45 马提尼·亨利步枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "1d8+1d6+3",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 80,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 100,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 49
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "1D8+1D6+3",
+          "range": "80",
+          "usesPerRound": "1/3",
+          "capacity": "1",
+          "malfunction": "100",
+          "era": "1920s",
+          "price": "20/200"
+        },
+        "roundsPerUse": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-50",
+      "profile": {
+        "name": "莫兰上校的气动步枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+1",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 20,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 88,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 50
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+1",
+          "range": "20",
+          "usesPerRound": "1/3",
+          "capacity": "1",
+          "malfunction": "88",
+          "era": "1920s",
+          "price": "200"
+        },
+        "roundsPerUse": 3
+      }
+    },
+    {
+      "id": "workbook-weapon-51",
+      "profile": {
+        "name": "加兰德M1、M2步枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 8,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 51
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+4",
+          "range": "110",
+          "usesPerRound": "1",
+          "capacity": "8",
+          "malfunction": "100",
+          "era": "二战及以后",
+          "price": "400"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-52",
+      "profile": {
+        "name": "SKS半自动步枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+1",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 90,
+        "usesPerRound": 1,
+        "capacity": 10,
+        "malfunction": 97,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 52
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+1",
+          "range": "90",
+          "usesPerRound": "1(2)",
+          "capacity": "10",
+          "malfunction": "97",
+          "era": "现代",
+          "price": "500"
+        },
+        "rapidUsesPerRound": 2
+      }
+    },
+    {
+      "id": "workbook-weapon-53",
+      "profile": {
+        "name": ".303 (7.7mm) 李恩菲尔德",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 5,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 53
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+4",
+          "range": "110",
+          "usesPerRound": "1",
+          "capacity": "5",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "50/300"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-54",
+      "profile": {
+        "name": ".30——06 (7.62mm) 栓式枪机步枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 5,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 54
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+4",
+          "range": "110",
+          "usesPerRound": "1",
+          "capacity": "5",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "75/175"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-55",
+      "profile": {
+        "name": ".30——06 (7.62mm) 半自动步枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 5,
+        "malfunction": 100,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 55
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+4",
+          "range": "110",
+          "usesPerRound": "1",
+          "capacity": "5",
+          "malfunction": "100",
+          "era": "现代",
+          "price": "275"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-56",
+      "profile": {
+        "name": ".444 (11.28mm) 马林步枪",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d8+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 5,
+        "malfunction": 98,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 56
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D8+4",
+          "range": "110",
+          "usesPerRound": "1",
+          "capacity": "5",
+          "malfunction": "98",
+          "era": "现代",
+          "price": "400"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-57",
+      "profile": {
+        "name": "猎象枪(双管)",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "3d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 100,
+        "usesPerRound": 2,
+        "capacity": 2,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 57
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "3D6+4",
+          "range": "100",
+          "usesPerRound": "1 or 2",
+          "capacity": "2",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "400/1000"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-58",
+      "profile": {
+        "name": "20号霰弹枪(双管)",
+        "category": "shotgun",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 10,
+        "usesPerRound": 2,
+        "capacity": 2,
+        "malfunction": 100,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 58
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6/1D6/1D3",
+          "range": "10/20/50",
+          "usesPerRound": "1 or 2",
+          "capacity": "2",
+          "malfunction": "100",
+          "era": "1920s",
+          "price": "35/稀有",
+          "kind": "霰弹枪"
+        },
+        "longerRanges": [
+          {
+            "range": 20,
+            "damage": "1d6"
+          },
+          {
+            "range": 50,
+            "damage": "1d3"
+          }
+        ]
+      }
+    },
+    {
+      "id": "workbook-weapon-59",
+      "profile": {
+        "name": "16号霰弹枪(双管)",
+        "category": "shotgun",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+2",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 10,
+        "usesPerRound": 2,
+        "capacity": 2,
+        "malfunction": 100,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 59
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+2/1D6+1/1D4",
+          "range": "10/20/50",
+          "usesPerRound": "1 or 2",
+          "capacity": "2",
+          "malfunction": "100",
+          "era": "1920s",
+          "price": "40/稀有"
+        },
+        "longerRanges": [
+          {
+            "range": 20,
+            "damage": "1d6+1"
+          },
+          {
+            "range": 50,
+            "damage": "1d4"
+          }
+        ]
+      }
+    },
+    {
+      "id": "workbook-weapon-60",
+      "profile": {
+        "name": "12号霰弹枪(双管)",
+        "category": "shotgun",
+        "skillKey": "firearmsRifle",
+        "damage": "4d6",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 10,
+        "usesPerRound": 2,
+        "capacity": 2,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 60
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "4D6/2D6/1D6",
+          "range": "10/20/50",
+          "usesPerRound": "1 or 2",
+          "capacity": "2",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "40/200"
+        },
+        "longerRanges": [
+          {
+            "range": 20,
+            "damage": "2d6"
+          },
+          {
+            "range": 50,
+            "damage": "1d6"
+          }
+        ]
+      }
+    },
+    {
+      "id": "workbook-weapon-61",
+      "profile": {
+        "name": "12号泵动霰弹枪",
+        "category": "shotgun",
+        "skillKey": "firearmsRifle",
+        "damage": "4d6",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 10,
+        "usesPerRound": 1,
+        "capacity": 5,
+        "malfunction": 100,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 61
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "4D6/2D6/1D6",
+          "range": "10/20/50",
+          "usesPerRound": "1",
+          "capacity": "5",
+          "malfunction": "100",
+          "era": "现代",
+          "price": "45/100"
+        },
+        "longerRanges": [
+          {
+            "range": 20,
+            "damage": "2d6"
+          },
+          {
+            "range": 50,
+            "damage": "1d6"
+          }
+        ]
+      }
+    },
+    {
+      "id": "workbook-weapon-62",
+      "profile": {
+        "name": "12号半自动霰弹枪",
+        "category": "shotgun",
+        "skillKey": "firearmsRifle",
+        "damage": "4d6",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 10,
+        "usesPerRound": 1,
+        "capacity": 5,
+        "malfunction": 100,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 62
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "4D6/2D6/1D6",
+          "range": "10/20/50",
+          "usesPerRound": "1(2)",
+          "capacity": "5",
+          "malfunction": "100",
+          "era": "现代",
+          "price": "45/100"
+        },
+        "longerRanges": [
+          {
+            "range": 20,
+            "damage": "2d6"
+          },
+          {
+            "range": 50,
+            "damage": "1d6"
+          }
+        ],
+        "rapidUsesPerRound": 2
+      }
+    },
+    {
+      "id": "workbook-weapon-63",
+      "profile": {
+        "name": "削短12号双管霰弹枪",
+        "category": "shotgun",
+        "skillKey": "firearmsRifle",
+        "damage": "4d6",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 5,
+        "usesPerRound": 2,
+        "capacity": 2,
+        "malfunction": 100,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 63
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "4D6/1D6",
+          "range": "5/10",
+          "usesPerRound": "1 or 2",
+          "capacity": "2",
+          "malfunction": "100",
+          "era": "1920s",
+          "price": "N/A"
+        },
+        "longerRanges": [
+          {
+            "range": 10,
+            "damage": "1d6"
+          }
+        ]
+      }
+    },
+    {
+      "id": "workbook-weapon-64",
+      "profile": {
+        "name": "10号霰弹枪(双管)",
+        "category": "shotgun",
+        "skillKey": "firearmsRifle",
+        "damage": "4d6+2",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 10,
+        "usesPerRound": 2,
+        "capacity": 2,
+        "malfunction": 100,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 64
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "4D6+2/2D6+1/1D4",
+          "range": "10/20/50",
+          "usesPerRound": "1 or 2",
+          "capacity": "2",
+          "malfunction": "100",
+          "era": "1920s，罕见",
+          "price": "稀有"
+        },
+        "longerRanges": [
+          {
+            "range": 20,
+            "damage": "2d6+1"
+          },
+          {
+            "range": 50,
+            "damage": "1d4"
+          }
+        ]
+      }
+    },
+    {
+      "id": "workbook-weapon-65",
+      "profile": {
+        "name": "12号贝里尼M3 (折叠式枪托)",
+        "category": "shotgun",
+        "skillKey": "firearmsRifle",
+        "damage": "4d6",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 10,
+        "usesPerRound": 1,
+        "capacity": 7,
+        "malfunction": 100,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 65
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "4D6/2D6/1D6",
+          "range": "10/20/50",
+          "usesPerRound": "1(2)",
+          "capacity": "7",
+          "malfunction": "100",
+          "era": "现代",
+          "price": "——/895"
+        },
+        "longerRanges": [
+          {
+            "range": 20,
+            "damage": "2d6"
+          },
+          {
+            "range": 50,
+            "damage": "1d6"
+          }
+        ],
+        "rapidUsesPerRound": 2
+      }
+    },
+    {
+      "id": "workbook-weapon-66",
+      "profile": {
+        "name": "12号SPAS (折叠式枪托)",
+        "category": "shotgun",
+        "skillKey": "firearmsRifle",
+        "damage": "4d6",
+        "damageBonusMode": "none",
+        "impales": false,
+        "range": 10,
+        "usesPerRound": 1,
+        "capacity": 8,
+        "malfunction": 98,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 66
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "4D6/2D6/1D6",
+          "range": "10/20/50",
+          "usesPerRound": "1",
+          "capacity": "8",
+          "malfunction": "98",
+          "era": "现代",
+          "price": "——/600"
+        },
+        "longerRanges": [
+          {
+            "range": 20,
+            "damage": "2d6"
+          },
+          {
+            "range": 50,
+            "damage": "1d6"
+          }
+        ]
+      }
+    },
+    {
+      "id": "workbook-weapon-67",
+      "profile": {
+        "name": "AK——47 or AKM",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+1",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 100,
+        "usesPerRound": 1,
+        "capacity": 30,
+        "malfunction": 100,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 67
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+1",
+          "range": "100",
+          "usesPerRound": "1(2)or全自动",
+          "capacity": "30",
+          "malfunction": "100",
+          "era": "现代",
+          "price": "——/200",
+          "kind": "突击步枪"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-68",
+      "profile": {
+        "name": "AK——74",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+1",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 30,
+        "malfunction": 97,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 68
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+1",
+          "range": "110",
+          "usesPerRound": "1(2)or全自动",
+          "capacity": "30",
+          "malfunction": "97",
+          "era": "现代",
+          "price": "——/1000"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-69",
+      "profile": {
+        "name": "巴雷特M82",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d10+1d8+6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 250,
+        "usesPerRound": 1,
+        "capacity": 11,
+        "malfunction": 96,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 69
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D10+1D8+6",
+          "range": "250",
+          "usesPerRound": "1",
+          "capacity": "11",
+          "malfunction": "96",
+          "era": "现代",
+          "price": "——/3000"
+        }
+      }
+    },
+    {
+      "id": "workbook-weapon-70",
+      "profile": {
+        "name": "FN FAL Light Automatic",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 20,
+        "malfunction": 97,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 70
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6+4",
+          "range": "110",
+          "usesPerRound": "1(2)or3连射",
+          "capacity": "20",
+          "malfunction": "97",
+          "era": "现代",
+          "price": "——/1500"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-71",
+      "profile": {
+        "name": "Galil Assault Rifle",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 20,
+        "malfunction": 98,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 71
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6",
+          "range": "110",
+          "usesPerRound": "1(2)or连射",
+          "capacity": "20",
+          "malfunction": "98",
+          "era": "现代",
+          "price": "——/2000"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-72",
+      "profile": {
+        "name": "M16A2",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 30,
+        "malfunction": 97,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 72
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6",
+          "range": "110",
+          "usesPerRound": "1(2)or3连射",
+          "capacity": "30",
+          "malfunction": "97",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-73",
+      "profile": {
+        "name": "M4",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 90,
+        "usesPerRound": 1,
+        "capacity": 30,
+        "malfunction": 97,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 73
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6",
+          "range": "90",
+          "usesPerRound": "1or3连射",
+          "capacity": "30",
+          "malfunction": "97",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-74",
+      "profile": {
+        "name": "Steyr AUG",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 30,
+        "malfunction": 99,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 74
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6",
+          "range": "110",
+          "usesPerRound": "1(2)or全自动",
+          "capacity": "30",
+          "malfunction": "99",
+          "era": "现代",
+          "price": "——/1100"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-75",
+      "profile": {
+        "name": "巴雷特M70/90",
+        "category": "rifle",
+        "skillKey": "firearmsRifle",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 30,
+        "malfunction": 99,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 75
+        },
+        "sourceText": {
+          "skill": "步枪/霰弹枪",
+          "damage": "2D6",
+          "range": "110",
+          "usesPerRound": "1or全自动",
+          "capacity": "30",
+          "malfunction": "99",
+          "era": "现代",
+          "price": "——/2800"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-76",
+      "profile": {
+        "name": "贝格曼MP181/ MP2811",
+        "category": "smg",
+        "skillKey": "firearmsSmg",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 20,
+        "usesPerRound": 1,
+        "capacity": 20,
+        "malfunction": 96,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 76
+        },
+        "sourceText": {
+          "skill": "冲锋枪",
+          "damage": "1D10",
+          "range": "20",
+          "usesPerRound": "1(2)or全自动",
+          "capacity": "20/30/32",
+          "malfunction": "96",
+          "era": "1920s",
+          "price": "1000/20000",
+          "kind": "冲锋枪"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。 装弹量有多种规格，默认采用原表首项，可解锁修改。"
+      }
+    },
+    {
+      "id": "workbook-weapon-77",
+      "profile": {
+        "name": "黑克勒——科赫MP5",
+        "category": "smg",
+        "skillKey": "firearmsSmg",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 20,
+        "usesPerRound": 1,
+        "capacity": 15,
+        "malfunction": 97,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 77
+        },
+        "sourceText": {
+          "skill": "冲锋枪",
+          "damage": "1D10",
+          "range": "20",
+          "usesPerRound": "1(2)or全自动",
+          "capacity": "15/30",
+          "malfunction": "97",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。 装弹量有多种规格，默认采用原表首项，可解锁修改。"
+      }
+    },
+    {
+      "id": "workbook-weapon-78",
+      "profile": {
+        "name": "MAC——11",
+        "category": "smg",
+        "skillKey": "firearmsSmg",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 32,
+        "malfunction": 96,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 78
+        },
+        "sourceText": {
+          "skill": "冲锋枪",
+          "damage": "1D10",
+          "range": "15",
+          "usesPerRound": "1(3)or全自动",
+          "capacity": "32",
+          "malfunction": "96",
+          "era": "现代",
+          "price": "——/750"
+        },
+        "rapidUsesPerRound": 3,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-79",
+      "profile": {
+        "name": "蝎式冲锋枪",
+        "category": "smg",
+        "skillKey": "firearmsSmg",
+        "damage": "1d8",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 15,
+        "usesPerRound": 1,
+        "capacity": 20,
+        "malfunction": 96,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 79
+        },
+        "sourceText": {
+          "skill": "冲锋枪",
+          "damage": "1D8",
+          "range": "15",
+          "usesPerRound": "1(3)or全自动",
+          "capacity": "20",
+          "malfunction": "96",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rapidUsesPerRound": 3,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-80",
+      "profile": {
+        "name": "汤普森冲锋枪",
+        "category": "smg",
+        "skillKey": "firearmsSmg",
+        "damage": "1d10+2",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 20,
+        "usesPerRound": 1,
+        "capacity": 20,
+        "malfunction": 96,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 80
+        },
+        "sourceText": {
+          "skill": "冲锋枪",
+          "damage": "1D10+2",
+          "range": "20",
+          "usesPerRound": "1or全自动",
+          "capacity": "20/30/50",
+          "malfunction": "96",
+          "era": "1920s",
+          "price": "200+/1600"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。 装弹量有多种规格，默认采用原表首项，可解锁修改。"
+      }
+    },
+    {
+      "id": "workbook-weapon-81",
+      "profile": {
+        "name": "乌兹微型冲锋枪",
+        "category": "smg",
+        "skillKey": "firearmsSmg",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 20,
+        "usesPerRound": 1,
+        "capacity": 32,
+        "malfunction": 98,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 81
+        },
+        "sourceText": {
+          "skill": "冲锋枪",
+          "damage": "1D10",
+          "range": "20",
+          "usesPerRound": "1(2)or全自动",
+          "capacity": "32",
+          "malfunction": "98",
+          "era": "现代",
+          "price": "——/1000"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-82",
+      "profile": {
+        "name": "M1882加特林机枪",
+        "category": "machineGun",
+        "skillKey": "firearmsMachineGun",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 100,
+        "usesPerRound": 1,
+        "capacity": 200,
+        "malfunction": 96,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 82
+        },
+        "sourceText": {
+          "skill": "机枪",
+          "damage": "2D6+4",
+          "range": "100",
+          "usesPerRound": "全自动",
+          "capacity": "200",
+          "malfunction": "96",
+          "era": "1920s，罕见",
+          "price": "2000/14000",
+          "kind": "机枪"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-83",
+      "profile": {
+        "name": "M1918式勃朗宁自动步枪",
+        "category": "machineGun",
+        "skillKey": "firearmsMachineGun",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 90,
+        "usesPerRound": 1,
+        "capacity": 20,
+        "malfunction": 100,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 83
+        },
+        "sourceText": {
+          "skill": "机枪",
+          "damage": "2D6+4",
+          "range": "90",
+          "usesPerRound": "1(2)or全自动",
+          "capacity": "20",
+          "malfunction": "100",
+          "era": "1920s",
+          "price": "800/1500"
+        },
+        "rapidUsesPerRound": 2,
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-84",
+      "profile": {
+        "name": "M1917A1式勃朗宁重机枪",
+        "category": "machineGun",
+        "skillKey": "firearmsMachineGun",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 150,
+        "usesPerRound": 1,
+        "capacity": 250,
+        "malfunction": 96,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 84
+        },
+        "sourceText": {
+          "skill": "机枪",
+          "damage": "2D6+4",
+          "range": "150",
+          "usesPerRound": "全自动",
+          "capacity": "250",
+          "malfunction": "96",
+          "era": "1920s",
+          "price": "3000/30000"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-85",
+      "profile": {
+        "name": "布伦式轻机枪",
+        "category": "machineGun",
+        "skillKey": "firearmsMachineGun",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 30,
+        "malfunction": 96,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 85
+        },
+        "sourceText": {
+          "skill": "机枪",
+          "damage": "2D6+4",
+          "range": "110",
+          "usesPerRound": "1or全自动",
+          "capacity": "30/100",
+          "malfunction": "96",
+          "era": "1920s",
+          "price": "3000/50000"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。 装弹量有多种规格，默认采用原表首项，可解锁修改。"
+      }
+    },
+    {
+      "id": "workbook-weapon-86",
+      "profile": {
+        "name": "刘易斯式轻机枪",
+        "category": "machineGun",
+        "skillKey": "firearmsMachineGun",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 27,
+        "malfunction": 96,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 86
+        },
+        "sourceText": {
+          "skill": "机枪",
+          "damage": "2D6+4",
+          "range": "110",
+          "usesPerRound": "全自动",
+          "capacity": "27/97",
+          "malfunction": "96",
+          "era": "1920s",
+          "price": "3000/20000"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。 装弹量有多种规格，默认采用原表首项，可解锁修改。"
+      }
+    },
+    {
+      "id": "workbook-weapon-87",
+      "profile": {
+        "name": "Minigun",
+        "category": "machineGun",
+        "skillKey": "firearmsMachineGun",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 200,
+        "usesPerRound": 1,
+        "capacity": 4000,
+        "malfunction": 98,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 87
+        },
+        "sourceText": {
+          "skill": "机枪",
+          "damage": "2D6+4",
+          "range": "200",
+          "usesPerRound": "全自动",
+          "capacity": "4000",
+          "malfunction": "98",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-88",
+      "profile": {
+        "name": "FNMinimi5.56mm轻机枪",
+        "category": "machineGun",
+        "skillKey": "firearmsMachineGun",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 30,
+        "malfunction": 99,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 88
+        },
+        "sourceText": {
+          "skill": "机枪",
+          "damage": "2D6",
+          "range": "110",
+          "usesPerRound": "全自动",
+          "capacity": "30/200",
+          "malfunction": "99",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。 装弹量有多种规格，默认采用原表首项，可解锁修改。"
+      }
+    },
+    {
+      "id": "workbook-weapon-89",
+      "profile": {
+        "name": "维克斯MK1式机枪",
+        "category": "machineGun",
+        "skillKey": "firearmsMachineGun",
+        "damage": "2d6+4",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 110,
+        "usesPerRound": 1,
+        "capacity": 250,
+        "malfunction": 99,
+        "era": "1920s",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 89
+        },
+        "sourceText": {
+          "skill": "机枪",
+          "damage": "2D6+4",
+          "range": "110",
+          "usesPerRound": "全自动",
+          "capacity": "250",
+          "malfunction": "99",
+          "era": "1920s",
+          "price": "N/A"
+        },
+        "rulesNotes": "连射和全自动的发数、命中与耗弹由主持人裁定；数值栏按单次结算记录。"
+      }
+    },
+    {
+      "id": "workbook-weapon-90",
+      "profile": {
+        "name": "燃烧瓶",
+        "category": "thrown",
+        "skillKey": "throw",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 95,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 90
+        },
+        "sourceText": {
+          "skill": "投掷",
+          "damage": "2D6+燃烧",
+          "range": "STR/5码",
+          "usesPerRound": "1/2",
+          "capacity": "一次性",
+          "malfunction": "95",
+          "era": "1920s,现代",
+          "price": "N/A",
+          "kind": "特殊武器"
+        },
+        "rangeRule": "strFifth",
+        "roundsPerUse": 2,
+        "rulesNotes": "投掷基础射程按 STR ÷ 5 码计算。 仅自动结算初始伤害，起火与持续燃烧由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-91",
+      "profile": {
+        "name": "信号枪",
+        "category": "handgun",
+        "skillKey": "firearmsHandgun",
+        "damage": "1d10+1d3",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 10,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 91
+        },
+        "sourceText": {
+          "skill": "手枪",
+          "damage": "1D10+1D3+燃烧",
+          "range": "10",
+          "usesPerRound": "1/2",
+          "capacity": "1",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "15/75"
+        },
+        "roundsPerUse": 2,
+        "rulesNotes": "仅自动结算初始伤害，起火与持续燃烧由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-92",
+      "profile": {
+        "name": "M79 40mm 榴弹发射器",
+        "category": "heavy",
+        "skillKey": "firearmsHeavyWeapons",
+        "damage": "3d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 20,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 99,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 92
+        },
+        "sourceText": {
+          "skill": "重武器",
+          "damage": "3D10/2码",
+          "range": "20",
+          "usesPerRound": "1/3",
+          "capacity": "1",
+          "malfunction": "99",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "roundsPerUse": 3,
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-93",
+      "profile": {
+        "name": "炸药棒",
+        "category": "thrown",
+        "skillKey": "throw",
+        "damage": "4d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 99,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 93
+        },
+        "sourceText": {
+          "skill": "投掷",
+          "damage": "4D10/3码",
+          "range": "STR/5步",
+          "usesPerRound": "1/2",
+          "capacity": "一次性",
+          "malfunction": "99",
+          "era": "1920s,现代",
+          "price": "2/5"
+        },
+        "rangeRule": "strFifth",
+        "roundsPerUse": 2,
+        "rulesNotes": "投掷基础射程按 STR ÷ 5 码计算。 原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-94",
+      "profile": {
+        "name": "雷管",
+        "category": "explosive",
+        "skillKey": "electricalRepair",
+        "damage": "2d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 100,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 94
+        },
+        "sourceText": {
+          "skill": "电气维修",
+          "damage": "2D10/1码",
+          "range": "N/A",
+          "usesPerRound": "N/A",
+          "capacity": "一次性",
+          "malfunction": "100",
+          "era": "1920s,现代",
+          "price": "20/整盒"
+        },
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-95",
+      "profile": {
+        "name": "管状炸弹",
+        "category": "explosive",
+        "skillKey": "demolitions",
+        "damage": "1d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 95,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 95
+        },
+        "sourceText": {
+          "skill": "爆破",
+          "damage": "1D10/3码",
+          "range": "布置",
+          "usesPerRound": "一次使用",
+          "capacity": "一次性",
+          "malfunction": "95",
+          "era": "1920s,现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-96",
+      "profile": {
+        "name": "塑胶炸弹(C4) 100克",
+        "category": "explosive",
+        "skillKey": "demolitions",
+        "damage": "6d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 99,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 96
+        },
+        "sourceText": {
+          "skill": "爆破",
+          "damage": "6D10/3码",
+          "range": "布置",
+          "usesPerRound": "一次使用",
+          "capacity": "一次性",
+          "malfunction": "99",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-97",
+      "profile": {
+        "name": "手榴弹",
+        "category": "thrown",
+        "skillKey": "throw",
+        "damage": "4d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 99,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 97
+        },
+        "sourceText": {
+          "skill": "投掷",
+          "damage": "4D10/3码",
+          "range": "STR/5步",
+          "usesPerRound": "1/2",
+          "capacity": "一次性",
+          "malfunction": "99",
+          "era": "1920s,现代",
+          "price": "N/A"
+        },
+        "rangeRule": "strFifth",
+        "roundsPerUse": 2,
+        "rulesNotes": "投掷基础射程按 STR ÷ 5 码计算。 原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-98",
+      "profile": {
+        "name": "81mm迫击炮",
+        "category": "heavy",
+        "skillKey": "artillery",
+        "damage": "6d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 500,
+        "usesPerRound": 2,
+        "capacity": 1,
+        "malfunction": 100,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 98
+        },
+        "sourceText": {
+          "skill": "炮术",
+          "damage": "6D10/6码",
+          "range": "500码",
+          "usesPerRound": "2",
+          "capacity": "独立装弹",
+          "malfunction": "100",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-99",
+      "profile": {
+        "name": "75mm野战炮",
+        "category": "heavy",
+        "skillKey": "artillery",
+        "damage": "10d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 500,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 99,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 99
+        },
+        "sourceText": {
+          "skill": "炮术",
+          "damage": "10D10/2码",
+          "range": "500码",
+          "usesPerRound": "1/4",
+          "capacity": "独立装弹",
+          "malfunction": "99",
+          "era": "1920s,现代",
+          "price": "1500/——"
+        },
+        "roundsPerUse": 4,
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-100",
+      "profile": {
+        "name": "120mm坦克炮(稳定)",
+        "category": "heavy",
+        "skillKey": "artillery",
+        "damage": "10d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 2000,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 100,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 100
+        },
+        "sourceText": {
+          "skill": "炮术",
+          "damage": "10D10/2码",
+          "range": "2000码",
+          "usesPerRound": "1",
+          "capacity": "独立装弹",
+          "malfunction": "100",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-101",
+      "profile": {
+        "name": "5英寸舰载炮(稳定)",
+        "category": "heavy",
+        "skillKey": "artillery",
+        "damage": "15d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 3000,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 98,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 101
+        },
+        "sourceText": {
+          "skill": "炮术",
+          "damage": "15D10/4码",
+          "range": "3000码",
+          "usesPerRound": "1",
+          "capacity": "自动上弹",
+          "malfunction": "98",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-102",
+      "profile": {
+        "name": "反步兵地雷",
+        "category": "explosive",
+        "skillKey": "demolitions",
+        "damage": "4d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 99,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 102
+        },
+        "sourceText": {
+          "skill": "爆破",
+          "damage": "4D10/5码",
+          "range": "布置",
+          "usesPerRound": "布置",
+          "capacity": "一次性",
+          "malfunction": "99",
+          "era": "1920s,现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-103",
+      "profile": {
+        "name": "阔剑地雷",
+        "category": "explosive",
+        "skillKey": "demolitions",
+        "damage": "6d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 0,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 99,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 103
+        },
+        "sourceText": {
+          "skill": "爆破",
+          "damage": "6D6/20码",
+          "range": "布置",
+          "usesPerRound": "布置",
+          "capacity": "一次性",
+          "malfunction": "99",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-104",
+      "profile": {
+        "name": "火焰喷射器",
+        "category": "heavy",
+        "skillKey": "firearmsFlamethrower",
+        "damage": "2d6",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 25,
+        "usesPerRound": 1,
+        "capacity": 10,
+        "malfunction": 93,
+        "era": "any",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 104
+        },
+        "sourceText": {
+          "skill": "喷射器",
+          "damage": "2D6+燃烧",
+          "range": "25码",
+          "usesPerRound": "1",
+          "capacity": "至少10",
+          "malfunction": "93",
+          "era": "1920s,现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "装弹量有多种规格，默认采用原表首项，可解锁修改。 仅自动结算初始伤害，起火与持续燃烧由主持人裁定。"
+      }
+    },
+    {
+      "id": "workbook-weapon-105",
+      "profile": {
+        "name": "轻型反坦克武器",
+        "category": "heavy",
+        "skillKey": "firearmsHeavyWeapons",
+        "damage": "8d10",
+        "damageBonusMode": "none",
+        "impales": true,
+        "range": 150,
+        "usesPerRound": 1,
+        "capacity": 1,
+        "malfunction": 98,
+        "era": "modern",
+        "reference": {
+          "sheet": "武器列表",
+          "row": 105
+        },
+        "sourceText": {
+          "skill": "重武器",
+          "damage": "8d10/1码",
+          "range": "150码",
+          "usesPerRound": "1",
+          "capacity": "1",
+          "malfunction": "98",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "原文“/码”表示爆炸影响半径；这里只计算单个目标的基础伤害，距离衰减和区域效果由主持人裁定。"
+      }
+    }
+  ],
+  "armor": [
+    {
+      "id": "workbook-armor-2",
+      "profile": {
+        "name": "厚重皮夹克",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "body",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 2
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "0",
+          "coverage": "躯干",
+          "species": "人类、人型生物",
+          "penetration": "×",
+          "protection": "每处1次/难以防护/无法防护",
+          "era": "1920s,现代",
+          "price": "10/55",
+          "kind": "规\n则\n书\n内\n的\n防\n护\n物"
+        }
+      }
+    },
+    {
+      "id": "workbook-armor-3",
+      "profile": {
+        "name": "一战标准钢盔",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "head",
+        "era": "1920s",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 3
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "头部",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "∞/正常防护/无法防护",
+          "era": "1920s",
+          "price": "N/A"
+        }
+      }
+    },
+    {
+      "id": "workbook-armor-4",
+      "profile": {
+        "name": "1英寸（2.5厘米）硬木",
+        "rating": 3,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 4
+        },
+        "sourceText": {
+          "rating": "3",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "正常防护/易击碎/无法防护",
+          "era": "——",
+          "price": "0.5/10 m²"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。"
+      }
+    },
+    {
+      "id": "workbook-armor-5",
+      "profile": {
+        "name": "现代美军头盔",
+        "rating": 5,
+        "movPenalty": 0,
+        "coverage": "head",
+        "era": "modern",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 5
+        },
+        "sourceText": {
+          "rating": "5",
+          "movPenalty": "0",
+          "coverage": "头部",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "∞/正常防护/无法防护",
+          "era": "现代",
+          "price": "N/A"
+        }
+      }
+    },
+    {
+      "id": "workbook-armor-6",
+      "profile": {
+        "name": "重型凯芙拉防弹背心",
+        "rating": 8,
+        "movPenalty": 0,
+        "coverage": "body",
+        "era": "modern",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 6
+        },
+        "sourceText": {
+          "rating": "8",
+          "movPenalty": "0",
+          "coverage": "躯干",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "∞/正常防护/无法防护",
+          "era": "现代",
+          "price": "N/A"
+        }
+      }
+    },
+    {
+      "id": "workbook-armor-7",
+      "profile": {
+        "name": "1.5 （3.8厘米）英寸防弹玻璃",
+        "rating": 15,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "modern",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 7
+        },
+        "sourceText": {
+          "rating": "15",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "∞/正常防护/1D4",
+          "era": "现代",
+          "price": "——/100 m²"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。"
+      }
+    },
+    {
+      "id": "workbook-armor-8",
+      "profile": {
+        "name": "1 英寸钢板",
+        "rating": 19,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 8
+        },
+        "sourceText": {
+          "rating": "19",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "∞/∞/每处1次",
+          "era": "——",
+          "price": "1/10 m²"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。"
+      }
+    },
+    {
+      "id": "workbook-armor-9",
+      "profile": {
+        "name": "大号沙包",
+        "rating": 20,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 9
+        },
+        "sourceText": {
+          "rating": "20",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "∞/∞/正常防护",
+          "era": "1920s,现代",
+          "price": "0.01/3"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。"
+      }
+    },
+    {
+      "id": "workbook-armor-10",
+      "profile": {
+        "name": "皮肤",
+        "rating": 0,
+        "movPenalty": 0,
+        "coverage": "all",
+        "era": "any",
+        "kind": "natural",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 10
+        },
+        "sourceText": {
+          "rating": "?",
+          "movPenalty": "——",
+          "coverage": "全身",
+          "species": "大象,深潜者,鳄鱼等",
+          "penetration": "?",
+          "protection": "每处1次/难以防护/无法防护",
+          "era": "——",
+          "price": "——"
+        },
+        "manualRating": true,
+        "rulesNotes": "原文没有单一固定护甲值，请由主持人按原文条件手动确认护甲。"
+      }
+    },
+    {
+      "id": "workbook-armor-11",
+      "profile": {
+        "name": "生化网状装甲",
+        "rating": 8,
+        "movPenalty": 0,
+        "coverage": "all",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 11
+        },
+        "sourceText": {
+          "rating": "8",
+          "movPenalty": "？",
+          "coverage": "全身",
+          "species": "米戈、人型生物",
+          "penetration": "?",
+          "protection": "?/?/?",
+          "era": "——",
+          "price": "N/A"
+        },
+        "rulesNotes": "原表未定 MOV 减值，需由主持人解锁后手动确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-12",
+      "profile": {
+        "name": "砖墙",
+        "rating": 10,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 12
+        },
+        "sourceText": {
+          "rating": "10",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "∞/∞/正常防护",
+          "era": "1920s,现代",
+          "price": "5/60 m²"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。"
+      }
+    },
+    {
+      "id": "workbook-armor-13",
+      "profile": {
+        "name": "一尺深的水",
+        "rating": 0,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "environment",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 13
+        },
+        "sourceText": {
+          "rating": "1D2+1/1D8+4",
+          "movPenalty": "——",
+          "coverage": "浸入部分",
+          "species": "——",
+          "penetration": "×",
+          "protection": "∞/∞/∞",
+          "era": "43亿年前至今",
+          "price": "无价之宝",
+          "kind": "非穿着物"
+        },
+        "manualRating": true,
+        "rulesNotes": "原文没有单一固定护甲值，请由主持人按原文条件手动确认护甲。 按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-14",
+      "profile": {
+        "name": "半米深的水",
+        "rating": 0,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "environment",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 14
+        },
+        "sourceText": {
+          "rating": "1D4+2/1D8+4",
+          "movPenalty": "——",
+          "coverage": "浸入部分",
+          "species": "——",
+          "penetration": "×",
+          "protection": "∞/∞/∞"
+        },
+        "manualRating": true,
+        "rulesNotes": "原文没有单一固定护甲值，请由主持人按原文条件手动确认护甲。 按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-15",
+      "profile": {
+        "name": "一米深的水",
+        "rating": 0,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "environment",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 15
+        },
+        "sourceText": {
+          "rating": "1D8+4/1D16+8",
+          "movPenalty": "——",
+          "coverage": "浸入部分",
+          "species": "——",
+          "penetration": "×",
+          "protection": "∞/∞/∞"
+        },
+        "manualRating": true,
+        "rulesNotes": "原文没有单一固定护甲值，请由主持人按原文条件手动确认护甲。 按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-16",
+      "profile": {
+        "name": "桌面板凳等 普通木质平面",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 16
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "×",
+          "protection": "每处1次/无法防护/无法防护",
+          "era": "新石器时代后",
+          "price": "3/20 m²"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-17",
+      "profile": {
+        "name": "弹簧床垫",
+        "rating": 8,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "modern",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 17
+        },
+        "sourceText": {
+          "rating": "8",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "×",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "现代",
+          "price": "——/40"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-18",
+      "profile": {
+        "name": "半米厚水泥墙",
+        "rating": 12,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 18
+        },
+        "sourceText": {
+          "rating": "12",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "∞/∞/正常防护",
+          "era": "1920s,现代",
+          "price": "7/45 m²"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-19",
+      "profile": {
+        "name": "普通玻璃",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 19
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "一次性/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "5/10 m²"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-20",
+      "profile": {
+        "name": "1立方米石块",
+        "rating": 20,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 20
+        },
+        "sourceText": {
+          "rating": "20",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "∞/正常防护/难以防护",
+          "era": "古埃及之后",
+          "price": "5/20 m²"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-21",
+      "profile": {
+        "name": "粗钢筋网",
+        "rating": 40,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "modern",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 21
+        },
+        "sourceText": {
+          "rating": "40 网状",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "?",
+          "protection": "∞/∞/∞",
+          "era": "现代",
+          "price": "——/40m²"
+        },
+        "rulesNotes": "网状掩体有空隙，是否遮挡目标由主持人裁定。 按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-22",
+      "profile": {
+        "name": "土堆",
+        "rating": 15,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 22
+        },
+        "sourceText": {
+          "rating": "15",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "∞/∞/正常防护",
+          "era": "1920s,现代",
+          "price": "0.01/3"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-23",
+      "profile": {
+        "name": "卷闸门（铁）",
+        "rating": 4,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 23
+        },
+        "sourceText": {
+          "rating": "4",
+          "movPenalty": "——",
+          "coverage": "分隔整个空间",
+          "species": "——",
+          "penetration": "√",
+          "protection": "每处1次/难以防护/无法防护",
+          "era": "1920s,现代",
+          "price": "30/70"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-24",
+      "profile": {
+        "name": "500张A4纸",
+        "rating": 3,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 24
+        },
+        "sourceText": {
+          "rating": "3",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "1920s,现代",
+          "price": "1/9"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-25",
+      "profile": {
+        "name": "书",
+        "rating": 3,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 25
+        },
+        "sourceText": {
+          "rating": "3",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "1500年前至今",
+          "price": "10/15"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-26",
+      "profile": {
+        "name": "大型动物的部分肢体",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "cover",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 26
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "——",
+          "penetration": "×",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "1920s,现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-27",
+      "profile": {
+        "name": "厚皮毡帽",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "head",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 27
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "0",
+          "coverage": "头部",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "×",
+          "protection": "每处1次/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "10/35",
+          "kind": "头部"
+        },
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-28",
+      "profile": {
+        "name": "铁面具",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 28
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "0",
+          "coverage": "面部",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "罕见",
+          "price": "N/A"
+        },
+        "locations": ["face"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-29",
+      "profile": {
+        "name": "击剑面具",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 29
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "0",
+          "coverage": "头+面+颈",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "25/80"
+        },
+        "locations": ["head", "face", "neck"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-30",
+      "profile": {
+        "name": "冰球面罩",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 30
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "头+眼部(网状)",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "30/110"
+        },
+        "locations": ["head", "eyes"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-31",
+      "profile": {
+        "name": "工业防护眼镜",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "modern",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 31
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "眼部",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "无法防护/无法防护/无法防护",
+          "era": "现代",
+          "price": "——/15"
+        },
+        "locations": ["eyes"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-32",
+      "profile": {
+        "name": "电焊面罩",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 32
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "面部",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "一次性/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "1/10"
+        },
+        "locations": ["face"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-33",
+      "profile": {
+        "name": "全防护级防毒面具",
+        "rating": 0,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 33
+        },
+        "sourceText": {
+          "rating": "耐毒性 2h",
+          "movPenalty": "0",
+          "coverage": "面部",
+          "species": "人类、有明显口鼻的生物",
+          "penetration": "×",
+          "protection": "无法防护",
+          "era": "1920s,现代",
+          "price": "35/150"
+        },
+        "manualRating": true,
+        "locations": ["face"],
+        "rulesNotes": "原文没有单一固定护甲值，请由主持人按原文条件手动确认护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-34",
+      "profile": {
+        "name": "工地安全帽",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "head",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 34
+        },
+        "sourceText": {
+          "rating": "1 耐冲击",
+          "movPenalty": "0",
+          "coverage": "头顶",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "×",
+          "protection": "一次性/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "1/10"
+        },
+        "rulesNotes": "只用于符合原文条件的耐冲击防护。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-35",
+      "profile": {
+        "name": "全防护摩托车帽",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "head",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 35
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "头部",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "1920s,现代",
+          "price": "25/90"
+        },
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-36",
+      "profile": {
+        "name": "维京头盔",
+        "rating": 3,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 36
+        },
+        "sourceText": {
+          "rating": "3",
+          "movPenalty": "0",
+          "coverage": "头顶+眼部(网状)",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["head", "eyes"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-37",
+      "profile": {
+        "name": "古罗马头盔",
+        "rating": 3,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 37
+        },
+        "sourceText": {
+          "rating": "3",
+          "movPenalty": "0",
+          "coverage": "头顶+面颊",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["head", "face"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-38",
+      "profile": {
+        "name": "藤条盔",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "head",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 38
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "头部",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-39",
+      "profile": {
+        "name": "中世纪全防护头盔",
+        "rating": 4,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 39
+        },
+        "sourceText": {
+          "rating": "4",
+          "movPenalty": "0",
+          "coverage": "头+面+颈",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "中世纪",
+          "price": "N/A"
+        },
+        "locations": ["head", "face", "neck"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-40",
+      "profile": {
+        "name": "文艺复兴头盔",
+        "rating": 0,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 40
+        },
+        "sourceText": {
+          "rating": "1D2+3",
+          "movPenalty": "0",
+          "coverage": "头+面+颈",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "文艺复兴",
+          "price": "N/A"
+        },
+        "manualRating": true,
+        "locations": ["head", "face", "neck"],
+        "rulesNotes": "原文没有单一固定护甲值，请由主持人按原文条件手动确认护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-41",
+      "profile": {
+        "name": "金质镶钻王冠",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "head",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 41
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "0",
+          "coverage": "头顶",
+          "species": "人类、有明显头颅的生物",
+          "penetration": "×",
+          "protection": "无法防护/无法防护/无法防护",
+          "era": "工业革命结束前",
+          "price": "老鼻子贵了"
+        },
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-42",
+      "profile": {
+        "name": "击剑纤维服",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 42
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "四肢、躯干、颈",
+          "species": "人类、人型生物",
+          "penetration": "×",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "50/230",
+          "kind": "躯干或全身"
+        },
+        "locations": ["body", "neck", "arms", "legs"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-43",
+      "profile": {
+        "name": "对练棉甲",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "modern",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 43
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "躯干、双臂、颈",
+          "species": "人类、人型生物",
+          "penetration": "×",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "现代",
+          "price": "——/160"
+        },
+        "locations": ["body", "neck", "arms"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-44",
+      "profile": {
+        "name": "关节护具",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 44
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "肘、膝、四肢、头",
+          "species": "人类、有明显关节的生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "5/20"
+        },
+        "locations": ["head", "arms", "legs"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-45",
+      "profile": {
+        "name": "护胸板",
+        "rating": 3,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "modern",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 45
+        },
+        "sourceText": {
+          "rating": "3",
+          "movPenalty": "0",
+          "coverage": "前胸",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "现代",
+          "price": "——/35"
+        },
+        "locations": ["chest"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-46",
+      "profile": {
+        "name": "锁子甲",
+        "rating": 4,
+        "movPenalty": 1,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 46
+        },
+        "sourceText": {
+          "rating": "4",
+          "movPenalty": "1",
+          "coverage": "双臂、大腿、躯干、颈",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["body", "neck", "arms", "legs"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-47",
+      "profile": {
+        "name": "扎甲",
+        "rating": 4,
+        "movPenalty": 1,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 47
+        },
+        "sourceText": {
+          "rating": "4",
+          "movPenalty": "1",
+          "coverage": "双臂、大腿、躯干、颈",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["body", "neck", "arms", "legs"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-48",
+      "profile": {
+        "name": "鳞甲",
+        "rating": 4,
+        "movPenalty": 1,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 48
+        },
+        "sourceText": {
+          "rating": "4",
+          "movPenalty": "1",
+          "coverage": "双臂、大腿、躯干、颈",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["body", "neck", "arms", "legs"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-49",
+      "profile": {
+        "name": "米兰盔甲",
+        "rating": 5,
+        "movPenalty": 1,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 49
+        },
+        "sourceText": {
+          "rating": "5",
+          "movPenalty": "1",
+          "coverage": "除头部、全身",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["body", "neck", "arms", "legs", "hands", "feet"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-50",
+      "profile": {
+        "name": "藤甲",
+        "rating": 4,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 50
+        },
+        "sourceText": {
+          "rating": "4",
+          "movPenalty": "0",
+          "coverage": "双臂、大腿、躯干、颈",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["body", "neck", "arms", "legs"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-51",
+      "profile": {
+        "name": "板甲",
+        "rating": 5,
+        "movPenalty": 1,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 51
+        },
+        "sourceText": {
+          "rating": "5",
+          "movPenalty": "1",
+          "coverage": "除头部、全身",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["body", "neck", "arms", "legs", "hands", "feet"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-52",
+      "profile": {
+        "name": "胴丸",
+        "rating": 4,
+        "movPenalty": 1,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 52
+        },
+        "sourceText": {
+          "rating": "4",
+          "movPenalty": "1",
+          "coverage": "除头部、全身",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["body", "neck", "arms", "legs", "hands", "feet"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-53",
+      "profile": {
+        "name": "纸甲",
+        "rating": 3,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 53
+        },
+        "sourceText": {
+          "rating": "3",
+          "movPenalty": "0",
+          "coverage": "双臂、大腿、躯干、颈",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["body", "neck", "arms", "legs"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-54",
+      "profile": {
+        "name": "防刺服",
+        "rating": 4,
+        "movPenalty": 0,
+        "coverage": "body",
+        "era": "modern",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 54
+        },
+        "sourceText": {
+          "rating": "4",
+          "movPenalty": "0",
+          "coverage": "躯干",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "现代",
+          "price": "——/40"
+        },
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-55",
+      "profile": {
+        "name": "常规防弹衣",
+        "rating": 6,
+        "movPenalty": 0,
+        "coverage": "body",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 55
+        },
+        "sourceText": {
+          "rating": "6",
+          "movPenalty": "0",
+          "coverage": "躯干",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "∞/正常防护/无法防护",
+          "era": "1920s,现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-56",
+      "profile": {
+        "name": "防刺西服",
+        "rating": 5,
+        "movPenalty": 1,
+        "coverage": "custom",
+        "era": "modern",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 56
+        },
+        "sourceText": {
+          "rating": "5",
+          "movPenalty": "1",
+          "coverage": "除头部、除手脚、全身",
+          "species": "人类、人型生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "现代",
+          "price": "——/120"
+        },
+        "locations": ["body", "neck", "arms", "legs"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-57",
+      "profile": {
+        "name": "防化服",
+        "rating": 0,
+        "movPenalty": 1,
+        "coverage": "all",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 57
+        },
+        "sourceText": {
+          "rating": "耐毒性 氧气瓶",
+          "movPenalty": "1",
+          "coverage": "全身",
+          "species": "人类、人型生物",
+          "penetration": "×",
+          "protection": "无法防护",
+          "era": "1920s,现代",
+          "price": "N/A"
+        },
+        "manualRating": true,
+        "rulesNotes": "原文没有单一固定护甲值，请由主持人按原文条件手动确认护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-58",
+      "profile": {
+        "name": "工作手套",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 58
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "0",
+          "coverage": "双手",
+          "species": "拥有五指型手掌的生物",
+          "penetration": "×",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "0.1/3",
+          "kind": "手脚四肢"
+        },
+        "locations": ["hands"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-59",
+      "profile": {
+        "name": "防刺手套",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "modern",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 59
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "双手",
+          "species": "拥有五指型手掌的生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "现代",
+          "price": "——/20"
+        },
+        "locations": ["hands"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-60",
+      "profile": {
+        "name": "冰球手套",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 60
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "0",
+          "coverage": "双手",
+          "species": "拥有五指型手掌的生物",
+          "penetration": "×",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "5/20"
+        },
+        "locations": ["hands"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-61",
+      "profile": {
+        "name": "军用特种手套",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "modern",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 61
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "0",
+          "coverage": "双手",
+          "species": "拥有五指型手掌的生物",
+          "penetration": "√",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "locations": ["hands"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-62",
+      "profile": {
+        "name": "电焊手套",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 62
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "双手",
+          "species": "拥有五指型手掌的生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "1920s,现代",
+          "price": "5/20"
+        },
+        "locations": ["hands"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-63",
+      "profile": {
+        "name": "铁手甲",
+        "rating": 2,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 63
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "0",
+          "coverage": "双手",
+          "species": "拥有五指型手掌的生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["hands"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-64",
+      "profile": {
+        "name": "雨靴",
+        "rating": 1,
+        "movPenalty": 0,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 64
+        },
+        "sourceText": {
+          "rating": "1",
+          "movPenalty": "0",
+          "coverage": "双脚",
+          "species": "拥有站立功能的双腿的生物",
+          "penetration": "×",
+          "protection": "难以防护/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "0.5/10"
+        },
+        "locations": ["feet"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-65",
+      "profile": {
+        "name": "铁靴",
+        "rating": 2,
+        "movPenalty": 1,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 65
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "1",
+          "coverage": "双脚",
+          "species": "拥有站立功能的双腿的生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "locations": ["feet"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-66",
+      "profile": {
+        "name": "工业防护靴",
+        "rating": 2,
+        "movPenalty": 1,
+        "coverage": "custom",
+        "era": "any",
+        "kind": "worn",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 66
+        },
+        "sourceText": {
+          "rating": "2",
+          "movPenalty": "1",
+          "coverage": "双脚",
+          "species": "拥有站立功能的双腿的生物",
+          "penetration": "×",
+          "protection": "正常防护/无法防护/无法防护",
+          "era": "1920s,现代",
+          "price": "3/15"
+        },
+        "locations": ["feet"],
+        "rulesNotes": "参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-67",
+      "profile": {
+        "name": "PC防暴盾",
+        "rating": 9,
+        "movPenalty": 1,
+        "coverage": "none",
+        "era": "modern",
+        "kind": "shield",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 67
+        },
+        "sourceText": {
+          "rating": "9",
+          "movPenalty": "1",
+          "coverage": "——",
+          "species": "人类、可以拿起物品的生物",
+          "penetration": "√",
+          "protection": "正常防护/难以防护/无法防护",
+          "era": "现代",
+          "price": "——/40",
+          "kind": "盾"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-68",
+      "profile": {
+        "name": "金属镇暴盾",
+        "rating": 13,
+        "movPenalty": 1,
+        "coverage": "none",
+        "era": "modern",
+        "kind": "shield",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 68
+        },
+        "sourceText": {
+          "rating": "13",
+          "movPenalty": "1",
+          "coverage": "——",
+          "species": "人类、可以拿起物品的生物",
+          "penetration": "√",
+          "protection": "∞/正常防护/难以防护",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-69",
+      "profile": {
+        "name": "防弹钢盾",
+        "rating": 25,
+        "movPenalty": 2,
+        "coverage": "none",
+        "era": "modern",
+        "kind": "shield",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 69
+        },
+        "sourceText": {
+          "rating": "25",
+          "movPenalty": "2",
+          "coverage": "——",
+          "species": "人类、可以拿起物品的生物",
+          "penetration": "√",
+          "protection": "∞/∞/正常防护",
+          "era": "现代",
+          "price": "N/A"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-70",
+      "profile": {
+        "name": "格斗盾",
+        "rating": 20,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "shield",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 70
+        },
+        "sourceText": {
+          "rating": "20",
+          "movPenalty": "0",
+          "coverage": "拳前",
+          "species": "人类、有手的生物",
+          "penetration": "√",
+          "protection": "∞/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-71",
+      "profile": {
+        "name": "圆木盾",
+        "rating": 15,
+        "movPenalty": 1,
+        "coverage": "none",
+        "era": "any",
+        "kind": "shield",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 71
+        },
+        "sourceText": {
+          "rating": "15",
+          "movPenalty": "1",
+          "coverage": "——",
+          "species": "人类、可以拿起物品的生物",
+          "penetration": "√",
+          "protection": "∞/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-72",
+      "profile": {
+        "name": "筝形盾",
+        "rating": 15,
+        "movPenalty": 1,
+        "coverage": "none",
+        "era": "any",
+        "kind": "shield",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 72
+        },
+        "sourceText": {
+          "rating": "15",
+          "movPenalty": "1",
+          "coverage": "——",
+          "species": "人类、可以拿起物品的生物",
+          "penetration": "√",
+          "protection": "∞/难以防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-73",
+      "profile": {
+        "name": "圆铁盾",
+        "rating": 20,
+        "movPenalty": 2,
+        "coverage": "none",
+        "era": "any",
+        "kind": "shield",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 73
+        },
+        "sourceText": {
+          "rating": "20",
+          "movPenalty": "2",
+          "coverage": "——",
+          "species": "人类、可以拿起物品的生物",
+          "penetration": "√",
+          "protection": "∞/正常防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    },
+    {
+      "id": "workbook-armor-74",
+      "profile": {
+        "name": "剑格、护手",
+        "rating": 20,
+        "movPenalty": 0,
+        "coverage": "none",
+        "era": "any",
+        "kind": "shield",
+        "reference": {
+          "sheet": "防具表 载具表",
+          "row": 74
+        },
+        "sourceText": {
+          "rating": "20",
+          "movPenalty": "——",
+          "coverage": "——",
+          "species": "剑",
+          "penetration": "√",
+          "protection": "∞/正常防护/无法防护",
+          "era": "古代",
+          "price": "N/A"
+        },
+        "rulesNotes": "按遮挡方向、位置及伤害类型裁定，不计入常驻身体护甲。 参考卡扩展内容，使用前由主持人确认。"
+      }
+    }
+  ]
+}

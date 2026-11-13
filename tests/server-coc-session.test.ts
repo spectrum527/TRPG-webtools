@@ -12,6 +12,7 @@ import { previewCocSpellHp } from '../shared/coc-session-rules';
 import { parseRoomConfig, exportRoomConfig, roomConfiguration } from '../shared/room-config';
 import type { Ack, Room, RoomAction, RoomConnection } from '../shared/types';
 import { preparedCharacter } from './fixtures/adjustment-character';
+import type { CocInvestigatorEdit } from '../shared/coc-investigator';
 
 const sockets: Socket[] = [];
 const servers: ReturnType<typeof createAppServer>[] = [];
@@ -146,6 +147,102 @@ async function setup() {
 }
 
 describe('CoC session socket and archive', () => {
+  it('preserves expanded equipment through sockets and archives and never auto-damages through unresolved armor', async () => {
+    const env = await setup();
+    const equipmentEdit = async (memberId: string, edit: CocInvestigatorEdit) => {
+      const room = await env.snapshot();
+      const member = room.members.find((member) => member.id === memberId)!;
+      await act(env.host, {
+        type: 'character-coc',
+        requestId: id(),
+        memberId,
+        characterId: member.character!.id,
+        expectedCharacterRevision: member.characterRevision,
+        edit,
+      });
+    };
+    await equipmentEdit(env.p.session.memberId, {
+      kind: 'weapon-add',
+      entry: { catalogId: 'workbook-weapon-17' },
+      loaded: 1,
+    });
+    let room = await env.snapshot();
+    const attacker = env.selected(room);
+    const unresolved = attacker.character!.cocInvestigator!.equipment!.weapons[0];
+    const initialRandomCalls = env.randomCalls();
+    const rejected = await send(env.host, {
+      type: 'encounter-coc-weapon',
+      attackerId: attacker.id,
+      targetId: env.o.session.memberId,
+      weaponId: unresolved.id,
+      expectedCharacterRevision: attacker.characterRevision,
+      expectedRevision: room.encounter.revision,
+      requestId: id(),
+      visibility: 'public',
+      edge: 'normal',
+      confirmedDamage: true,
+    });
+    expect(rejected.ok).toBe(false);
+    expect(env.randomCalls()).toBe(initialRandomCalls);
+    expect(
+      env.selected(await env.snapshot()).character!.cocInvestigator!.equipment!.weapons[0].ammo
+        .loaded,
+    ).toBe(1);
+    await equipmentEdit(env.p.session.memberId, {
+      kind: 'weapon-add',
+      entry: { catalogId: 'workbook-weapon-36' },
+      loaded: 3,
+    });
+    await equipmentEdit(env.o.session.memberId, {
+      kind: 'armor-add',
+      entry: { catalogId: 'workbook-armor-10' },
+      equipped: true,
+    });
+    room = await env.snapshot();
+    await act(env.host, {
+      type: 'encounter-settings',
+      autoDamage: true,
+      expectedRevision: room.encounter.revision,
+    });
+    const fire = async (armorOverride?: number) => {
+      const current = await env.snapshot();
+      const member = env.selected(current);
+      const weapon = member.character!.cocInvestigator!.equipment!.weapons[1];
+      env.roll(1);
+      await act(env.host, {
+        type: 'encounter-coc-weapon',
+        attackerId: member.id,
+        targetId: env.o.session.memberId,
+        weaponId: weapon.id,
+        expectedCharacterRevision: member.characterRevision,
+        expectedRevision: current.encounter.revision,
+        requestId: id(),
+        visibility: 'public',
+        edge: 'normal',
+        confirmedDamage: true,
+        armorOverride,
+      });
+    };
+    const beforeHp = room.members.find((m) => m.id === env.o.session.memberId)!.character!.hp;
+    await fire();
+    room = await env.snapshot();
+    expect(room.members.find((m) => m.id === env.o.session.memberId)!.character!.hp).toBe(beforeHp);
+    expect(room.log.at(-1)?.content).toContain('目标护甲未知');
+    const archive = await env.archive();
+    expect(
+      archive.members.find((m) => m.id === env.o.session.memberId)!.character!.cocInvestigator!
+        .equipment!.armor[0].profile,
+    ).toMatchObject({
+      kind: 'natural',
+      manualRating: true,
+      reference: { row: 10 },
+      sourceText: { rating: '?' },
+    });
+    await fire(0);
+    expect(
+      (await env.snapshot()).members.find((m) => m.id === env.o.session.memberId)!.character!.hp,
+    ).toBeLessThan(beforeHp);
+  });
   it('authorizes counter corrections to the host and keeps retries and pending SAN atomic', async () => {
     const env = await setup();
     let room = await env.snapshot();

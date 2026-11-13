@@ -23,6 +23,7 @@ import {
 import { COC_DERIVED_FIELDS, cocDerivedValues } from '../../shared/coc-investigator';
 import {
   COC_ARMOR_CATALOG,
+  cocArmorCoverageLabel,
   COC_WEAPON_CATALOG,
   cocArmorValues,
   cocWeaponValues,
@@ -371,7 +372,6 @@ const derivedLabels = {
   maxSan: 'SAN 上限',
 };
 const wealthLabels = { cash: '初始现金', assets: '初始资产', spending: '日常消费水平' };
-const armorCoverage = { head: '头部', body: '身体', all: '全身' };
 const weaponOverrideLabels: Record<string, string> = {
   skill: '技能值',
   skillKey: '关联技能',
@@ -545,11 +545,17 @@ function CocAudit({ card }: { card: Character }) {
               );
               return (
                 <p key={armor.id}>
-                  <b>{v.name}</b> · {COC_CAREER_SOURCE_LABELS[source]} · {armorCoverage[v.coverage]}{' '}
-                  · 护甲 {v.rating}
+                  <b>{v.name}</b> · {COC_CAREER_SOURCE_LABELS[source]} ·{' '}
+                  {cocArmorCoverageLabel(armor.profile)} · 护甲 {v.resolved ? v.rating : '待裁定'}
                   {v.movPenalty > 0 && ` · MOV −${v.movPenalty}`}
                   {armor.equipped ? ' · 已穿戴' : ' · 未穿戴'}
                   {manual && ' · 含手动设定'}
+                  {armor.profile.rulesNotes && (
+                    <>
+                      <br />
+                      {armor.profile.rulesNotes}
+                    </>
+                  )}
                 </p>
               );
             })}

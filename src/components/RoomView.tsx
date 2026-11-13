@@ -1,4 +1,6 @@
 import { CocRoomRuleControls } from './CocRoomRules';
+import { sortCocSkills } from '../../shared/coc-skill-order';
+import { CocSkillOrderSelect, useCocSkillOrder } from './CocSkillOrder';
 import { CocCheckFollowup } from './CocCheckFollowup';
 import { cocCurrentLuck } from '../../shared/coc-session';
 import { IMAGE_MIMES, MAX_IMAGE_BYTES } from '../../shared/media';
@@ -1507,8 +1509,9 @@ function CheckTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
   const [edge, setEdge] = useState<Edge>('normal');
   const [visibility, setVisibility] = useState<Visibility>('public');
   const [busy, setBusy] = useState(false);
+  const [skillOrder, setSkillOrder] = useCocSkillOrder('checks', 'invested');
   const card = me.role === 'host' || !me.character ? null : effectiveCharacter(me.character);
-  const options =
+  const rawOptions =
     kind === 'skill'
       ? card
         ? adjustmentFields(card, 'skill')
@@ -1518,6 +1521,10 @@ function CheckTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
       : dnd
         ? DND_ATTRIBUTES
         : COC_ATTRIBUTES;
+  const options =
+    !dnd && kind === 'skill' && me.character
+      ? sortCocSkills(rawOptions, me.character, skillOrder, card?.skills)
+      : rawOptions;
   let preview = modifier;
   if (dnd && card && kind !== 'attack') {
     const attr =
@@ -1567,6 +1574,9 @@ function CheckTool({ room, me, run }: { room: Room; me: Member; run: Run }) {
           )}
         </select>
       </label>
+      {!dnd && kind === 'skill' && card && (
+        <CocSkillOrderSelect value={skillOrder} onChange={setSkillOrder} />
+      )}
       {kind !== 'attack' && kind !== 'sanity' && (
         <label className="field">
           {kind === 'skill' ? '选择技能' : '选择属性'}

@@ -3,6 +3,7 @@ import { effectiveCharacter } from './adjustments';
 import { COC_SKILL_CATALOG, CocSkillKeySchema } from './coc-career';
 import { cocDamageBonusAndBuild } from './coc-physical';
 import { rollDice, type DieRandom } from './dice';
+import workbookEquipment from './coc-equipment-data.json';
 import type { Character, DiceResult } from './types';
 import {
   controlledValue,
@@ -49,11 +50,71 @@ export const CocDamageExpressionSchema = z
 const damageBonusMode = z.enum(['none', 'full', 'half']);
 const era = z.enum(['1920s', 'modern', 'any']);
 const source = z.enum(['coc7', 'workbook', 'interlude']);
-const coverage = z.enum(['body', 'head', 'all']);
-const distance = whole(0, 10000);
+export const COC_ARMOR_KINDS = {
+  worn: '穿戴防具',
+  shield: '盾牌',
+  natural: '天生护甲',
+  cover: '掩体',
+  environment: '环境防护',
+} as const;
+export const COC_WEAPON_CATEGORIES = {
+  melee: '近战',
+  thrown: '投掷',
+  bow: '弓弩',
+  handgun: '手枪',
+  rifle: '步枪',
+  shotgun: '霰弹枪',
+  smg: '冲锋枪',
+  machineGun: '机枪',
+  heavy: '重武器',
+  explosive: '爆炸物',
+  other: '其他',
+} as const;
+export const COC_ARMOR_LOCATIONS = {
+  body: '躯干',
+  head: '头部',
+  face: '面部',
+  eyes: '眼部',
+  neck: '颈部',
+  arms: '双臂',
+  hands: '双手',
+  legs: '双腿',
+  feet: '双脚',
+  chest: '前胸',
+  back: '背部',
+  abdomen: '腹部',
+} as const;
+export type CocArmorLocation = keyof typeof COC_ARMOR_LOCATIONS;
+const location = z.enum(Object.keys(COC_ARMOR_LOCATIONS) as CocArmorLocation[]);
+const coverage = z.enum(['body', 'head', 'all', 'custom', 'none']);
+const reference = z.strictObject({
+  sheet: z.enum(['武器列表', '防具表 载具表']),
+  row: whole(2, 355),
+});
+const sourceText = z.partialRecord(
+  z.enum([
+    'skill',
+    'damage',
+    'range',
+    'usesPerRound',
+    'capacity',
+    'malfunction',
+    'era',
+    'price',
+    'kind',
+    'rating',
+    'movPenalty',
+    'coverage',
+    'species',
+    'penetration',
+    'protection',
+  ]),
+  z.string().max(500),
+);
+const distance = z.number().finite().min(0).max(10000);
 const armorRating = whole(0, 99);
 const movementPenalty = whole(0, 20);
-const capacity = whole(0, 1000);
+const capacity = whole(0, 9999);
 const shotsPerRound = whole(1, 20);
 const malfunction = whole(0, 100); // 0 means no malfunction number.
 const skillRating = whole(0, 1000);
@@ -61,7 +122,19 @@ const skillRating = whole(0, 1000);
 export const CocWeaponProfileSchema = z
   .strictObject({
     name: equipmentName,
-    category: z.enum(['melee', 'thrown', 'bow', 'handgun', 'rifle', 'shotgun', 'other']),
+    category: z.enum([
+      'melee',
+      'thrown',
+      'bow',
+      'handgun',
+      'rifle',
+      'shotgun',
+      'smg',
+      'machineGun',
+      'heavy',
+      'explosive',
+      'other',
+    ]),
     skillKey: CocSkillKeySchema,
     damage: CocDamageExpressionSchema,
     damageBonusMode,
@@ -79,6 +152,11 @@ export const CocWeaponProfileSchema = z
     malfunction,
     ammoType: z.string().trim().min(1).max(50).optional(),
     era,
+    reference: reference.optional(),
+    sourceText: sourceText.optional(),
+    rulesNotes: z.string().max(2000).optional(),
+    manualDamage: z.boolean().optional(),
+    manualRange: z.boolean().optional(),
   })
   .superRefine((profile, ctx) => {
     if (profile.rapidUsesPerRound !== undefined && profile.rapidUsesPerRound < profile.usesPerRound)
@@ -99,13 +177,33 @@ export const CocWeaponProfileSchema = z
     }
   });
 
-export const CocArmorProfileSchema = z.strictObject({
-  name: equipmentName,
-  rating: armorRating,
-  movPenalty: movementPenalty,
-  coverage,
-  era,
-});
+export const CocArmorProfileSchema = z
+  .strictObject({
+    name: equipmentName,
+    rating: armorRating,
+    movPenalty: movementPenalty,
+    coverage,
+    era,
+    kind: z
+      .enum(
+        Object.keys(COC_ARMOR_KINDS) as [
+          keyof typeof COC_ARMOR_KINDS,
+          ...Array<keyof typeof COC_ARMOR_KINDS>,
+        ],
+      )
+      .optional(),
+    locations: z.array(location).min(1).max(12).optional(),
+    reference: reference.optional(),
+    sourceText: sourceText.optional(),
+    rulesNotes: z.string().max(2000).optional(),
+    manualRating: z.boolean().optional(),
+  })
+  .superRefine((profile, ctx) => {
+    if (profile.coverage === 'custom' && !profile.locations?.length)
+      ctx.addIssue({ code: 'custom', path: ['locations'], message: '请选择至少一个防护部位' });
+    if (profile.locations && new Set(profile.locations).size !== profile.locations.length)
+      ctx.addIssue({ code: 'custom', path: ['locations'], message: '防护部位不可重复' });
+  });
 
 export type CocWeaponProfile = z.infer<typeof CocWeaponProfileSchema>;
 export type CocArmorProfile = z.infer<typeof CocArmorProfileSchema>;
@@ -249,13 +347,13 @@ export const cocEquipmentEditOptions = [
 export const CocEquipmentEditSchema = z.discriminatedUnion('kind', cocEquipmentEditOptions);
 export type CocEquipmentEdit = z.infer<typeof CocEquipmentEditSchema>;
 
-type WeaponCatalogEntry = {
+export type WeaponCatalogEntry = {
   id: string;
   profile: CocWeaponProfile;
   source: z.infer<typeof source>;
   notes?: string;
 };
-type ArmorCatalogEntry = {
+export type ArmorCatalogEntry = {
   id: string;
   profile: CocArmorProfile;
   source: z.infer<typeof source>;
@@ -298,7 +396,7 @@ const shotgun = {
 
 // Selected data from Chaosium's public equipment table and the Keeper Rulebook.
 // Names are brief equipment labels; rules that need Keeper judgment are in notes.
-export const COC_WEAPON_CATALOG: readonly WeaponCatalogEntry[] = [
+export const COC_LEGACY_WEAPON_CATALOG: readonly WeaponCatalogEntry[] = [
   {
     id: 'unarmed',
     source: 'coc7',
@@ -648,7 +746,7 @@ export const COC_WEAPON_CATALOG: readonly WeaponCatalogEntry[] = [
   },
 ];
 
-export const COC_ARMOR_CATALOG: readonly ArmorCatalogEntry[] = [
+export const COC_LEGACY_ARMOR_CATALOG: readonly ArmorCatalogEntry[] = [
   {
     id: 'heavy-leather-jacket',
     source: 'coc7',
@@ -682,6 +780,29 @@ export const COC_ARMOR_CATALOG: readonly ArmorCatalogEntry[] = [
     profile: { name: '防刺西服', rating: 5, movPenalty: 1, coverage: 'body', era: 'modern' },
   },
 ];
+
+export const COC_WORKBOOK_WEAPONS: readonly WeaponCatalogEntry[] = workbookEquipment.weapons.map(
+  (entry) => ({
+    ...entry,
+    source: 'workbook',
+    profile: CocWeaponProfileSchema.parse(entry.profile),
+  }),
+);
+export const COC_WORKBOOK_ARMOR: readonly ArmorCatalogEntry[] = workbookEquipment.armor.map(
+  (entry) => ({
+    ...entry,
+    source: 'workbook',
+    profile: CocArmorProfileSchema.parse(entry.profile),
+  }),
+);
+export const COC_WEAPON_CATALOG = [...COC_LEGACY_WEAPON_CATALOG, ...COC_WORKBOOK_WEAPONS];
+export const COC_ARMOR_CATALOG = [...COC_LEGACY_ARMOR_CATALOG, ...COC_WORKBOOK_ARMOR];
+
+export function cocArmorCoverageLabel(profile: CocArmorProfile): string {
+  if (profile.coverage === 'custom')
+    return (profile.locations ?? []).map((key) => COC_ARMOR_LOCATIONS[key]).join('、');
+  return { body: '躯干', head: '头部', all: '全身', none: '按遮挡范围裁定' }[profile.coverage];
+}
 
 export function defaultCocEquipment(): CocEquipment {
   return { weapons: [], armor: [] };
@@ -771,6 +892,12 @@ export function cocWeaponValues(
     damageBonus,
     damageBonusMode: mode,
     damageExpression,
+    damageRequiresRuling:
+      profile.manualDamage === true &&
+      !(overrides?.damage?.mode === 'manual' && overrides.damage.manual !== null),
+    rangeRequiresRuling:
+      profile.manualRange === true &&
+      !(overrides?.range?.mode === 'manual' && overrides.range.manual !== null),
     impales: profile.impales,
     ammo: weapon.ammo,
     ammoType: profile.ammoType,
@@ -801,10 +928,12 @@ export function rollCocWeaponDamage(
   values: Pick<
     ReturnType<typeof cocWeaponValues>,
     'damage' | 'damageBonus' | 'damageBonusMode' | 'damageExpression' | 'impales'
-  >,
+  > & { damageRequiresRuling?: boolean },
   rng?: DieRandom,
   { extreme = false }: { extreme?: boolean } = {},
 ): DiceResult {
+  if (values.damageRequiresRuling)
+    throw new Error('此武器没有固定 HP 伤害，请由主持人裁定或解锁填写伤害骰式');
   const damage = CocDamageExpressionSchema.parse(values.damage);
   const mode = damageBonusMode.parse(values.damageBonusMode);
   const bonus = mode === 'none' ? '0' : CocDamageExpressionSchema.parse(values.damageBonus);
@@ -869,22 +998,46 @@ export function cocArmorValues(armor: CocArmor) {
   return {
     name: armor.profile.name,
     coverage: armor.profile.coverage,
+    resolved:
+      !armor.profile.manualRating ||
+      (armor.overrides?.rating?.mode === 'manual' && armor.overrides.rating.manual !== null),
     rating: controlledValue(armor.overrides?.rating, armor.profile.rating),
     movPenalty: controlledValue(armor.overrides?.movPenalty, armor.profile.movPenalty),
   };
 }
 
-/** Head protection only applies when a hit is explicitly assigned to the head. */
+function armorCovers(profile: CocArmorProfile, location: CocArmorLocation): boolean {
+  if (profile.kind && !['worn', 'natural'].includes(profile.kind)) return false;
+  if (profile.coverage === 'none') return false;
+  if (profile.coverage === 'all') return true;
+  const locations = profile.coverage === 'custom' ? (profile.locations ?? []) : [profile.coverage];
+  return (
+    locations.includes(location) ||
+    (['chest', 'back', 'abdomen'].includes(location) && locations.includes('body'))
+  );
+}
+
+export function cocUnresolvedArmor(
+  card: Character,
+  location: CocArmorLocation = 'body',
+): CocArmor[] {
+  return (card.cocInvestigator?.equipment?.armor ?? []).filter(
+    (armor) =>
+      armor.equipped && armorCovers(armor.profile, location) && !cocArmorValues(armor).resolved,
+  );
+}
+
+/** Situational shields, cover and environmental protection require a keeper ruling. */
 export function cocArmorValue(
   card: Character,
-  { location = 'body' }: { location?: 'head' | 'body' } = {},
+  { location = 'body' }: { location?: CocArmorLocation } = {},
 ): number {
   return Math.max(
     0,
     ...(card.cocInvestigator?.equipment?.armor ?? [])
       .filter(
-        ({ equipped, profile }) =>
-          equipped && (profile.coverage === 'all' || profile.coverage === location),
+        (armor) =>
+          armor.equipped && armorCovers(armor.profile, location) && cocArmorValues(armor).resolved,
       )
       .map((armor) => cocArmorValues(armor).rating),
   );

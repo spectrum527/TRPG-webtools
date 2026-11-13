@@ -1,5 +1,7 @@
 import { CocSessionCounters } from './CocSessionCounters';
 import { useState } from 'react';
+import { sortCocSkills } from '../../shared/coc-skill-order';
+import { CocSkillOrderSelect, useCocSkillOrder } from './CocSkillOrder';
 import { LockKeyhole, LockKeyholeOpen, Trash2 } from 'lucide-react';
 import { cocSkillDefinitions } from '../../shared/coc-career';
 import { effectiveCharacter } from '../../shared/adjustments';
@@ -29,6 +31,7 @@ export function CocSessionPanel({
     sanity = session.sanity;
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
+  const [skillOrder, setSkillOrder] = useCocSkillOrder('development', 'invested');
   const send: typeof onEdit = async (edit) => {
     setError('');
     try {
@@ -404,8 +407,9 @@ export function CocSessionPanel({
           查找技能
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="技能名称" />
         </label>
+        <CocSkillOrderSelect value={skillOrder} onChange={setSkillOrder} />
         <div className="coc-development-grid">
-          {cocSkillDefinitions(card)
+          {sortCocSkills(cocSkillDefinitions(card), card, skillOrder, effective.skills)
             .filter(
               (s) => !['creditRating', 'cthulhuMythos'].includes(s.key) && s.label.includes(query),
             )

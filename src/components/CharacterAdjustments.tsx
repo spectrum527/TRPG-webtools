@@ -24,6 +24,8 @@ import {
 } from '../../shared/adjustments';
 import type { Character, Member, Room, RoomAction } from '../../shared/types';
 import { Modal, Spinner } from './ui';
+import { sortCocSkills } from '../../shared/coc-skill-order';
+import { CocSkillOrderSelect, useCocSkillOrder } from './CocSkillOrder';
 
 type Run = (action: RoomAction) => Promise<boolean>;
 type Field = { target: AdjustmentTarget; key: string };
@@ -112,6 +114,7 @@ function CharacterWorkspace({
   const original = effectiveCharacter({ ...card, adjustments: undefined });
   const [field, setField] = useState<Field>({ target: 'attribute', key: 'str' });
   const [search, setSearch] = useState('');
+  const [skillOrder, setSkillOrder] = useCocSkillOrder('adjustments', 'invested');
   const [busy, setBusy] = useState(false);
   const [savedFromRevision, setSavedFromRevision] = useState<number | null>(null);
   const [status, setStatus] = useState('');
@@ -138,7 +141,12 @@ function CharacterWorkspace({
     setBusy(false);
     return success;
   };
-  const fields = adjustmentFields(card, field.target).filter((entry) =>
+  const rawFields = adjustmentFields(card, field.target);
+  const fields = (
+    card.rule === 'coc' && field.target === 'skill'
+      ? sortCocSkills(rawFields, card, skillOrder, current.skills)
+      : rawFields
+  ).filter((entry) =>
     `${entry.label} ${entry.key}`.toLowerCase().includes(search.trim().toLowerCase()),
   );
   return (
@@ -180,6 +188,9 @@ function CharacterWorkspace({
                 onChange={(event) => setSearch(event.target.value)}
               />
             </label>
+          )}
+          {field.target === 'skill' && card.rule === 'coc' && (
+            <CocSkillOrderSelect value={skillOrder} onChange={setSkillOrder} />
           )}
           <div className={`adjustment-fields ${field.target}`}>
             {fields.map((entry) => {
